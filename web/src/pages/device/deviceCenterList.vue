@@ -207,6 +207,7 @@ import DeviceSceneIcon from './components/deviceSceneIcon.vue'
 import TrafficInsightsPanel from './components/trafficInsightsPanel.vue'
 import AdvancedNetworkTools from './components/advancedNetworkTools.vue'
 import { requestErrorMessage } from './requestError'
+import { deviceDisplayName, devicePresenceLabel, deviceCategoryLabel } from './devicePresentation'
 import {
     buildDeviceListItems,
     deviceIdentityPresentation,
@@ -298,29 +299,11 @@ const load = async () => {
     }
 }
 
-const displayName = (device: DeviceListItem) => {
-    const name = device.displayName || device.hostname || ''
-    if (name) return name
-    if (device.brand) return `${device.brand} ${device.classification.source === 'fallback' ? $gettext('设备') : sceneLabel(device.scene)}`
-    return $gettext('未命名设备')
-}
-const presenceLabel = (device: DeviceListItem) => device.presenceState === 'never_seen' ? $gettext('尚未上线') : device.online ? $gettext('在线') : $gettext('离线')
+const displayName = (device: DeviceListItem) => deviceDisplayName(device, $gettext)
+const presenceLabel = (device: DeviceListItem) => devicePresenceLabel(device, $gettext)
 const presenceClass = (device: DeviceListItem) => device.presenceState === 'never_seen' ? 'never-seen' : device.online ? 'online' : 'offline'
 const connectionLabel = (kind: string) => kind === 'wifi' ? 'Wi-Fi' : kind === 'lan' ? $gettext('有线') : $gettext('未知')
-const sceneLabel = (scene: DeviceScene) => ({
-    phone: $gettext('手机'),
-    computer: $gettext('电脑'),
-    tablet: $gettext('平板'),
-    tv: $gettext('电视与影音'),
-    network: $gettext('网络设备'),
-    'smart-home': $gettext('智能家居'),
-    camera: $gettext('摄像头'),
-    gaming: $gettext('游戏设备'),
-    storage: $gettext('存储与服务器'),
-    printer: $gettext('打印机'),
-    wearable: $gettext('穿戴设备'),
-    unknown: $gettext('未知设备'),
-}[scene])
+const sceneLabel = (scene: DeviceScene) => deviceCategoryLabel(scene, $gettext)
 const categoryMeta = (device: DeviceListItem) => {
     const presentation = identityPresentation(device)
     if (presentation.metaMode === 'pending') return $gettext('类型待确认')

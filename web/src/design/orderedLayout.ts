@@ -1,0 +1,69 @@
+// Design-only R layout. Memory session; no device writes or durable preferences.
+import {ref} from 'vue'
+import {widget,type WidgetId} from './rowLayout'
+export type Template='single'|'pair'|'triple'|'left-big'|'right-big'
+export type Column={weight:number;cards:Array<WidgetId|null>;split:number}
+export type OrderedRow={id:string;template:Template;height:number;columns:Column[]}
+export const templates:Array<{id:Template;zh:string;en:string;slots:number[]}>=([
+  {id:'single',zh:'整行',en:'Single',slots:[1]},
+  {id:'pair',zh:'两列',en:'Two columns',slots:[1,1]},
+  {id:'triple',zh:'三列',en:'Three columns',slots:[1,1,1]},
+  {id:'left-big',zh:'左大右上下',en:'Tall left',slots:[1,2]},
+  {id:'right-big',zh:'左上下右大',en:'Tall right',slots:[2,1]},
+])
+export const compactIds:WidgetId[]=['connection','system','sharing','docker','downloads','remote']
+export const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value))
+let serial=0
+export function makeRow(ids:WidgetId[]=[],template:Template='single',height=320,id='row-'+(++serial)):OrderedRow{
+  let cursor=0
+  const columns=templates.find(t=>t.id===template)!.slots.map((n,index)=>({weight:template==='triple'?[34,33,33][index]:template==='single'?100:index===0?60:40,split:50,cards:Array.from({length:n},()=>ids[cursor++]||null)}))
+  return {id,template,height,columns}
+}
+export const recommended=():OrderedRow[]=>[
+  makeRow(['traffic','connection'],'pair',320,'network'),makeRow(['applications'],'single',152,'applications'),
+  {...makeRow(['devices','system'],'pair',340,'devices'),columns:[{weight:65,cards:['devices'],split:50},{weight:35,cards:['system'],split:50}]},
+  makeRow(['storage','sharing'],'pair',330,'storage'),
+]
+function sampleLayout(){const rows=recommended(),sample=new URLSearchParams(location.search).get('preset');if(sample==='stacked'||sample==='mirrored'){rows[0]=makeRow(['traffic','connection','system'],'left-big',320,'network');rows[2].columns[1].cards=[null];if(sample==='mirrored'){rows[0].template='right-big';rows[0].columns.reverse()}}else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'));return rows}
+export const orderedSession=ref<OrderedRow[]>(sampleLayout())
+export const visibleIds=(rows:OrderedRow[])=>rows.flatMap(r=>r.columns.flatMap(c=>c.cards.filter((id):id is WidgetId=>Boolean(id))))
+export function cardMinimum(id:WidgetId,stacked:boolean){return stacked&&compactIds.includes(id)?148:id==='applications'?240:widget(id).minHeight}
+export function rowMinimum(row:OrderedRow){return Math.max(0,...row.columns.map(c=>{
+  const cards=c.cards.filter((id):id is WidgetId=>Boolean(id));return cards.reduce((sum,id)=>sum+(id==='applications'&&row.template==='single'?152:cardMinimum(id,c.cards.length>1)),0)+Math.max(0,cards.length-1)*18
+}))}
+export function layoutIssue(rows:OrderedRow[]){
+  const ids=visibleIds(rows)
+  if(new Set(ids).size!==ids.length)return 'duplicate'
+  for(const row of rows){const required=Math.ceil(Math.max(rowMinimum(row),...row.columns.flatMap(c=>c.cards.length===2?c.cards.map((id,i)=>id?cardMinimum(id,true)/((i===0?c.split:100-c.split)/100)+18:0):[0])));if(required>row.height)return String(required)}
+  return ''
+}
+export function changeTemplate(rows:OrderedRow[],rowId:string,template:Template){
+  const result=clone(rows),index=result.findIndex(r=>r.id===rowId),old=result[index],ids=visibleIds([old]),capacity=templates.find(t=>t.id===template)!.slots.reduce((a,b)=>a+b,0)
+  if((old.template==='left-big'&&template==='right-big')||(old.template==='right-big'&&template==='left-big')){old.template=template;old.columns.reverse();return result}
+  const replacement=makeRow(ids.slice(0,capacity),template,old.height,old.id)
+  result.splice(index,1,replacement,...ids.slice(capacity).map(id=>makeRow([id],'single',Math.max(320,widget(id).singleHeight))))
+  return result
+}
+export type ActualColumn={source:number;weight:number;cards:WidgetId[];split:number;compact:boolean}
+export type ActualRow={id:string;source:string;height:number;columns:ActualColumn[]}
+export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4):ActualRow[]{
+  const result:ActualRow[]=[]
+  const singleHeight=(id:WidgetId)=>id==='applications'?(favoriteCount>4?310:240):widget(id).singleHeight
+  for(const row of rows){
+    let group:ActualColumn[]=[]
+    const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>widget(id).minWidth))
+    const flush=()=>{
+      if(!group.length)return
+      if(width<650&&group.length===1){for(const id of group[0].cards)result.push({id:row.id+'-'+id,source:row.id,height:singleHeight(id),columns:[{...group[0],cards:[id],compact:false}]})}
+      else result.push({id:row.id+'-'+group[0].source,source:row.id,height:row.height,columns:group})
+      group=[]
+    }
+    row.columns.forEach((column,source)=>{
+      const cards=column.cards.filter((id):id is WidgetId=>Boolean(id));if(!cards.length)return
+      const next={source,cards,weight:column.weight,split:column.split,compact:column.cards.length>1}
+      if(group.length&&group.reduce((sum,c)=>sum+colWidth(c),0)+colWidth(next)+group.length*18>width)flush()
+      group.push(next)
+    });flush()
+  }
+  return result
+}

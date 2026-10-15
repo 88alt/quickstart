@@ -6,6 +6,11 @@
 > 文档权限：本文件定义产品语义、领域语言和模块 Interface；研究、原型、历史里程碑与能力对比不能覆盖本文  
 > 关联资料：[能力对比与历史路线图](device-management-comparison-and-roadmap.md)、[低保真交互](lan-device-management-low-fidelity-design.md)、[设备品牌注册表](device-brand-registry.md)
 
+> 2026-10-14 接手：M64 产品语义继续有效；本文件中的历史设备/版本状态不代表当前安装验收。
+> 当前事实见 [M65～M70 核验与计划](quickstart-m65-m70-takeover.md)；[Quickstart 首页设计评审](product/quickstart-home-design-review.md) 是待确认的概览扩展，不覆盖本基线，也尚未实现为正式首页。
+> 首页设计仍采用项目 Vue 与共享设备语义。当前用户要求移走顶部快捷入口，保留原大图并大胆重组信息；评审依据为 [主视觉与操作空间](product/quickstart-home-canvas.md)。前两轮规格保留历史。原型不代表正式首页或当前设备验收。
+> 首页设计只修改系统菜单右侧的 Quickstart 内容。系统左侧菜单的项目、层级、样式、权限和交互保持原样，首页模块配置不包含系统菜单；预览中的宿主占位不作为菜单设计或正式代码发布。
+
 > M11～M20 的历史任务与证据见 [《局域网设备管理 M11～M21 实施里程碑》](lan-device-management-m11-m21-milestones.md)；M21～M31 见 [《基线冻结、P0 闭环与正式 UI》](lan-device-management-m21-m31-baseline-p0-ui-milestones.md)；当前收口顺序见 [《M32～M40 收口里程碑》](lan-device-management-m32-m40-closeout-milestones.md)。
 
 ## 1. 结论
