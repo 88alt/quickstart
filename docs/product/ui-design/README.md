@@ -1,6 +1,20 @@
 # Quickstart Vue 首页设计原型
 
-## 当前：已选R有序布局的完整原型
+## 最新：M66.13～M66.18 就地编辑
+
+公开入口仍为[5180首页](http://192.168.9.19:5180/)。用户已认可功能基线并授权执行就地编辑计划；M66.13～17已自检通过，M66.18技术检查通过、候选已交付，最终体验尚待用户确认。[当前阶段状态](../../evidence/m66/direct-edit/status.md) · [评审指南](../../evidence/m66/direct-edit/18-review/review-guide.md) · [计划](../quickstart-home-direct-edit-milestones.md)。以下旧操作说明均保留阶段背景，当前操作以本节为准。
+
+1. 刷新页面，右上“自定义首页”进入编辑。上方只保留紧凑工具条，原大表单已移走。
+2. 拖卡片手柄到高亮目标：交换、空位或独占新行；也可点手柄→移动→点目标，跨屏用“目标列表”。整行有独立移动手柄。
+3. 拖分隔线调整比例，或从行边缘“布局”打开结构缩略图、行高档位与比例小样；精确数值可展开。手机通过同一结构面板调整桌面比例，单列阅读不改写原配置。
+4. 添加模块打开临时面板，选择模块后选择位置；已添加模块可定位或隐藏。隐藏全部后仍可添加或从“更多”恢复推荐。
+5. 撤销一次恢复一个成功动作；取消恢复上次完成的布局；完成只保留预览内存。设备详情往返保持，刷新恢复URL示例。Escape取消当前操作或关闭面板。
+
+设计预览控件继续集中在顶部，可切换默认、左右堆叠、三列服务、数据状态、DHCP分配方、语言与主题。320px使用“预览/Preview”短标题，读屏名称保留完整含义。左侧系统菜单不在编辑范围。
+
+新检查入口：`direct-editor-review.cjs`、`direct-movement-review.cjs`、`direct-layout-review.cjs`、`direct-input-review.cjs`、`direct-visual-review.cjs`、`direct-resource-review.cjs`。均使用`rtk proxy /var/cache/build-cache/run.sh -- env NODE_PATH=/config/playwright-runner/node_modules node docs/product/ui-design/<入口>`；新一轮给`QS_DESIGN_EVIDENCE_ROOT`指定独立目录，保留失败历史。PNG审计在visual报告完成后运行`ordered-screenshot-audit.cjs`，其证据根必须与visual一致。
+
+## 历史：M66.10～M66.12 的完整原型
 
 最新产品反馈（2026-10-15）：用户认可功能定义并要求提交当前代码；当前大表单编辑交互仍需优化。此认可作为功能基线，不能标记最终视觉/交互验收完成，见[确认记录](../../evidence/m66/row-layout/12-design-signoff/functional-baseline-approval.md)。
 

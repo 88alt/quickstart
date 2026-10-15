@@ -34,33 +34,35 @@ export function rowMinimum(row:OrderedRow){return Math.max(0,...row.columns.map(
 export function layoutIssue(rows:OrderedRow[]){
   const ids=visibleIds(rows)
   if(new Set(ids).size!==ids.length)return 'duplicate'
+  if(rows.some(row=>row.columns.some(c=>c.cards.length===2&&c.cards.some(id=>id&&!compactIds.includes(id)))))return 'compact'
   for(const row of rows){const required=Math.ceil(Math.max(rowMinimum(row),...row.columns.flatMap(c=>c.cards.length===2?c.cards.map((id,i)=>id?cardMinimum(id,true)/((i===0?c.split:100-c.split)/100)+18:0):[0])));if(required>row.height)return String(required)}
   return ''
 }
 export function changeTemplate(rows:OrderedRow[],rowId:string,template:Template){
   const result=clone(rows),index=result.findIndex(r=>r.id===rowId),old=result[index],ids=visibleIds([old]),capacity=templates.find(t=>t.id===template)!.slots.reduce((a,b)=>a+b,0)
   if((old.template==='left-big'&&template==='right-big')||(old.template==='right-big'&&template==='left-big')){old.template=template;old.columns.reverse();return result}
-  const replacement=makeRow(ids.slice(0,capacity),template,old.height,old.id)
+  const replacement=makeRow(ids.slice(0,capacity),template==='right-big'?'left-big':template,old.height,old.id)
+  if(template==='right-big'){replacement.template=template;replacement.columns.reverse()}
   result.splice(index,1,replacement,...ids.slice(capacity).map(id=>makeRow([id],'single',Math.max(320,widget(id).singleHeight))))
   return result
 }
-export type ActualColumn={source:number;weight:number;cards:WidgetId[];split:number;compact:boolean}
+export type ActualColumn={source:number;weight:number;cards:Array<WidgetId|null>;slots:number[];split:number;compact:boolean}
 export type ActualRow={id:string;source:string;height:number;columns:ActualColumn[]}
-export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4):ActualRow[]{
+export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEmpty=false):ActualRow[]{
   const result:ActualRow[]=[]
   const singleHeight=(id:WidgetId)=>id==='applications'?(favoriteCount>4?310:240):widget(id).singleHeight
   for(const row of rows){
     let group:ActualColumn[]=[]
-    const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>widget(id).minWidth))
+    const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>id?widget(id).minWidth:260))
     const flush=()=>{
       if(!group.length)return
-      if(width<650&&group.length===1){for(const id of group[0].cards)result.push({id:row.id+'-'+id,source:row.id,height:singleHeight(id),columns:[{...group[0],cards:[id],compact:false}]})}
+      if(width<650&&group.length===1){group[0].cards.forEach((id,index)=>result.push({id:row.id+'-'+(id||'empty-'+group[0].source+'-'+index),source:row.id,height:id?singleHeight(id):148,columns:[{...group[0],cards:[id],slots:[group[0].slots[index]],compact:false}]}))}
       else result.push({id:row.id+'-'+group[0].source,source:row.id,height:row.height,columns:group})
       group=[]
     }
     row.columns.forEach((column,source)=>{
-      const cards=column.cards.filter((id):id is WidgetId=>Boolean(id));if(!cards.length)return
-      const next={source,cards,weight:column.weight,split:column.split,compact:column.cards.length>1}
+      const slots=column.cards.map((id,index)=>showEmpty||id?index:-1).filter(index=>index>=0),cards=slots.map(index=>column.cards[index]);if(!cards.length)return
+      const next={source,cards,slots,weight:column.weight,split:column.split,compact:column.cards.length>1}
       if(group.length&&group.reduce((sum,c)=>sum+colWidth(c),0)+colWidth(next)+group.length*18>width)flush()
       group.push(next)
     });flush()

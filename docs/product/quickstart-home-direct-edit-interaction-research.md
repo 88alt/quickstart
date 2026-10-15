@@ -1,8 +1,12 @@
 # Quickstart 首页：从表单配置转向就地编辑
 
+执行更新：用户已授权实施M66.13～18，当前实现及最新自检见[阶段状态](../evidence/m66/direct-edit/status.md)与[R规格](quickstart-home-ordered-prototype-spec.md)。下文为实施前研究记录，其中“已有/尚未实现”均对应研究时的3b2beca基线，不能作为当前实现状态。
+
 研究日期：2026-10-15。范围：当前 R 有序首页原型的下一轮交互方案；仅建议，不代表方案已经实现。用户已认可产品功能定义，并要求先提交当前代码；此次反馈明确指出编辑交互仍需较大优化，因此不能记录为当前视觉、编辑体验的最终人工验收通过。
 
 当前功能基线已本地提交为`3b2beca`（feat: archive Quickstart ordered home design prototype），未推送；本文为提交后的交互研究建议，尚未改动当前5180界面。
+
+用户随后认可方向并要求定义完整实施阶段，计划见[M66.13～M66.18](quickstart-home-direct-edit-milestones.md)。此认可确认交互方向，不代表新界面已实现或最终体验已验收。
 
 ## 建议结论
 

@@ -10,6 +10,7 @@
 > 当前事实见 [M65～M70 核验与计划](quickstart-m65-m70-takeover.md)；[Quickstart 首页设计评审](product/quickstart-home-design-review.md) 是待确认的概览扩展，不覆盖本基线，也尚未实现为正式首页。
 > 首页设计仍采用项目 Vue 与共享设备语义。当前用户要求移走顶部快捷入口，保留原大图并大胆重组信息；评审依据为 [主视觉与操作空间](product/quickstart-home-canvas.md)。前两轮规格保留历史。原型不代表正式首页或当前设备验收。
 > 首页设计只修改系统菜单右侧的 Quickstart 内容。系统左侧菜单的项目、层级、样式、权限和交互保持原样，首页模块配置不包含系统菜单；预览中的宿主占位不作为菜单设计或正式代码发布。
+> 2026-10-15：首页已推进到有序行的就地编辑原型（M66.13～18），当前进度见[执行状态](evidence/m66/direct-edit/status.md)，已实现交互规则见[R规格](product/quickstart-home-ordered-prototype-spec.md)。仅优化隔离预览，设备身份、DHCP分配权和策略基线保持本文件语义，最终用户体验仍需确认。
 
 > M11～M20 的历史任务与证据见 [《局域网设备管理 M11～M21 实施里程碑》](lan-device-management-m11-m21-milestones.md)；M21～M31 见 [《基线冻结、P0 闭环与正式 UI》](lan-device-management-m21-m31-baseline-p0-ui-milestones.md)；当前收口顺序见 [《M32～M40 收口里程碑》](lan-device-management-m32-m40-closeout-milestones.md)。
 

@@ -156,6 +156,8 @@ NAS 拆包必须另列功能和目标固件源依赖影响，不能由一次索�
 
 ## 待产品决策
 
+就地编辑执行更新（2026-10-15）：用户已授权连续实施M66.13～18；13～17自检通过，5180已换为就地编辑原型，18当前候选技术总验收通过、已交付，等待用户实际确认新交互体验。最新结果见[阶段状态](evidence/m66/direct-edit/status.md)，当前操作见[评审指南](evidence/m66/direct-edit/18-review/review-guide.md)。此后新增状态不覆盖M65设备基线，不作为正式首页/API/安装验收。
+
 最新用户反馈（2026-10-15）：产品功能定义已认可并要求先提交当前代码；当前大表单编辑交互仍需优化。M66.12保留最终体验评审，下一步比较更方便、直观且实现成本适中的就地编辑方案；见[功能基线确认](evidence/m66/row-layout/12-design-signoff/functional-baseline-approval.md)。
 
 最新继续结果（2026-10-15）：用户已选择R并同意有限分栏/堆叠；上轮三次优化后停止的两项失败，在用户再次授权继续后已定点复现、修正并完成当前候选回归。M66.10/11当前TypeScript、13交互、24基准、42状态、13临界点、72权限点击、48张PNG及生命周期均通过。M66.12已进入最终人工评审，等待用户实际确认当前视觉/交互；见 [最新状态](evidence/m66/row-layout/status.md)、[评审指南](evidence/m66/row-layout/12-design-signoff/review-guide.md)、[R规格](product/quickstart-home-ordered-prototype-spec.md)。后文旧结果保留原日期，不替代当前设计检查，也不将本次原型验证扩展为设备业务通过。
