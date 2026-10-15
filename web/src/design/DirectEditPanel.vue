@@ -3,7 +3,7 @@
   <section ref="element" class="direct-panel" role="dialog" aria-modal="true" :aria-label="title" @keydown="keyboard">
     <header><h2>{{title}}</h2><button @click="emit('close')" :aria-label="english?'Close panel':'关闭面板'">×</button></header>
     <div class="direct-panel-body"><slot/></div>
-    <footer><button @click="emit('close')">{{english?'Back to home':'返回首页'}}</button></footer>
+    <footer><slot name="actions"><button @click="emit('close')">{{english?'Back to home':'返回首页'}}</button></slot></footer>
   </section>
 </template>
 <script setup lang="ts">

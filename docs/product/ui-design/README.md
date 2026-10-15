@@ -1,8 +1,24 @@
 # Quickstart Vue 首页设计原型
 
-## 最新：M66.13～M66.18 就地编辑
+## 当前原型：M66.19～M66.24 槽位编辑
 
-公开入口仍为[5180首页](http://192.168.9.19:5180/)。用户已认可功能基线并授权执行就地编辑计划；M66.13～17已自检通过，M66.18技术检查通过、候选已交付，最终体验尚待用户确认。[当前阶段状态](../../evidence/m66/direct-edit/status.md) · [评审指南](../../evidence/m66/direct-edit/18-review/review-guide.md) · [计划](../quickstart-home-direct-edit-milestones.md)。以下旧操作说明均保留阶段背景，当前操作以本节为准。
+用户已认可“真实页面选行布局、填槽位为主，整页布局总览为辅”。产品指导统一见[布局交互规范1.0](../quickstart-home-layout-interaction-spec.md)，实施任务树、测试目标及证据位置见[M66.19～M66.24计划](../quickstart-home-slot-edit-milestones.md)。[阶段状态](../../evidence/m66/slot-edit/status.md)：19～23自检通过，24当前候选技术验收通过、已交付，待用户最终体验确认。
+
+公开入口：[默认首页](http://192.168.9.19:5180/?layout=ordered) · [应用半宽](http://192.168.9.19:5180/?layout=ordered&preset=half)。顶部设计预览也提供半宽、左右上下组合、三列服务、状态、权限及语言选择。刷新旧标签页加载当前构建。左侧系统菜单保持；内存应用、刷新恢复示例。
+
+1. “自定义首页”默认进入真实页面编辑；每行“布局”选择五种结构。缩槽明确选择保留项，不再自动新建行收纳多余模块。
+2. 空槽位添加、已有模块替换或从首页移除。选择器说明适配及已有来源；选中后在底部预览影响，再确认。已有模块移来，来源留空，被替换模块仅隐藏，不交换。
+3. 分隔线或行工具调整比例／高度；放不下时明确说明，不裁切或自动拉高。空槽位编辑中保留，完成前预览整理；复杂上下组合须补齐或换结构。
+4. 次级“布局总览”压缩四行结构便于移动。点击名称→移动→选择位置，或拖名称；整行有独立手柄。普通单／双列边缘可扩列，满三列和上下组合不隐式扩容。返回真实页面判断尺寸。
+5. 撤销恢复一个完整动作；取消恢复进入时布局；完成更新本次内存，详情往返保持，刷新重置。Escape先取消当前动作／关闭面板。应用卡按容器宽高换列，全部面板保留常用管理、系统工具及软件中心。
+
+当前[技术验收](../../evidence/m66/slot-edit/24-review/acceptance.md)、[场景覆盖](../../evidence/m66/slot-edit/24-review/coverage.md)、[候选资源](../../evidence/m66/slot-edit/24-review/candidate.json)、[人工任务卡](../../evidence/m66/slot-edit/24-review/review-guide.md)。当前公开入口index.76bdeab0.js；源指纹及3个JS/CSS资源校验见候选，不能使用旧截图代替当前候选。
+
+检查入口：`slot-contract-review.cjs`、`slot-module-review.cjs`、`slot-primary-review.cjs`、`slot-normalization-review.cjs`、`slot-overview-review.cjs`、`slot-input-review.cjs`、`slot-resource-review.cjs`、`slot-navigation-review.cjs`、`slot-final-review.cjs`、`slot-candidate.cjs`。均通过`rtk proxy /var/cache/build-cache/run.sh -- env NODE_PATH=/config/playwright-runner/node_modules node docs/product/ui-design/<入口>`；重验给`QS_DESIGN_EVIDENCE_ROOT`新的独立目录。最终视觉脚本逐轮保留子目录，结束后再以该子目录运行`ordered-screenshot-audit.cjs`，不要在报告生成前启动审计。权限专项复用`ordered-authority-popover-review.cjs`。下文均为历史实现说明，不作为当前操作指南。
+
+## 历史：M66.13～M66.18 就地编辑
+
+此前公开入口为[5180首页](http://192.168.9.19:5180/)。用户已认可功能基线并授权执行就地编辑计划；M66.13～17已自检通过，M66.18技术检查通过、候选已交付，最终体验尚待用户确认。[该轮阶段状态](../../evidence/m66/direct-edit/status.md) · [评审指南](../../evidence/m66/direct-edit/18-review/review-guide.md) · [计划](../quickstart-home-direct-edit-milestones.md)。以下操作说明记录该轮实现，本次未重新验证服务状态；后续交互目标以文首新规范为准。
 
 1. 刷新页面，右上“自定义首页”进入编辑。上方只保留紧凑工具条，原大表单已移走。
 2. 拖卡片手柄到高亮目标：交换、空位或独占新行；也可点手柄→移动→点目标，跨屏用“目标列表”。整行有独立移动手柄。

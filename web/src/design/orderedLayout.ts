@@ -1,6 +1,7 @@
 // Design-only R layout. Memory session; no device writes or durable preferences.
 import {ref} from 'vue'
 import {widget,type WidgetId} from './rowLayout'
+import {capability,moduleCapabilities} from './moduleCapability'
 export type Template='single'|'pair'|'triple'|'left-big'|'right-big'
 export type Column={weight:number;cards:Array<WidgetId|null>;split:number}
 export type OrderedRow={id:string;template:Template;height:number;columns:Column[]}
@@ -11,7 +12,7 @@ export const templates:Array<{id:Template;zh:string;en:string;slots:number[]}>=(
   {id:'left-big',zh:'左大右上下',en:'Tall left',slots:[1,2]},
   {id:'right-big',zh:'左上下右大',en:'Tall right',slots:[2,1]},
 ])
-export const compactIds:WidgetId[]=['connection','system','sharing','docker','downloads','remote']
+export const compactIds:WidgetId[]=moduleCapabilities.filter(c=>c.stacked).map(c=>c.id)
 export const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value))
 let serial=0
 export function makeRow(ids:WidgetId[]=[],template:Template='single',height=320,id='row-'+(++serial)):OrderedRow{
@@ -20,16 +21,16 @@ export function makeRow(ids:WidgetId[]=[],template:Template='single',height=320,
   return {id,template,height,columns}
 }
 export const recommended=():OrderedRow[]=>[
-  makeRow(['traffic','connection'],'pair',320,'network'),makeRow(['applications'],'single',152,'applications'),
+  makeRow(['traffic','connection'],'pair',320,'network'),makeRow(['applications'],'single',176,'applications'),
   {...makeRow(['devices','system'],'pair',340,'devices'),columns:[{weight:65,cards:['devices'],split:50},{weight:35,cards:['system'],split:50}]},
   makeRow(['storage','sharing'],'pair',330,'storage'),
 ]
-function sampleLayout(){const rows=recommended(),sample=new URLSearchParams(location.search).get('preset');if(sample==='stacked'||sample==='mirrored'){rows[0]=makeRow(['traffic','connection','system'],'left-big',320,'network');rows[2].columns[1].cards=[null];if(sample==='mirrored'){rows[0].template='right-big';rows[0].columns.reverse()}}else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'));return rows}
+function sampleLayout(){const rows=recommended(),sample=new URLSearchParams(location.search).get('preset');if(sample==='stacked'||sample==='mirrored'){rows[0]=makeRow(['traffic','connection','system'],'left-big',320,'network');rows[2].columns[1].cards=[null];if(sample==='mirrored'){rows[0].template='right-big';rows[0].columns.reverse()}}else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'));else if(sample==='half'){rows[1]=makeRow(['applications','system'],'pair',300,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['devices'],'single',340,'devices')}return rows}
 export const orderedSession=ref<OrderedRow[]>(sampleLayout())
 export const visibleIds=(rows:OrderedRow[])=>rows.flatMap(r=>r.columns.flatMap(c=>c.cards.filter((id):id is WidgetId=>Boolean(id))))
-export function cardMinimum(id:WidgetId,stacked:boolean){return stacked&&compactIds.includes(id)?148:id==='applications'?240:widget(id).minHeight}
+export function cardMinimum(id:WidgetId,stacked:boolean){return stacked&&compactIds.includes(id)?capability(id).compactHeight:capability(id).minHeight}
 export function rowMinimum(row:OrderedRow){return Math.max(0,...row.columns.map(c=>{
-  const cards=c.cards.filter((id):id is WidgetId=>Boolean(id));return cards.reduce((sum,id)=>sum+(id==='applications'&&row.template==='single'?152:cardMinimum(id,c.cards.length>1)),0)+Math.max(0,cards.length-1)*18
+  const cards=c.cards.filter((id):id is WidgetId=>Boolean(id));return cards.reduce((sum,id)=>sum+cardMinimum(id,c.cards.length>1),0)+Math.max(0,cards.length-1)*18
 }))}
 export function layoutIssue(rows:OrderedRow[]){
   const ids=visibleIds(rows)
@@ -50,7 +51,7 @@ export type ActualColumn={source:number;weight:number;cards:Array<WidgetId|null>
 export type ActualRow={id:string;source:string;height:number;columns:ActualColumn[]}
 export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEmpty=false):ActualRow[]{
   const result:ActualRow[]=[]
-  const singleHeight=(id:WidgetId)=>id==='applications'?(favoriteCount>4?310:240):widget(id).singleHeight
+  const singleHeight=(id:WidgetId)=>widget(id).singleHeight
   for(const row of rows){
     let group:ActualColumn[]=[]
     const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>id?widget(id).minWidth:260))

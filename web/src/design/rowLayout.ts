@@ -9,7 +9,7 @@ export const layoutVariants:Array<{id:LayoutVariant;key:string;zh:string;en:stri
 export const widgetDefinitions:Array<{id:WidgetId;zh:string;en:string;glyph:string;minWidth:number;minHeight:number;singleHeight:number;extra?:boolean}>=[
   {id:'traffic',zh:'网络流量',en:'Network traffic',glyph:'activity',minWidth:440,minHeight:280,singleHeight:300},
   {id:'connection',zh:'网络连接',en:'Connection',glyph:'network',minWidth:300,minHeight:260,singleHeight:280},
-  {id:'applications',zh:'应用与工具',en:'Apps & tools',glyph:'grid',minWidth:320,minHeight:152,singleHeight:240},
+  {id:'applications',zh:'应用与工具',en:'Apps & tools',glyph:'grid',minWidth:240,minHeight:176,singleHeight:240},
   {id:'devices',zh:'局域网设备',en:'LAN devices',glyph:'devices',minWidth:400,minHeight:300,singleHeight:340},
   {id:'system',zh:'系统状态',en:'System health',glyph:'chip',minWidth:260,minHeight:260,singleHeight:280},
   {id:'storage',zh:'磁盘信息',en:'Disks',glyph:'disk',minWidth:380,minHeight:280,singleHeight:330},

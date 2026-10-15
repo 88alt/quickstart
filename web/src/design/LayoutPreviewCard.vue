@@ -1,6 +1,6 @@
 <template>
   <div class="layout-widget" ref="element" :class="['widget-'+id,{narrow:width<450,medium:width<650,short:height<310}]" :data-layout-card="id">
-    <template v-if="id==='traffic'"><NetworkFlow :key="theme"/><button class="layout-speed" @click="$emit('navigate','/networkSpeedTest')" :aria-label="t('网络测速','Network speed test')"><StudioGlyph name="activity"/>{{t('测速','Test')}}</button><span v-if="errors.network" class="layout-data-notice">{{t('流量采样暂不可用','Traffic sampling unavailable')}}</span></template>
+    <template v-if="id==='traffic'"><NetworkFlow v-if="nativeVisible" :key="theme"/><button class="layout-speed" @click="$emit('navigate','/networkSpeedTest')" :aria-label="t('网络测速','Network speed test')"><StudioGlyph name="activity"/>{{t('测速','Test')}}</button><span v-if="errors.network" class="layout-data-notice">{{t('流量采样暂不可用','Traffic sampling unavailable')}}</span></template>
     <section v-else-if="id==='connection'" class="layout-connection">
       <header><h2><StudioGlyph name="network"/>{{t('网络连接','Connection')}}</h2><button @click="$emit('navigate','/network')">{{t('网络设置','Settings')}}<StudioGlyph name="arrow"/></button></header>
       <div class="layout-health"><span :class="{ready}"><StudioGlyph :name="ready?'check':'network'"/></span><div><strong>{{ready?t('连接正常','Connected'):errors.network?t('状态待确认','Unconfirmed'):t('读取连接中','Reading connection')}}</strong><small>{{data.network?.defaultInterface||'—'}} · {{data.network?.proto==='static'?t('静态网络','Static network'):data.network?.proto||'—'}}</small></div><span class="layout-health-caption" v-if="width>430">{{ready?'ONLINE':'—'}}</span></div>
@@ -25,11 +25,14 @@ const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<strin
 defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'retry'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
 const element=ref<HTMLElement|null>(null),width=ref(600),height=ref(320),addresses=ref(false),details=ref(false)
+// Design container owns visibility. The reused native chart has delayed setup;
+// unmounting while hidden also prevents a not-yet-started initial sample.
+const nativeVisible=ref(!document.hidden),visibility=()=>nativeVisible.value=!document.hidden
 const ready=computed(()=>Boolean(props.data.network?.internetConnected)&&!props.errors.network)
 const summaryLimit=computed(()=>{const columns=width.value>=650?3:width.value>=450?2:1;const rows=height.value<330?1:columns===1?(height.value>=370?3:2):2;return Math.min(6,rows*columns)})
 const moduleItem=computed(()=>({id:props.id as CanvasModuleKey,enabled:true,span:width.value>=500?8:4}))
 let observer:ResizeObserver|undefined
-onMounted(()=>{observer=new ResizeObserver(entries=>{width.value=entries[0].contentRect.width;height.value=entries[0].contentRect.height});if(element.value)observer.observe(element.value)})
-onUnmounted(()=>observer?.disconnect())
+onMounted(()=>{if(props.id==='traffic')document.addEventListener('visibilitychange',visibility);observer=new ResizeObserver(entries=>{width.value=entries[0].contentRect.width;height.value=entries[0].contentRect.height});if(element.value)observer.observe(element.value)})
+onUnmounted(()=>{observer?.disconnect();document.removeEventListener('visibilitychange',visibility)})
 </script>
 <style src="./layoutPreviewCard.css" scoped></style>

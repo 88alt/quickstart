@@ -1,14 +1,14 @@
 <template>
-  <section v-if="!collapsed" class="home-applications" data-applications-hub>
+  <section v-if="!collapsed" ref="hub" class="home-applications fluid-applications" data-applications-hub>
     <header class="applications-heading">
-      <div><StudioGlyph name="grid"/><h2>{{t('应用与工具','Apps & tools')}}</h2><div class="applications-tabs" role="tablist" aria-label="应用与工具分类"><button role="tab" :aria-selected="tab==='favorites'" @click="tab='favorites'">{{t('常用','Favorites')}}</button><button role="tab" :aria-selected="tab==='tools'" @click="tab='tools'">{{t('系统工具','System tools')}}</button></div></div>
-      <div class="applications-actions"><button @click="openBrowser(false)">{{t('全部应用','All apps')}}</button><button @click="openBrowser(true)"><StudioGlyph name="tune"/><span>{{t('自定义','Customize')}}</span></button><span></span><button class="software-center" @click="navigate('/applications')" data-software-center>{{t('软件中心','Software center')}}<StudioGlyph name="arrow"/></button></div>
+      <div><StudioGlyph name="grid"/><h2>{{t('应用与工具','Apps & tools')}}</h2></div>
+      <div class="applications-actions"><button @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<StudioGlyph name="arrow"/></button></div>
     </header>
     <div v-if="tab==='tools'" class="applications-system-tools" data-applications-tools><CanvasTools @navigate="navigate"/></div>
     <template v-else>
       <div v-if="catalogueState!=='ready'" class="applications-state" :class="catalogueState" data-applications-state><StudioGlyph :name="catalogueState==='loading'?'activity':'grid'"/><span>{{stateText}}</span><button v-if="catalogueState==='error'" @click="recovered=true">{{t('重试','Retry')}}</button><button @click="tab='tools'">{{t('打开系统工具','Open system tools')}}</button></div>
       <div v-else-if="!favorites.length" class="applications-state"><StudioGlyph name="grid"/><span>{{t('把常用应用放在这里','Keep your favorite apps here')}}</span><button @click="openBrowser(true)">{{t('选择应用','Choose apps')}}</button></div>
-      <div v-else class="applications-favorites" :style="'--favorite-count:'+favorites.length"><button v-for="app in favorites" :key="app.id" @click="navigate(app.path)" :data-favorite-app="app.id"><span class="application-icon" :class="app.tone"><StudioGlyph :name="app.glyph"/></span><span><strong>{{t(app.zh,app.en)}}</strong><small>{{t(app.detail,app.detailEn)}}</small></span><StudioGlyph name="arrow" class="application-arrow"/></button></div>
+      <div v-else class="applications-favorites" :style="{gridTemplateColumns:'repeat('+columns+', minmax(0,1fr))'}" :data-app-columns="columns" :data-app-capacity="capacity"><button v-for="app in favorites.slice(0,capacity)" :key="app.id" @click="navigate(app.path)" :title="t(app.zh,app.en)" :data-favorite-app="app.id"><span class="application-icon" :class="app.tone"><StudioGlyph :name="app.glyph"/></span><span><strong>{{t(app.zh,app.en)}}</strong></span></button></div>
     </template>
     <div v-if="fallbackEntries.length" class="applications-fallback" data-applications-fallback><span>{{t('快捷操作','Quick actions')}}</span><button v-for="entry in fallbackEntries" :key="entry.path" @click="navigate(entry.path)" :data-home-entry="entry.path"><StudioGlyph :name="entry.glyph"/>{{t(entry.zh,entry.en)}}<StudioGlyph name="arrow"/></button></div>
   </section>
@@ -31,7 +31,7 @@
         <p class="application-limit" v-if="editing&&draft.length>=6">{{t('已选6个，可先移除或调整顺序。','6 selected. Remove an item or adjust the order.')}}</p>
         <div v-if="!editing&&fallbackEntries.length" class="browser-fallback"><h3>{{t('快捷操作','Quick actions')}}</h3><button v-for="entry in fallbackEntries" :key="entry.path" @click="navigate(entry.path)" :data-browser-quick="entry.path"><StudioGlyph :name="entry.glyph"/>{{t(entry.zh,entry.en)}}<StudioGlyph name="arrow"/></button></div>
       </div>
-      <footer><template v-if="editing"><button @click="closeBrowser">{{t('取消','Cancel')}}</button><button class="applications-save" @click="saveFavorites">{{t('应用到首页','Apply to home')}} · {{draft.length}}/6</button></template><template v-else><span>{{t('软件中心负责安装与更新','Install & update in the software center')}}</span><button class="software-center" @click="navigate('/applications')" data-browser-software-center>{{t('软件中心','Software center')}}<StudioGlyph name="arrow"/></button></template></footer>
+      <footer><template v-if="editing"><button @click="closeBrowser">{{t('取消','Cancel')}}</button><button class="applications-save" @click="saveFavorites">{{t('应用到首页','Apply to home')}} · {{draft.length}}/6</button></template><template v-else><button @click="editing=true;draft=[...homeApplicationSession.favorites]" data-manage-favorites>{{t('管理常用','Edit favorites')}}</button><button class="software-center" @click="navigate('/applications')" data-browser-software-center>{{t('软件中心','Software center')}}<StudioGlyph name="arrow"/></button></template></footer>
     </section>
   </template>
 </template>
@@ -44,6 +44,10 @@ import {homeApplications,homeApplicationSession,type HomeApplication} from './ho
 import {demo} from './fixtures'
 const props=defineProps<{collapsed:boolean;fallbackEntries:Array<typeof quickEntrances[number]>;contained?:boolean}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'close'):void}>()
+const hub=ref<HTMLElement|null>(null),hubWidth=ref(600),hubHeight=ref(240)
+const columns=computed(()=>{const maximum=Math.max(2,Math.min(6,Math.floor((hubWidth.value+12)/140))),count=favorites.value.length||2;return Math.min(maximum,Math.ceil(count/Math.ceil(count/maximum)))})
+const capacity=computed(()=>Math.max(1,Math.floor((hubHeight.value-56+12)/94))*columns.value)
+let hubObserver:ResizeObserver|undefined
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
 const tab=ref('favorites'),browserTab=ref('apps'),browserOpen=ref(false),editing=ref(false),search=ref(''),draft=ref<string[]>([]),recovered=ref(false)
 const catalogueState=computed(()=>!recovered.value&&demo.scenario==='apps-error'?'error':demo.scenario==='apps-loading'?'loading':demo.scenario==='apps-empty'?'empty':'ready')
@@ -67,6 +71,6 @@ function navigate(path:string){if(browserOpen.value)closeBrowser();emit('navigat
 function keyboard(event:KeyboardEvent){if(!browserOpen.value)return;if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeBrowser();return}if(event.key==='Tab'){const controls=Array.from(document.querySelectorAll<HTMLElement>('.applications-browser button:not(:disabled),.applications-browser input'));const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}}}
 watch(()=>demo.scenario,()=>recovered.value=false)
 watch(tab,async value=>{if(value==='tools'&&props.contained){tab.value='favorites';await openBrowser(false);browserTab.value='tools'}})
-onMounted(()=>document.addEventListener('keydown',keyboard,true));onUnmounted(()=>{document.removeEventListener('keydown',keyboard,true);if(browserOpen.value)document.body.style.overflow=bodyOverflow})
+onMounted(()=>{document.addEventListener('keydown',keyboard,true);if(hub.value){hubObserver=new ResizeObserver(entries=>{hubWidth.value=entries[0].contentRect.width;hubHeight.value=entries[0].contentRect.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);if(browserOpen.value)document.body.style.overflow=bodyOverflow})
 </script>
 <style src="./homeApplications.css" scoped></style>

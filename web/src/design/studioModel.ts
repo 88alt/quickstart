@@ -65,11 +65,19 @@ export function useStudioModel(layout:Ref<Array<{id:string;enabled:boolean}>>,sk
     }catch(e){if(active&&startedRevision===revision)errors[channel.id]=String(e)}
     finally{pending.delete(channel.id);if(active&&!document.hidden&&wanted(channel)){if(startedRevision!==revision)void load(channel);else timers.set(channel.id,window.setTimeout(()=>void load(channel),channel.seconds*1000))}}
   }
-  function refresh(){stop();for(const channel of channels)void load(channel)}
-  function visibility(){stop();if(!document.hidden)refresh()}
-  function retry(){demo.recovered=true;refresh()}
-  watch(()=>layout.value.filter(m=>m.enabled).map(m=>m.id).sort().join(','),refresh)
-  watch(()=>demo.scenario,()=>{revision++;delete data.inventory;errors.inventory='';if(demo.scenario==='stale')data.inventory={devices:inventory()};refresh()})
+  // Moving/replacing cards must not restart readers that are still wanted.
+  // Force refresh remains explicit for retry, visibility restoration and scenes.
+  function refresh(force=false){
+    for(const channel of channels){
+      const timer=timers.get(channel.id)
+      if(!wanted(channel)||force){if(timer!==undefined)window.clearTimeout(timer);timers.delete(channel.id)}
+      if(wanted(channel)&&(force||!timers.has(channel.id)))void load(channel)
+    }
+  }
+  function visibility(){stop();if(!document.hidden)refresh(true)}
+  function retry(){demo.recovered=true;refresh(true)}
+  watch(()=>layout.value.filter(m=>m.enabled).map(m=>m.id).sort().join(','),()=>refresh())
+  watch(()=>demo.scenario,()=>{revision++;delete data.inventory;errors.inventory='';if(demo.scenario==='stale')data.inventory={devices:inventory()};refresh(true)})
   onMounted(()=>{active=true;refresh();document.addEventListener('visibilitychange',visibility)})
   onUnmounted(()=>{active=false;stop();document.removeEventListener('visibilitychange',visibility)})
   return {data,errors,updated,devices,retry}
