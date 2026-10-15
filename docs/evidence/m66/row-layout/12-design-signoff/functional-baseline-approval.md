@@ -16,3 +16,5 @@
 提交前核验：18个候选源码/检查工具SHA256仍与已通过候选一致；原型代码未在本次讨论中改变。继续保留当前13组交互、24基准、42状态、72权限点击、48张PNG及生命周期的实际检查结果；失败历史不改写。本次仅更新产品确认文档，不为文档变更重跑整套前端测试。
 
 候选与证据见[候选标识](../11-review/continuation-1/candidate.md)、[本轮验收](../11-review/continuation-1/acceptance.md)。候选标识中的“未提交”和旧PID说明记录检查发生时的状态，本次提交后以Git提交记录确定源码归档位置。
+
+当前功能基线已提交：`3b2beca`，`feat: archive Quickstart ordered home design prototype`。未推送。后续交互方案见[就地编辑研究与建议](../../../../product/quickstart-home-direct-edit-interaction-research.md)，尚未实现，不改变已归档候选的检查结论。

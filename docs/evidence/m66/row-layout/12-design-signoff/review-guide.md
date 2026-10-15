@@ -37,4 +37,3 @@
 [完整检查与修正证据](../11-review/continuation-1/acceptance.md) · [当前候选及SHA256](../11-review/continuation-1/candidate.md) · [产品交互规格](../../../../product/quickstart-home-ordered-prototype-spec.md)。
 
 用户最新反馈：**产品功能定义已认可，要求先提交代码；当前大表单编辑交互仍需明显优化。** 见[功能基线确认](functional-baseline-approval.md)。下一步比较更直接的布局操作方案，最终视觉/交互确认仍待后续审阅。历史R选型和结构认可保持有效，正式首页开发另行安排，未执行打包、发布或真实设备验收。
-
