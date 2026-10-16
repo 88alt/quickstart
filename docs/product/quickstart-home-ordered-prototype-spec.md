@@ -1,6 +1,8 @@
 # Quickstart R有序首页：实现与验收索引
 
-当前实现（2026-10-16）：产品目标以[首页布局交互规范1.1](quickstart-home-layout-interaction-spec.md)为唯一依据。M66.25在已认可的槽位交互上补充整行直接排序：拖行标题、邻行让位、跨屏滚动、一次撤销；整行不再进入目标列表，模块仍用槽位移动。[本轮任务与验收](quickstart-home-row-sort-m66-25.md) · [当前证据](../evidence/m66/row-sort/25-review/status.md) · [操作指南](ui-design/README.md)。只更新隔离原型，新手感待人工确认。
+当前实现（2026-10-16）：[规范1.2](quickstart-home-layout-interaction-spec.md)的模块形态、显示属性、版本化文档与三类适配协商已接入隔离Vue原型，M66.26～30技术检查通过，M66.31技术交付及用户人工验收通过。[当前验收](../evidence/m66/widget-presentation/31-handoff/acceptance.md) · [架构参考](quickstart-home-widget-presentation-architecture.md) · [任务与标准](quickstart-home-widget-presentation-milestones.md)。实现基线`952528c`，本轮按用户要求归档提交，公开资源和源指纹以候选清单为准。
+
+M66.25历史基线：规范1.1补充整行直接排序，后来已获用户体验确认，当前行为继续保留；[原阶段证据](../evidence/m66/row-sort/25-review/status.md)的旧PID／资源不代表当前候选。最新操作见[原型指南](ui-design/README.md)。
 
 用户后续确认（2026-10-16）：当前自定义首页交互功能体验通过，要求提交代码。上段的人工确认现已完成；新提出的模块属性与多形态进入独立设计，不改变既有交互验收结论。
 

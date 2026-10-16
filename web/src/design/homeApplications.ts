@@ -14,4 +14,5 @@ export const homeApplications:HomeApplication[]=[
 ]
 export const applicationDefaults=['files','docker','qbittorrent','ddnsto']
 // Memory only: route navigation retains choices; refreshing restores the proposal.
-export const homeApplicationSession=reactive({favorites:[...applicationDefaults]})
+const favoriteSample=new URLSearchParams(location.search).get('favorites')
+export const homeApplicationSession=reactive({favorites:favoriteSample===null?[...applicationDefaults]:[...applicationDefaults,'linkease','fastnet'].slice(0,Math.max(0,Math.min(6,Number(favoriteSample)||0)))})

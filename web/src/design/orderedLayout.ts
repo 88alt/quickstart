@@ -2,6 +2,7 @@
 import {ref} from 'vue'
 import {widget,type WidgetId} from './rowLayout'
 import {capability,moduleCapabilities} from './moduleCapability'
+import {placementMinimum,resolvePresentation,type WidgetPreferences} from './widgetPresentation'
 export type Template='single'|'pair'|'triple'|'left-big'|'right-big'
 export type Column={weight:number;cards:Array<WidgetId|null>;split:number}
 export type OrderedRow={id:string;template:Template;height:number;columns:Column[]}
@@ -25,7 +26,14 @@ export const recommended=():OrderedRow[]=>[
   {...makeRow(['devices','system'],'pair',340,'devices'),columns:[{weight:65,cards:['devices'],split:50},{weight:35,cards:['system'],split:50}]},
   makeRow(['storage','sharing'],'pair',330,'storage'),
 ]
-function sampleLayout(){const rows=recommended(),sample=new URLSearchParams(location.search).get('preset');if(sample==='stacked'||sample==='mirrored'){rows[0]=makeRow(['traffic','connection','system'],'left-big',320,'network');rows[2].columns[1].cards=[null];if(sample==='mirrored'){rows[0].template='right-big';rows[0].columns.reverse()}}else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'));else if(sample==='half'){rows[1]=makeRow(['applications','system'],'pair',300,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['devices'],'single',340,'devices')}return rows}
+function sampleLayout(){
+ const rows=recommended(),sample=new URLSearchParams(location.search).get('preset')
+ if(sample==='stacked'||sample==='mirrored'){rows[0]=makeRow(['traffic','connection','system'],'left-big',320,'network');rows[2].columns[1].cards=[null];if(sample==='mirrored'){rows[0].template='right-big';rows[0].columns.reverse()}}
+ else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'))
+ else if(sample==='half'){rows[1]=makeRow(['applications','system'],'pair',300,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['devices'],'single',340,'devices')}
+ else if(sample==='apps-devices'){rows[1]=makeRow(['applications','devices'],'pair',340,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['system'],'single',280,'system')}
+ return rows
+}
 export const orderedSession=ref<OrderedRow[]>(sampleLayout())
 export const visibleIds=(rows:OrderedRow[])=>rows.flatMap(r=>r.columns.flatMap(c=>c.cards.filter((id):id is WidgetId=>Boolean(id))))
 export function cardMinimum(id:WidgetId,stacked:boolean){return stacked&&compactIds.includes(id)?capability(id).compactHeight:capability(id).minHeight}
@@ -49,12 +57,12 @@ export function changeTemplate(rows:OrderedRow[],rowId:string,template:Template)
 }
 export type ActualColumn={source:number;weight:number;cards:Array<WidgetId|null>;slots:number[];split:number;compact:boolean}
 export type ActualRow={id:string;source:string;height:number;columns:ActualColumn[]}
-export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEmpty=false):ActualRow[]{
+export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEmpty=false,prefs?:WidgetPreferences):ActualRow[]{
   const result:ActualRow[]=[]
-  const singleHeight=(id:WidgetId)=>widget(id).singleHeight
+  const singleHeight=(id:WidgetId)=>prefs&&id==='applications'?Math.max(widget(id).singleHeight,resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight):prefs&&id==='devices'&&prefs[id].mode==='summary'?resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight:widget(id).singleHeight
   for(const row of rows){
     let group:ActualColumn[]=[]
-    const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>id?widget(id).minWidth:260))
+    const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>id?prefs?placementMinimum(id,prefs[id],c.cards.length===2).minWidth:widget(id).minWidth:260))
     const flush=()=>{
       if(!group.length)return
       if(width<650&&group.length===1){group[0].cards.forEach((id,index)=>result.push({id:row.id+'-'+(id||'empty-'+group[0].source+'-'+index),source:row.id,height:id?singleHeight(id):148,columns:[{...group[0],cards:[id],slots:[group[0].slots[index]],compact:false}]}))}

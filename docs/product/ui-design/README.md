@@ -1,6 +1,20 @@
 # Quickstart Vue 首页设计原型
 
-## 当前补充：M66.25 整行直接排序
+## 当前原型：M66.26～M66.31 模块形态与显示设置
+
+用户已授权并完成M66.26～30的实现与当前候选技术检查；M66.31技术交付、正式开发交接及用户人工验收通过。[当前状态](../../evidence/m66/widget-presentation/status.md) · [验收与交付](../../evidence/m66/widget-presentation/31-handoff/acceptance.md) · [用户确认](../../evidence/m66/widget-presentation/31-handoff/user-signoff.md)。产品基线为[规范1.2](../quickstart-home-layout-interaction-spec.md)，架构见[设计参考](../quickstart-home-widget-presentation-architecture.md)，任务树及可测试目标见[六阶段计划](../quickstart-home-widget-presentation-milestones.md)。实现基线提交`952528c`，本轮按用户要求归档提交。
+
+[应用与设备同排／6常用项](http://192.168.9.19:5180/?layout=ordered&preset=apps-devices&favorites=6) · [默认首页](http://192.168.9.19:5180/?layout=ordered)。顶部设计预览可切“应用与设备同排”。URL中的favorites只是初始设计夹具；正常也可在布局编辑外用“全部→管理常用”准备6项。
+
+1. 自定义首页→模块齿轮“显示设置”：应用可选自动、网格、启动条；网格可选单／双／三行。6项双行为3×2，三行为2×3；预览不改草稿，采用一次提交，原行高足够则保持。
+2. 设备可选标准／摘要，统计、身份、权限及完整管理入口共用；摘要不自动开放上下小槽。自动、保存偏好与实际呈现分别处理，窄屏往返不改设置。
+3. 槽位选择区分直接可放入、调整后可放入、没有合法方案。短行里的设备不再只显示禁用；可确认增加共同高度，或明确选摘要替代。拖放需调整时也等待同一确认。
+4. 移动、替换、显示偏好与必要行高一次撤销；隐藏再添加保留设置，取消整份编辑恢复已应用文档。常用项内容管理仍独立，改变行数不删常用项。
+5. 行布局、整行直接排序、空位整理和系统菜单边界沿用已验收行为。仅设计fixture及内存草稿，刷新恢复URL示例；未接真实偏好存储或路由器。
+
+当前入口`index.61df59de.js`，三份JS/CSS及50个源指纹见[候选清单](../../evidence/m66/widget-presentation/31-handoff/candidate.json)。复验入口及当前结果见[30阶段技术验收](../../evidence/m66/widget-presentation/30-review/acceptance.md)。旧截图或原M66.25确认不代表新形态人工通过。
+
+## 历史基线：M66.25 整行直接排序
 
 保留已认可的槽位编辑，补充[整行排序任务树与RS01～RS08验收](../quickstart-home-row-sort-m66-25.md)。产品指导见[布局交互规范1.1](../quickstart-home-layout-interaction-spec.md)。以下M66.19～24报告是历史候选，不能代替新排序验收。
 

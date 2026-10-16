@@ -3,7 +3,7 @@ import {capability} from './moduleCapability'
 import {clone,makeRow,templates,visibleIds,type OrderedRow,type Template} from './orderedLayout'
 import type {WidgetId} from './rowLayout'
 export type Slot={row:string;column:number;slot:number}
-export type LayoutResult={rows:OrderedRow[];issue:string;changed:boolean;hidden:WidgetId[];requiredHeight?:number;problemRow?:string}
+export type LayoutResult={rows:OrderedRow[];issue:string;changed:boolean;hidden:WidgetId[];requiredHeight?:number;problemRow?:string;candidateRows?:OrderedRow[];requiresAdaptation?:boolean}
 export const slotId=(s:Slot)=>`${s.row}:${s.column}:${s.slot}`
 export function originOf(rows:OrderedRow[],id:WidgetId):Slot|undefined{
   for(const r of rows)for(let ci=0;ci<r.columns.length;ci++){const si=r.columns[ci].cards.indexOf(id);if(si>=0)return {row:r.id,column:ci,slot:si}}
@@ -27,7 +27,7 @@ export function validate(rows:OrderedRow[]):{issue:string;row?:string;requiredHe
 }
 function result(before:OrderedRow[],next:OrderedRow[],hidden:WidgetId[]=[]):LayoutResult{
   const problem=validate(next)
-  if(problem.issue)return {rows:before,issue:problem.issue,changed:false,hidden:[],requiredHeight:problem.requiredHeight,problemRow:problem.row}
+  if(problem.issue)return {rows:before,candidateRows:next,issue:problem.issue,changed:false,hidden,requiredHeight:problem.requiredHeight,problemRow:problem.row}
   return {rows:next,issue:'',changed:JSON.stringify(before)!==JSON.stringify(next),hidden}
 }
 export function assignSlot(rows:OrderedRow[],target:Slot,id:WidgetId|null):LayoutResult{
@@ -85,7 +85,7 @@ export function insertBeside(rows:OrderedRow[],id:WidgetId,rowId:string,index:nu
   return result(rows,next)
 }
 export type Normalized=LayoutResult&{problems:Array<{row:string;issue:string;requiredHeight?:number}>}
-export function normalize(rows:OrderedRow[],accept:(id:WidgetId,row:OrderedRow)=>boolean=()=>true):Normalized{
+export function normalize(rows:OrderedRow[],accept:(id:WidgetId,row:OrderedRow)=>boolean=()=>true,validator:typeof validate=validate):Normalized{
   const next=clone(rows).filter(r=>visibleIds([r]).length),problems:Normalized['problems']=[]
   next.forEach((row,index)=>{
     const ids=visibleIds([row]),hasEmpty=row.columns.some(c=>c.cards.some(id=>!id))
@@ -97,6 +97,6 @@ export function normalize(rows:OrderedRow[],accept:(id:WidgetId,row:OrderedRow)=
     if(ids.some(id=>!accept(id,replacement))){problems.push({row:row.id,issue:'hard-spec'});return}
     next[index]=replacement
   })
-  const problem=validate(next);if(problem.issue)problems.push({row:problem.row||'',issue:problem.issue,requiredHeight:problem.requiredHeight})
-  return problems.length?{rows:next,issue:problems[0].issue,changed:false,hidden:[],problems,problemRow:problems[0].row,requiredHeight:problems[0].requiredHeight}:{...result(rows,next),problems}
+  const problem=validator(next);if(problem.issue)problems.push({row:problem.row||'',issue:problem.issue,requiredHeight:problem.requiredHeight})
+  return problems.length?{rows:next,issue:problems[0].issue,changed:false,hidden:[],problems,problemRow:problems[0].row,requiredHeight:problems[0].requiredHeight}:{rows:next,issue:'',hidden:[],changed:JSON.stringify(rows)!==JSON.stringify(next),problems}
 }

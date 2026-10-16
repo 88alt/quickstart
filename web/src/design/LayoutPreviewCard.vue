@@ -8,8 +8,9 @@
       <footer><div><span v-for="port in data.ports?.ports||[]" :key="port.name"><i :class="{up:port.linkState==='UP'}"></i>{{port.name}}</span></div><button @click="details=true">{{t('接口详情','Interfaces')}}<StudioGlyph name="arrow"/></button></footer>
       <section v-if="details" class="layout-inline-details" role="dialog" :aria-label="t('接口详情','Interfaces')" @keydown.esc.stop="details=false"><header><h2>{{t('接口详情','Interfaces')}}</h2><button @click="details=false" :aria-label="t('关闭详情','Close details')">×</button></header><p>{{t('DNS来源','DNS source')}} · {{data.network?.dnsProto||'—'}}</p><p v-for="port in data.ports?.ports||[]" :key="port.name">{{port.name}} · {{port.interfaceNames.join(' / ')}} · {{port.linkState==='UP'?t('已连接','Connected'):t('未连接','Disconnected')}}</p></section>
     </section>
-    <HomeApplications v-else-if="id==='applications'" :collapsed="false" :fallback-entries="[]" :contained="contained" @navigate="$emit('navigate',$event)"/>
-    <CanvasModule v-else :item="moduleItem" :data="data" :errors="errors" :devices="devices" :summary-limit="summaryLimit" :disk-limit="contained?4:undefined" contextual-actions @navigate="$emit('navigate',$event)" @device="$emit('device',$event)" @retry="$emit('retry')"/>
+    <HomeApplications v-else-if="id==='applications'" :collapsed="false" :fallback-entries="[]" :contained="contained" :preference="preference" @navigate="$emit('navigate',$event)"/>
+    <CompactPreviewCard v-else-if="resolved.id==='summary'&&id!=='devices'" :id="id" :data="data" :errors="errors" @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
+    <CanvasModule v-else :item="moduleItem" :data="data" :errors="errors" :devices="devices" :summary="resolved.id==='summary'" :summary-limit="id==='devices'?resolved.capacity:undefined" :disk-limit="contained?4:undefined" contextual-actions @navigate="$emit('navigate',$event)" @device="$emit('device',$event)" @retry="$emit('retry')"/>
   </div>
 </template>
 <script setup lang="ts">
@@ -20,16 +21,18 @@ import type {WidgetId} from './rowLayout'
 import NetworkFlow from '../pages/index/network/NetworkFlow.vue'
 import CanvasModule from './CanvasModule.vue'
 import HomeApplications from './HomeApplications.vue'
+import CompactPreviewCard from './CompactPreviewCard.vue'
+import {resolvePresentation,type WidgetPreference} from './widgetPresentation'
 import StudioGlyph from './StudioGlyph.vue'
-const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>;devices:DeviceListItem[];theme:string;contained?:boolean}>()
+const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>;devices:DeviceListItem[];theme:string;contained?:boolean;preference?:WidgetPreference}>()
 defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'retry'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
 const element=ref<HTMLElement|null>(null),width=ref(600),height=ref(320),addresses=ref(false),details=ref(false)
+const resolved=computed(()=>resolvePresentation(props.id,props.preference||{mode:'auto',iconRows:0},{width:width.value,height:height.value,role:'ordinary',favoriteCount:4,mobile:width.value<650}))
 // Design container owns visibility. The reused native chart has delayed setup;
 // unmounting while hidden also prevents a not-yet-started initial sample.
 const nativeVisible=ref(!document.hidden),visibility=()=>nativeVisible.value=!document.hidden
 const ready=computed(()=>Boolean(props.data.network?.internetConnected)&&!props.errors.network)
-const summaryLimit=computed(()=>{const columns=width.value>=650?3:width.value>=450?2:1;const rows=height.value<330?1:columns===1?(height.value>=370?3:2):2;return Math.min(6,rows*columns)})
 const moduleItem=computed(()=>({id:props.id as CanvasModuleKey,enabled:true,span:width.value>=500?8:4}))
 let observer:ResizeObserver|undefined
 onMounted(()=>{if(props.id==='traffic')document.addEventListener('visibilitychange',visibility);observer=new ResizeObserver(entries=>{width.value=entries[0].contentRect.width;height.value=entries[0].contentRect.height});if(element.value)observer.observe(element.value)})

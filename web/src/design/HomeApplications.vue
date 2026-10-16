@@ -1,12 +1,12 @@
 <template>
-  <section v-if="!collapsed" ref="hub" class="home-applications fluid-applications" data-applications-hub>
+  <section v-if="!collapsed" ref="hub" class="home-applications fluid-applications" :class="{'applications-strip':resolved.id==='strip'}" :data-app-form="resolved.id" data-applications-hub>
     <header class="applications-heading">
       <div><StudioGlyph name="grid"/><h2>{{t('应用与工具','Apps & tools')}}</h2></div>
-      <div class="applications-actions"><button @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<StudioGlyph name="arrow"/></button></div>
+      <div class="applications-actions"><button @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<small v-if="catalogueState==='ready'&&favorites.length>capacity" class="applications-overflow" data-app-overflow>{{t('还有','More: ')}}{{favorites.length-capacity}}{{t('个','')}}</small><StudioGlyph name="arrow" v-else/></button></div>
     </header>
     <div v-if="tab==='tools'" class="applications-system-tools" data-applications-tools><CanvasTools @navigate="navigate"/></div>
     <template v-else>
-      <div v-if="catalogueState!=='ready'" class="applications-state" :class="catalogueState" data-applications-state><StudioGlyph :name="catalogueState==='loading'?'activity':'grid'"/><span>{{stateText}}</span><button v-if="catalogueState==='error'" @click="recovered=true">{{t('重试','Retry')}}</button><button @click="tab='tools'">{{t('打开系统工具','Open system tools')}}</button></div>
+      <div v-if="catalogueState!=='ready'" class="applications-state" :class="catalogueState" data-applications-state><StudioGlyph :name="catalogueState==='loading'?'activity':'grid'"/><span>{{stateText}}</span><button v-if="catalogueState==='error'" @click="recovered=true">{{t('重试','Retry')}}</button><button v-if="resolved.id!=='strip'" @click="tab='tools'">{{t('打开系统工具','Open system tools')}}</button></div>
       <div v-else-if="!favorites.length" class="applications-state"><StudioGlyph name="grid"/><span>{{t('把常用应用放在这里','Keep your favorite apps here')}}</span><button @click="openBrowser(true)">{{t('选择应用','Choose apps')}}</button></div>
       <div v-else class="applications-favorites" :style="{gridTemplateColumns:'repeat('+columns+', minmax(0,1fr))'}" :data-app-columns="columns" :data-app-capacity="capacity"><button v-for="app in favorites.slice(0,capacity)" :key="app.id" @click="navigate(app.path)" :title="t(app.zh,app.en)" :data-favorite-app="app.id"><span class="application-icon" :class="app.tone"><StudioGlyph :name="app.glyph"/></span><span><strong>{{t(app.zh,app.en)}}</strong></span></button></div>
     </template>
@@ -42,11 +42,13 @@ import CanvasTools from './CanvasTools.vue'
 import {configurationTools,quickEntrances} from './canvasLayout'
 import {homeApplications,homeApplicationSession,type HomeApplication} from './homeApplications'
 import {demo} from './fixtures'
-const props=defineProps<{collapsed:boolean;fallbackEntries:Array<typeof quickEntrances[number]>;contained?:boolean}>()
+import {resolvePresentation,type WidgetPreference} from './widgetPresentation'
+const props=defineProps<{collapsed:boolean;fallbackEntries:Array<typeof quickEntrances[number]>;contained?:boolean;preference?:WidgetPreference}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'close'):void}>()
 const hub=ref<HTMLElement|null>(null),hubWidth=ref(600),hubHeight=ref(240)
-const columns=computed(()=>{const maximum=Math.max(2,Math.min(6,Math.floor((hubWidth.value+12)/140))),count=favorites.value.length||2;return Math.min(maximum,Math.ceil(count/Math.ceil(count/maximum)))})
-const capacity=computed(()=>Math.max(1,Math.floor((hubHeight.value-56+12)/94))*columns.value)
+const resolved=computed(()=>resolvePresentation('applications',props.preference||{mode:'auto',iconRows:0},{width:hubWidth.value,height:hubHeight.value,role:'ordinary',favoriteCount:favorites.value.length,mobile:hubWidth.value<650}))
+const columns=computed(()=>resolved.value.columns)
+const capacity=computed(()=>resolved.value.capacity)
 let hubObserver:ResizeObserver|undefined
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
 const tab=ref('favorites'),browserTab=ref('apps'),browserOpen=ref(false),editing=ref(false),search=ref(''),draft=ref<string[]>([]),recovered=ref(false)
@@ -71,6 +73,6 @@ function navigate(path:string){if(browserOpen.value)closeBrowser();emit('navigat
 function keyboard(event:KeyboardEvent){if(!browserOpen.value)return;if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeBrowser();return}if(event.key==='Tab'){const controls=Array.from(document.querySelectorAll<HTMLElement>('.applications-browser button:not(:disabled),.applications-browser input'));const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}}}
 watch(()=>demo.scenario,()=>recovered.value=false)
 watch(tab,async value=>{if(value==='tools'&&props.contained){tab.value='favorites';await openBrowser(false);browserTab.value='tools'}})
-onMounted(()=>{document.addEventListener('keydown',keyboard,true);if(hub.value){hubObserver=new ResizeObserver(entries=>{hubWidth.value=entries[0].contentRect.width;hubHeight.value=entries[0].contentRect.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);if(browserOpen.value)document.body.style.overflow=bodyOverflow})
+onMounted(()=>{document.addEventListener('keydown',keyboard,true);if(hub.value){hubObserver=new ResizeObserver(()=>{const box=hub.value!.getBoundingClientRect();hubWidth.value=box.width;hubHeight.value=box.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);if(browserOpen.value)document.body.style.overflow=bodyOverflow})
 </script>
 <style src="./homeApplications.css" scoped></style>
