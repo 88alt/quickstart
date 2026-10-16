@@ -2,6 +2,8 @@
 import { reactive } from 'vue'
 import { inventory } from './devices'
 import { deviceFixture } from './deviceFixtures'
+import { networkFixture } from './networkFixtures'
+import { businessFixture } from './businessFixtures'
 const params=new URLSearchParams(location.search)
 export const demo = reactive({ scenario: params.get('scenario') || 'normal', authority: params.get('authority') || 'external', recovered: false, layout: params.get('layout') || 'baseline' })
 export const requests: Array<{ path: string; method: string; status: number }> = []
@@ -40,8 +42,14 @@ export function installFixtures() {
     if (!url.pathname.startsWith('/cgi-bin/') && url.origin === location.origin) return realFetch(input, init)
     let status = 200, data: unknown
     const key = url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname
+    const networkReply=url.origin===location.origin&&(demo.layout==='ordered'||!params.has('layout'))?networkFixture(key,method,JSON.parse(String(init?.body||'{}')),demo.scenario,demo.recovered):undefined
+    if(method==='GET'&&key==='/u/network/status/'&&demo.scenario==='network-loading'&&!demo.recovered)await new Promise(resolve=>setTimeout(resolve,1800))
+    if(method==='GET'&&key==='/network/port/list/'&&demo.scenario==='ports-loading'&&!demo.recovered)await new Promise(resolve=>setTimeout(resolve,1800))
     const deviceReply=url.origin===location.origin?deviceFixture(key,method,url,JSON.parse(String(init?.body||'{}'))):undefined
+    const businessReply=url.origin===location.origin&&(demo.layout==='ordered'||!params.has('layout'))?businessFixture(key,method,JSON.parse(String(init?.body||'{}')),demo.scenario,demo.recovered):undefined
     if (url.origin !== location.origin) { status=403; data={error:'External requests are disabled in design mode'} }
+    else if(networkReply){status=networkReply.status;data=networkReply.data}
+    else if(businessReply&&!(method==='GET'&&demo.scenario==='system-error'&&key==='/system/status/')){status=businessReply.status;data=businessReply.data}
     else if (key === '/app/check/' && method === 'POST') data={result:{status:'installed'}}
     else if (key === '/system/module-settings/' && method === 'GET') data={result:{diableDisplay:hiddenModules}}
     else if (key === '/system/module-settings/' && method === 'POST') { hiddenModules=JSON.parse(String(init?.body || '{}')).diableDisplay || []; data={result:{diableDisplay:hiddenModules},previewOnly:true} }

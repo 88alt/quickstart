@@ -1,8 +1,10 @@
 <template>
-  <section class="compact-preview" :data-layout-card="id" data-compact-card>
+  <NetworkConnectionCard v-if="id==='connection'" data-layout-card="connection" data-compact-card :data="data.network" :error="errors.network" summary @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
+  <NetworkInterfaceCard v-else-if="id==='networkInterface'" data-layout-card="networkInterface" data-compact-card :data="data.ports" :error="errors.ports" summary @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
+  <NativeBusinessCard v-else-if="nativeBusiness&&['storage','sharing','docker','downloads','remote','system'].includes(id)" :data-layout-card="id" data-compact-card :id="id" :data="data" :errors="errors" summary @retry="$emit('retry')"/>
+  <section v-else class="compact-preview" :data-layout-card="id" data-compact-card>
     <header><h2><StudioGlyph :name="definition.glyph"/>{{t(definition.zh,definition.en)}}</h2><button @click="$emit('navigate',destination)" :aria-label="t('查看详情：','Details: ')+t(definition.zh,definition.en)"><StudioGlyph name="arrow"/></button></header>
     <div v-if="failure" class="compact-message" role="status"><span>{{t('信息暂不可用','Information unavailable')}}</span><button @click="$emit('retry')">{{t('重试','Retry')}}</button><small>{{t('其他模块仍可使用','Other modules remain available')}}</small></div>
-    <template v-else-if="id==='connection'"><div class="compact-connection"><i :class="{good:data.network?.internetConnected}"></i><strong>{{data.network?data.network.internetConnected?t('连接正常','Connected'):t('连接断开','Disconnected'):t('读取中','Loading')}}</strong><span>{{data.network?.defaultInterface||'—'}}</span></div><div class="compact-meta"><span>{{t('网关','Gateway')}}</span><strong>{{data.network?.gateway||'—'}}</strong><button @click="$emit('navigate','/network')">{{t('网络设置','Settings')}}</button></div></template>
     <template v-else-if="id==='system'"><div class="compact-meters"><div><span>CPU</span><strong>{{data.system?.cpuUsage??'—'}}<small>%</small></strong><i><b :style="{width:(data.system?.cpuUsage||0)+'%'}"></b></i></div><div><span>{{t('内存','Memory')}}</span><strong>{{data.system?100-data.system.memAvailablePercentage:'—'}}<small>%</small></strong><i><b :style="{width:(data.system?100-data.system.memAvailablePercentage:0)+'%'}"></b></i></div></div></template>
     <template v-else-if="id==='sharing'"><div class="compact-service"><strong>SMB</strong><span>{{data.sharing?data.sharing.sambas?.length?t('已启用','Enabled'):t('未启用','Disabled'):t('读取中','Loading')}}</span></div><small class="compact-subtext">{{t('易有云与 WebDAV · 查看详情','LinkEase & WebDAV · See details')}}</small></template>
     <template v-else-if="id==='docker'"><div class="compact-service"><strong>Docker</strong><span :class="{good:data.docker?.status==='running'}">{{data.docker?data.docker.status==='running'?t('运行中','Running'):t('未运行','Stopped'):t('读取中','Loading')}}</span></div><small class="compact-subtext" :title="data.docker?.path">{{data.docker?.path||'—'}}</small></template>
@@ -11,10 +13,14 @@
   </section>
 </template>
 <script setup lang="ts">
-import {computed} from 'vue'
+import {computed,inject} from 'vue'
 import StudioGlyph from './StudioGlyph.vue'
+import NetworkConnectionCard from './NetworkConnectionCard.vue'
+import NetworkInterfaceCard from './NetworkInterfaceCard.vue'
+import NativeBusinessCard from './NativeBusinessCard.vue'
 import {widget,type WidgetId} from './rowLayout'
 const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>}>()
+const nativeBusiness=inject<boolean>('quickstart-native-business',false)
 defineEmits<{(e:'navigate',path:string):void;(e:'retry'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
 const definition=computed(()=>widget(props.id))

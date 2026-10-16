@@ -1,6 +1,8 @@
 # Quickstart R有序首页：实现与验收索引
 
-当前实现（2026-10-16）：[规范1.2](quickstart-home-layout-interaction-spec.md)的模块形态、显示属性、版本化文档与三类适配协商已接入隔离Vue原型，M66.26～30技术检查通过，M66.31技术交付及用户人工验收通过。[当前验收](../evidence/m66/widget-presentation/31-handoff/acceptance.md) · [架构参考](quickstart-home-widget-presentation-architecture.md) · [任务与标准](quickstart-home-widget-presentation-milestones.md)。实现基线`952528c`，本轮按用户要求归档提交，公开资源和源指纹以候选清单为准。
+当前实现（2026-10-16）：在已人工验收的M66.26～31布局基线上，M66.32～34对齐网络连接与独立接口状态；M66.35～37进一步直接复用磁盘信息、存储服务、Docker、下载服务、远程域名、系统信息的原Vue组件及配置表单。六组件业务基线见[源码／差异／任务树](quickstart-home-business-widgets-alignment.md)，当前证据见[本轮状态](../evidence/m66/business-widgets/status.md)。正式首页及系统菜单未迁移；下一步按组件逐一美化，不能重新删减业务。前轮网络证据见[阶段状态](../evidence/m66/network-widgets/status.md)。
+
+已验收布局基线：[规范1.2](quickstart-home-layout-interaction-spec.md)的模块形态、显示属性、版本化文档与三类适配协商已接入隔离Vue原型，M66.26～30技术检查通过，M66.31技术交付及用户人工验收通过。[该轮验收](../evidence/m66/widget-presentation/31-handoff/acceptance.md) · [架构参考](quickstart-home-widget-presentation-architecture.md) · [任务与标准](quickstart-home-widget-presentation-milestones.md)。该轮基线`952528c`，归档提交`bcf3c6a`；其中资产清单保留为历史快照。
 
 M66.25历史基线：规范1.1补充整行直接排序，后来已获用户体验确认，当前行为继续保留；[原阶段证据](../evidence/m66/row-sort/25-review/status.md)的旧PID／资源不代表当前候选。最新操作见[原型指南](ui-design/README.md)。
 

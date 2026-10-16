@@ -7,7 +7,7 @@ export type WidgetPreferences=Record<WidgetId,WidgetPreference>
 export type PositionRole='ordinary'|'large'|'stacked'
 export type PresentationContext={width:number;height:number;role:PositionRole;favoriteCount:number;mobile?:boolean}
 export type ResolvedPresentation={id:PresentationId;minWidth:number;minHeight:number;preferredHeight:number;columns:number;rows:number;capacity:number;issue:string}
-const summaryIds:WidgetId[]=['connection','system','sharing','docker','downloads','remote']
+const summaryIds:WidgetId[]=['connection','networkInterface','system','sharing','docker','downloads','remote']
 export const presentationDefinitions=widgetDefinitions.map(w=>({id:w.id,forms:w.id==='applications'?['grid','strip'] as PresentationId[]:w.id==='devices'||summaryIds.includes(w.id)?['standard','summary'] as PresentationId[]:['standard'] as PresentationId[],stacked:summaryIds.includes(w.id)}))
 export const definition=(id:WidgetId)=>presentationDefinitions.find(w=>w.id===id)!
 export function defaultPreferences():WidgetPreferences{return Object.fromEntries(widgetDefinitions.map(w=>[w.id,{mode:'auto',iconRows:0}])) as WidgetPreferences}

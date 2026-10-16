@@ -32,6 +32,7 @@ function sampleLayout(){
  else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'))
  else if(sample==='half'){rows[1]=makeRow(['applications','system'],'pair',300,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['devices'],'single',340,'devices')}
  else if(sample==='apps-devices'){rows[1]=makeRow(['applications','devices'],'pair',340,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['system'],'single',280,'system')}
+ else if(sample==='network-business')rows.splice(1,0,makeRow(['networkInterface'],'single',260,'interfaces'))
  return rows
 }
 export const orderedSession=ref<OrderedRow[]>(sampleLayout())
@@ -59,7 +60,7 @@ export type ActualColumn={source:number;weight:number;cards:Array<WidgetId|null>
 export type ActualRow={id:string;source:string;height:number;columns:ActualColumn[]}
 export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEmpty=false,prefs?:WidgetPreferences):ActualRow[]{
   const result:ActualRow[]=[]
-  const singleHeight=(id:WidgetId)=>prefs&&id==='applications'?Math.max(widget(id).singleHeight,resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight):prefs&&id==='devices'&&prefs[id].mode==='summary'?resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight:widget(id).singleHeight
+  const singleHeight=(id:WidgetId)=>prefs&&['connection','networkInterface'].includes(id)&&prefs[id].mode==='summary'?resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight:prefs&&id==='applications'?Math.max(widget(id).singleHeight,resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight):prefs&&id==='devices'&&prefs[id].mode==='summary'?resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight:widget(id).singleHeight
   for(const row of rows){
     let group:ActualColumn[]=[]
     const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>id?prefs?placementMinimum(id,prefs[id],c.cards.length===2).minWidth:widget(id).minWidth:260))

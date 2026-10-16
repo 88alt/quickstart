@@ -159,3 +159,19 @@ _Avoid_: Debug log, DNS history
 **Policy Bundle**:
 A versioned export of Device Groups, per-device group exceptions, and Traffic Quotas that must be previewed and version-checked before restoration.
 _Avoid_: Full router backup, UCI archive
+
+## Homepage Language
+
+Current prototype business baseline: [six original home widgets](docs/product/quickstart-home-business-widgets-alignment.md), with [current checks](docs/evidence/m66/business-widgets/status.md). Original Vue cards/forms remain the source of business behavior; the ordered design entry provides synthetic reads/writes and isolated action hosting. Layout edits must not write business configuration. Component styling follows business parity; prototype evidence does not establish router/install acceptance.
+
+**Home Widget**:
+A separately selectable homepage business unit whose display form may change while its business responsibilities and actions remain identifiable.
+_Avoid_: Display form as a separate business module
+
+**Network Connection**:
+The router's observed outbound connectivity, addressing, and DNS information; it is distinct from individual network port link states and from a LAN Device's Internet Path.
+_Avoid_: Network Interface Status, Device online state
+
+**Network Interface Status**:
+The observed link state, negotiated speed, and details of the router's network ports and their associated logical interfaces; a connected port alone does not establish Internet connectivity.
+_Avoid_: Network Connection, Internet availability
