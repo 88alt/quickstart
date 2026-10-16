@@ -21,6 +21,8 @@
       <!-- <QuickActions v-for="(item, index) in cards" :key="index" :card="item" @click="handleCardClick" /> -->
     </div>
 
+    <slot name="after-shortcuts" />
+
     <!-- 网络流量和网络连接IP地址模块 -->
     <div v-if="showNetworkModules" style="margin-top: 10px;">
       <!-- 当隐藏“网络连接和IP地址”，但显示“网络接口状态”时：上下排列，占满宽度 -->
@@ -45,6 +47,8 @@
         </div>
       </div>
     </div>
+
+    <slot name="after-network" />
 
     <!-- 卡片和网络接口状态模块 -->
     <div class="network-container align-c" v-if="moduleStates.configModule">
