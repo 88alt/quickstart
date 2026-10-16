@@ -1,6 +1,10 @@
 # Quickstart R有序首页：实现与验收索引
 
-当前实现（2026-10-15）：产品目标以[首页布局交互规范1.0](quickstart-home-layout-interaction-spec.md)为唯一依据。[M66.19～M66.24](quickstart-home-slot-edit-milestones.md)已推进至当前候选技术验收，19～23自检通过，24待最终人工体验确认。真实页面槽位编辑为主、总览为辅；默认移动替换、缩槽保留项、完成前整理及应用半宽已接入。[当前状态与证据](../evidence/m66/slot-edit/status.md) · [操作指南](ui-design/README.md)。旧技术结果不能代替新验收。
+当前实现（2026-10-16）：产品目标以[首页布局交互规范1.1](quickstart-home-layout-interaction-spec.md)为唯一依据。M66.25在已认可的槽位交互上补充整行直接排序：拖行标题、邻行让位、跨屏滚动、一次撤销；整行不再进入目标列表，模块仍用槽位移动。[本轮任务与验收](quickstart-home-row-sort-m66-25.md) · [当前证据](../evidence/m66/row-sort/25-review/status.md) · [操作指南](ui-design/README.md)。只更新隔离原型，新手感待人工确认。
+
+用户后续确认（2026-10-16）：当前自定义首页交互功能体验通过，要求提交代码。上段的人工确认现已完成；新提出的模块属性与多形态进入独立设计，不改变既有交互验收结论。
+
+此前[M66.19～M66.24](quickstart-home-slot-edit-milestones.md)的真实页面槽位编辑、默认移动替换、缩槽保留项、完成前整理及应用半宽继续保留。[基线证据](../evidence/m66/slot-edit/status.md)记录旧候选；不能替代当前版本验证。
 
 ## 以下为M66.13～M66.18历史实现
 

@@ -1,6 +1,14 @@
 # Quickstart Vue 首页设计原型
 
-## 当前原型：M66.19～M66.24 槽位编辑
+## 当前补充：M66.25 整行直接排序
+
+保留已认可的槽位编辑，补充[整行排序任务树与RS01～RS08验收](../quickstart-home-row-sort-m66-25.md)。产品指导见[布局交互规范1.1](../quickstart-home-layout-interaction-spec.md)。以下M66.19～24报告是历史候选，不能代替新排序验收。
+
+进入“自定义首页 → 布局总览”，从左侧“⠿ 第N行”拖动整行，邻行让位，松手提交；手机跨屏靠近上下边缘自动滚动。单击行标题只选中，不再打开整行目标列表。行内“···”支持上移／下移／置顶／置底；手柄支持Alt+上下和Alt+Home／End。一行的模块、比例和高度一起保留，一次撤销还原。
+
+[五行示例](http://192.168.9.19:5180/?layout=ordered&preset=services)便于体验第五行直接拖到第一行；[左右组合](http://192.168.9.19:5180/?layout=ordered&preset=stacked)用于检查不同行高。新检查入口`row-sort-review.cjs`，证据根`docs/evidence/m66/row-sort/25-review/`；状态见[本轮记录](../../evidence/m66/row-sort/25-review/status.md)。内存草稿、刷新重置和系统菜单边界保持原规则。
+
+## 基线：M66.19～M66.24 槽位编辑
 
 用户已认可“真实页面选行布局、填槽位为主，整页布局总览为辅”。产品指导统一见[布局交互规范1.0](../quickstart-home-layout-interaction-spec.md)，实施任务树、测试目标及证据位置见[M66.19～M66.24计划](../quickstart-home-slot-edit-milestones.md)。[阶段状态](../../evidence/m66/slot-edit/status.md)：19～23自检通过，24当前候选技术验收通过、已交付，待用户最终体验确认。
 
@@ -12,7 +20,7 @@
 4. 次级“布局总览”压缩四行结构便于移动。点击名称→移动→选择位置，或拖名称；整行有独立手柄。普通单／双列边缘可扩列，满三列和上下组合不隐式扩容。返回真实页面判断尺寸。
 5. 撤销恢复一个完整动作；取消恢复进入时布局；完成更新本次内存，详情往返保持，刷新重置。Escape先取消当前动作／关闭面板。应用卡按容器宽高换列，全部面板保留常用管理、系统工具及软件中心。
 
-当前[技术验收](../../evidence/m66/slot-edit/24-review/acceptance.md)、[场景覆盖](../../evidence/m66/slot-edit/24-review/coverage.md)、[候选资源](../../evidence/m66/slot-edit/24-review/candidate.json)、[人工任务卡](../../evidence/m66/slot-edit/24-review/review-guide.md)。当前公开入口index.76bdeab0.js；源指纹及3个JS/CSS资源校验见候选，不能使用旧截图代替当前候选。
+该基线的[技术验收](../../evidence/m66/slot-edit/24-review/acceptance.md)、[场景覆盖](../../evidence/m66/slot-edit/24-review/coverage.md)、[候选资源](../../evidence/m66/slot-edit/24-review/candidate.json)、[人工任务卡](../../evidence/m66/slot-edit/24-review/review-guide.md)。基线入口index.76bdeab0.js已由新候选替换；不能使用旧截图或旧PID代替当前候选。
 
 检查入口：`slot-contract-review.cjs`、`slot-module-review.cjs`、`slot-primary-review.cjs`、`slot-normalization-review.cjs`、`slot-overview-review.cjs`、`slot-input-review.cjs`、`slot-resource-review.cjs`、`slot-navigation-review.cjs`、`slot-final-review.cjs`、`slot-candidate.cjs`。均通过`rtk proxy /var/cache/build-cache/run.sh -- env NODE_PATH=/config/playwright-runner/node_modules node docs/product/ui-design/<入口>`；重验给`QS_DESIGN_EVIDENCE_ROOT`新的独立目录。最终视觉脚本逐轮保留子目录，结束后再以该子目录运行`ordered-screenshot-audit.cjs`，不要在报告生成前启动审计。权限专项复用`ordered-authority-popover-review.cjs`。下文均为历史实现说明，不作为当前操作指南。
 

@@ -1,5 +1,7 @@
 # M66.19～M66.24 执行状态
 
+后续更新（2026-10-16）：此页保留槽位交互基线历史。M66.25已替换整行排序路径，当前公开资源、PID及新验收见[整行排序记录](../row-sort/25-review/status.md)。下文旧候选不再代表当前5180资源；产品规范已更新到1.1。
+
 2026-10-15。用户已授权从M66.19连续执行到M66.24；每阶段先输出任务树与验收，再实现自检，初次失败最多优化3次。此前文档规划记录保留在planning-review.md，不代表实现验收。
 
 规范：[首页布局交互规范1.0](../../../product/quickstart-home-layout-interaction-spec.md)。计划：[六阶段任务及验收](../../../product/quickstart-home-slot-edit-milestones.md)。文档检查见[规划自检](planning-review.md)，不计作任何原型阶段通过。

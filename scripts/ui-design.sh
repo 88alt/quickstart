@@ -43,7 +43,8 @@ case "${1:-status}" in
         nohup setsid "$cache_runner" --project "$repo_root" -- node "$server" > "$log_file" 2>&1 < /dev/null 9>&- &
         pid=$!
         echo "$pid" > "$pid_file"
-        for ((attempt=0; attempt<400; attempt++)); do
+        # Vue cold builds can exceed 40s on a busy shared development host.
+        for ((attempt=0; attempt<1800; attempt++)); do
             if ! kill -0 "$pid" 2>/dev/null; then rm -f "$pid_file"; cat "$log_file" >&2; exit 1; fi
             if running && curl -fsS --max-time 1 http://127.0.0.1:5180/health 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if d["owner"]==sys.argv[1] and d["pid"]==int(sys.argv[2]) else 1)' "$repo_root/docs/product/ui-design" "$pid" 2>/dev/null; then
                 echo "Started: PID=$pid http://127.0.0.1:5180/"; echo "Log: $log_file"; exit 0
