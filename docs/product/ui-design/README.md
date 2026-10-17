@@ -1,5 +1,7 @@
 # Quickstart Vue 首页设计原型
 
+用户已确认首页自定义布局完成，归档提交`ed30df5`。后续开始[统一控件外观与独立业务设计](../quickstart-home-widget-visual-standard.md)，以磁盘卡为首个样张方向；当前为产品／架构建议，5180外观和业务尚未应用这份新建议。
+
 ## 最新：M66.50 统一边界调整
 
 [直接体验](http://192.168.9.19:5180/?layout=ordered&preset=network-stack&scenario=business-all) · [规则与任务树](../quickstart-home-boundary-resize-m66-50.md)。进入“自定义首页”，选中行可拖左右边界调宽、上下边界分配当前空间、底边增加行空间。默认仍自动；内容最低需求是硬边界。行布局面板可一次恢复自动。普通浏览与手机拆成单卡后不显示手柄；宽屏偏好保留。
