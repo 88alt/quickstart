@@ -1,5 +1,9 @@
 # Quickstart Vue 首页设计原型
 
+## 待实施：M66.76～M66.81 七控件内部布局重排
+
+用户已认可逐控件重新组织内容的方向，当前完成[六阶段目标、任务树与可测试标准](../quickstart-home-widget-composition-m66-76-81.md)规划，尚未开始新布局实现。顺序为基线与七份构图、系统双区、存储服务样张、Docker/下载/远程、网络/磁盘、整页验收。使用 `/config/playwright-runner` 为每阶段生成同条件前后截图，并实际打开逐卡/整行/整页审查；自动化通过不能代替审美复核。上一轮代码已归档 `d109c96`，下方M66.70～75仍是当前预览候选；新阶段不得套用旧380组结果。
+
 ## 当前：M66.70～M66.75 七控件正文精修
 
 [体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [全部服务示例](http://192.168.9.19:5180/?layout=ordered&scenario=business-all) · [六阶段目标、任务树与验收标准](../quickstart-home-widget-body-m66-70-75.md) · [执行状态](../../evidence/m66/widget-body/status.md) · [人工体验卡与前后对照](../../evidence/m66/widget-body/75-review/review-guide.md)。M66.70～M66.75已连续完成，[当前31套380组及资源/源码/TypeScript核验](../../evidence/m66/widget-body/75-review/acceptance.md)通过。统一七控件正文阅读轴、服务选项、只读路径、磁盘动作、网络隐私外观和系统指标层级；布局结构、字段、动作与原字体保持，系统指标使用已有指标字阶。仍为合成数据/内存偏好的隔离Vue原型，人工审美确认待用户完成；用户已要求[提交归档](../../evidence/m66/widget-body/commit-note.md)。
