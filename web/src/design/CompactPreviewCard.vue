@@ -1,6 +1,6 @@
 <template>
   <NetworkConnectionCard v-if="id==='connection'" data-layout-card="connection" data-compact-card :data="data.network" :error="errors.network" summary @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
-  <NetworkInterfaceCard v-else-if="id==='networkInterface'" data-layout-card="networkInterface" data-compact-card :data="data.ports" :error="errors.ports" summary @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
+  <NetworkInterfaceCard v-else-if="id==='networkInterface'" legacy-summary data-layout-card="networkInterface" data-compact-card :data="data.ports" :error="errors.ports" summary @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
   <NativeBusinessCard v-else-if="nativeBusiness&&['storage','sharing','docker','downloads','remote','system'].includes(id)" :data-layout-card="id" data-compact-card :id="id" :data="data" :errors="errors" summary @retry="$emit('retry')"/>
   <section v-else class="compact-preview" :data-layout-card="id" data-compact-card>
     <header><h2><StudioGlyph :name="definition.glyph"/>{{t(definition.zh,definition.en)}}</h2><button @click="$emit('navigate',destination)" :aria-label="t('查看详情：','Details: ')+t(definition.zh,definition.en)"><StudioGlyph name="arrow"/></button></header>

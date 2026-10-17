@@ -4,14 +4,17 @@ import {widget,type WidgetId} from './rowLayout'
 import {capability,moduleCapabilities} from './moduleCapability'
 import {placementMinimum,resolvePresentation,type WidgetPreferences} from './widgetPresentation'
 export type Template='single'|'pair'|'triple'|'left-big'|'right-big'
-export type Column={weight:number;cards:Array<WidgetId|null>;split:number}
-export type OrderedRow={id:string;template:Template;height:number;columns:Column[]}
+export type Column={weight:number;cards:Array<WidgetId|null>;split:number;upperShare?:number}
+export type OrderedRow={id:string;template:Template;height:number;heightMode?:'content'|'chart';minHeight?:number;columns:Column[]}
+// Preserve legacy dimensions for recovery, but never use them to constrain
+// ordinary content in the v2 ordered homepage.
+export function naturalRows(rows:OrderedRow[]):OrderedRow[]{return clone(rows).map(row=>({...row,heightMode:row.columns.some(c=>c.cards.includes('traffic'))?'chart':'content'}))}
 export const templates:Array<{id:Template;zh:string;en:string;slots:number[]}>=([
   {id:'single',zh:'整行',en:'Single',slots:[1]},
   {id:'pair',zh:'两列',en:'Two columns',slots:[1,1]},
   {id:'triple',zh:'三列',en:'Three columns',slots:[1,1,1]},
-  {id:'left-big',zh:'左大右上下',en:'Tall left',slots:[1,2]},
-  {id:'right-big',zh:'左上下右大',en:'Tall right',slots:[2,1]},
+  {id:'left-big',zh:'左单右双',en:'Single left, stacked right',slots:[1,2]},
+  {id:'right-big',zh:'左双右单',en:'Stacked left, single right',slots:[2,1]},
 ])
 export const compactIds:WidgetId[]=moduleCapabilities.filter(c=>c.stacked).map(c=>c.id)
 export const clone=<T>(value:T):T=>JSON.parse(JSON.stringify(value))
@@ -29,6 +32,7 @@ export const recommended=():OrderedRow[]=>[
 function sampleLayout(){
  const rows=recommended(),sample=new URLSearchParams(location.search).get('preset')
  if(sample==='stacked'||sample==='mirrored'){rows[0]=makeRow(['traffic','connection','system'],'left-big',320,'network');rows[2].columns[1].cards=[null];if(sample==='mirrored'){rows[0].template='right-big';rows[0].columns.reverse()}}
+ else if(sample?.startsWith('network-stack')){rows[0]=makeRow(['traffic',...(sample==='network-stack-reverse'?['networkInterface','connection'] as WidgetId[]:['connection','networkInterface'] as WidgetId[])],'left-big',320,'network');if(sample==='network-stack-mirror'){rows[0].template='right-big';rows[0].columns.reverse()}}
  else if(sample==='services')rows.push(makeRow(['docker','downloads','remote'],'triple',280,'services'))
  else if(sample==='half'){rows[1]=makeRow(['applications','system'],'pair',300,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['devices'],'single',340,'devices')}
  else if(sample==='apps-devices'){rows[1]=makeRow(['applications','devices'],'pair',340,'applications');rows[1].columns.forEach(c=>c.weight=50);rows[2]=makeRow(['system'],'single',280,'system')}
@@ -57,7 +61,7 @@ export function changeTemplate(rows:OrderedRow[],rowId:string,template:Template)
   return result
 }
 export type ActualColumn={source:number;weight:number;cards:Array<WidgetId|null>;slots:number[];split:number;compact:boolean}
-export type ActualRow={id:string;source:string;height:number;columns:ActualColumn[]}
+export type ActualRow={id:string;source:string;height:number;natural?:boolean;chartHeight?:number;columns:ActualColumn[]}
 export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEmpty=false,prefs?:WidgetPreferences):ActualRow[]{
   const result:ActualRow[]=[]
   const singleHeight=(id:WidgetId)=>prefs&&['connection','networkInterface'].includes(id)&&prefs[id].mode==='summary'?resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight:prefs&&id==='applications'?Math.max(widget(id).singleHeight,resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight):prefs&&id==='devices'&&prefs[id].mode==='summary'?resolvePresentation(id,prefs[id],{width,height:10000,role:'ordinary',favoriteCount,mobile:true}).minHeight:widget(id).singleHeight
@@ -66,8 +70,8 @@ export function renderRows(rows:OrderedRow[],width:number,favoriteCount=4,showEm
     const colWidth=(c:ActualColumn)=>Math.max(...c.cards.map(id=>id?prefs?placementMinimum(id,prefs[id],c.cards.length===2).minWidth:widget(id).minWidth:260))
     const flush=()=>{
       if(!group.length)return
-      if(width<650&&group.length===1){group[0].cards.forEach((id,index)=>result.push({id:row.id+'-'+(id||'empty-'+group[0].source+'-'+index),source:row.id,height:id?singleHeight(id):148,columns:[{...group[0],cards:[id],slots:[group[0].slots[index]],compact:false}]}))}
-      else result.push({id:row.id+'-'+group[0].source,source:row.id,height:row.height,columns:group})
+      if(width<650&&group.length===1){group[0].cards.forEach((id,index)=>result.push({id:row.id+'-'+(id||'empty-'+group[0].source+'-'+index),source:row.id,height:id?singleHeight(id):148,natural:!!row.heightMode,chartHeight:id==='traffic'?300:undefined,columns:[{...group[0],cards:[id],slots:[group[0].slots[index]],compact:false}]}))}
+      else result.push({id:row.id+'-'+group[0].source,source:row.id,height:row.height,natural:!!row.heightMode,chartHeight:group.some(c=>c.cards.includes('traffic'))?320:undefined,columns:group})
       group=[]
     }
     row.columns.forEach((column,source)=>{

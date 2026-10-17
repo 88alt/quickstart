@@ -43,10 +43,10 @@ import {configurationTools,quickEntrances} from './canvasLayout'
 import {homeApplications,homeApplicationSession,type HomeApplication} from './homeApplications'
 import {demo} from './fixtures'
 import {resolvePresentation,type WidgetPreference} from './widgetPresentation'
-const props=defineProps<{collapsed:boolean;fallbackEntries:Array<typeof quickEntrances[number]>;contained?:boolean;preference?:WidgetPreference}>()
+const props=defineProps<{collapsed:boolean;fallbackEntries:Array<typeof quickEntrances[number]>;contained?:boolean;preference?:WidgetPreference;natural?:boolean}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'close'):void}>()
 const hub=ref<HTMLElement|null>(null),hubWidth=ref(600),hubHeight=ref(240)
-const resolved=computed(()=>resolvePresentation('applications',props.preference||{mode:'auto',iconRows:0},{width:hubWidth.value,height:hubHeight.value,role:'ordinary',favoriteCount:favorites.value.length,mobile:hubWidth.value<650}))
+const resolved=computed(()=>resolvePresentation('applications',props.preference||{mode:'auto',iconRows:0},{width:hubWidth.value,height:props.natural?100000:hubHeight.value,role:'ordinary',favoriteCount:favorites.value.length,mobile:hubWidth.value<650,natural:props.natural}))
 const columns=computed(()=>resolved.value.columns)
 const capacity=computed(()=>resolved.value.capacity)
 let hubObserver:ResizeObserver|undefined

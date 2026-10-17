@@ -12,6 +12,6 @@ import type {WidgetId} from './rowLayout'
 const props=defineProps<{id:WidgetId;value:WidgetPreference}>(),emit=defineEmits<{(e:'update',value:WidgetPreference):void}>()
 const forms=computed<Array<WidgetPreference['mode']>>(()=>['auto',...definition(props.id).forms]),rowOptions:Array<WidgetPreference['iconRows']>=[0,1,2,3]
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
-const label=(form:string)=>({auto:t('自动推荐','Automatic'),standard:t('标准','Standard'),summary:t('摘要','Summary'),grid:t('图标网格','Icon grid'),strip:t('启动条','Launch strip')}[form]||form)
-function update(change:Partial<WidgetPreference>){emit('update',{...props.value,...change})}
+const label=(form:string)=>props.id==='system'&&form==='standard'?t('完整信息','Complete information'):props.id==='system'&&form==='summary'?t('紧凑概览','Compact overview'):({auto:t('自动推荐','Automatic'),standard:t('标准','Standard'),summary:t('摘要','Summary'),grid:t('图标网格','Icon grid'),strip:t('启动条','Launch strip')}[form]||form)
+function update(change:Partial<WidgetPreference>){emit('update',{...props.value,...change,ruleVersion:2})}
 </script>

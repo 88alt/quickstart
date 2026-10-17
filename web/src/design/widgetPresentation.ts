@@ -2,21 +2,30 @@
 import {widgetDefinitions,widget,type WidgetId} from './rowLayout'
 import type {OrderedRow} from './orderedLayout'
 export type PresentationId='standard'|'summary'|'grid'|'strip'
-export type WidgetPreference={mode:'auto'|PresentationId;iconRows:0|1|2|3}
+export type WidgetPreference={mode:'auto'|PresentationId;iconRows:0|1|2|3;ruleVersion?:0|1|2}
 export type WidgetPreferences=Record<WidgetId,WidgetPreference>
 export type PositionRole='ordinary'|'large'|'stacked'
-export type PresentationContext={width:number;height:number;role:PositionRole;favoriteCount:number;mobile?:boolean}
-export type ResolvedPresentation={id:PresentationId;minWidth:number;minHeight:number;preferredHeight:number;columns:number;rows:number;capacity:number;issue:string}
+export type PresentationContext={width:number;height:number;role:PositionRole;favoriteCount:number;mobile?:boolean;natural?:boolean}
+export type ResolvedPresentation={id:PresentationId;minWidth:number;minHeight:number;preferredHeight:number;columns:number;rows:number;capacity:number;issue:string;stretch:boolean;legacy:boolean}
 const summaryIds:WidgetId[]=['connection','networkInterface','system','sharing','docker','downloads','remote']
 export const presentationDefinitions=widgetDefinitions.map(w=>({id:w.id,forms:w.id==='applications'?['grid','strip'] as PresentationId[]:w.id==='devices'||summaryIds.includes(w.id)?['standard','summary'] as PresentationId[]:['standard'] as PresentationId[],stacked:summaryIds.includes(w.id)}))
 export const definition=(id:WidgetId)=>presentationDefinitions.find(w=>w.id===id)!
-export function defaultPreferences():WidgetPreferences{return Object.fromEntries(widgetDefinitions.map(w=>[w.id,{mode:'auto',iconRows:0}])) as WidgetPreferences}
-export function preferenceIssue(id:WidgetId,p:WidgetPreference){return !p||!['auto',...definition(id).forms].includes(p.mode)||![0,1,2,3].includes(p.iconRows)||id!=='applications'&&p.iconRows!==0?'preference':''}
+export function defaultPreferences(ruleVersion:0|1|2=2):WidgetPreferences{return Object.fromEntries(widgetDefinitions.map(w=>[w.id,{mode:'auto',iconRows:0,ruleVersion}])) as WidgetPreferences}
+export function preferenceIssue(id:WidgetId,p:WidgetPreference){return !p||p.ruleVersion!==undefined&&![0,1,2].includes(p.ruleVersion)||!['auto',...definition(id).forms].includes(p.mode)||![0,1,2,3].includes(p.iconRows)||id!=='applications'&&p.iconRows!==0?'preference':''}
+// Position eligibility belongs to the form, not to a small/large slot label.
+export function formCapability(id:WidgetId,form:PresentationId){return {stacked:form==='summary'&&summaryIds.includes(id)||id==='connection'&&form==='standard',stretch:id==='traffic'||id==='connection'&&form==='standard',contentLimit:id==='networkInterface'?2:id==='storage'?3:id==='sharing'?2:undefined}}
+export function automaticForm(id:WidgetId,p:WidgetPreference,ctx:PresentationContext):PresentationId{
+ if(p.ruleVersion===0)return ctx.role==='stacked'?'summary':id==='applications'?'grid':'standard'
+ if(p.ruleVersion===1&&ctx.role==='stacked')return 'summary'
+ if(id==='connection')return 'standard'
+ if(ctx.role==='stacked')return 'summary'
+ return id==='system'&&ctx.width<560?'summary':id==='applications'?'grid':'standard'
+}
 export function resolvePresentation(id:WidgetId,p:WidgetPreference,ctx:PresentationContext):ResolvedPresentation{
  const d=definition(id),w=widget(id),count=Math.min(6,Math.max(0,ctx.favoriteCount)),role=ctx.role
- const form:PresentationId=p.mode==='auto'?(role==='stacked'?'summary':id==='applications'?'grid':'standard'):p.mode
- let issue=preferenceIssue(id,p)||(role==='stacked'&&(!d.stacked||form!=='summary')?'compact':!d.forms.includes(form)?'form':'')
- let minWidth=ctx.mobile?240:form==='summary'&&id==='devices'?240:w.minWidth,minHeight=role==='stacked'?148:form==='summary'?(id==='devices'?(ctx.width<450?280:260):176):w.minHeight
+ const form:PresentationId=p.mode==='auto'?automaticForm(id,p,ctx):p.mode
+ let issue=preferenceIssue(id,p)||(role==='stacked'&&!formCapability(id,form).stacked?'compact':!d.forms.includes(form)?'form':'')
+ let minWidth=ctx.mobile?240:form==='summary'&&id==='devices'?240:w.minWidth,minHeight=role==='stacked'&&form==='summary'?148:form==='summary'?(id==='devices'?(ctx.width<450?280:260):176):w.minHeight
  let columns=1,rows=1,capacity=1,preferredHeight=minHeight
  if(id==='applications'){
   // 36px icon, two 16px name lines, 82px tile, 12px gap; 94px chrome
@@ -36,8 +45,8 @@ export function resolvePresentation(id:WidgetId,p:WidgetPreference,ctx:Presentat
   capacity=form==='summary'?0:Math.min(6,rows*columns)
  }
  if(!issue&&ctx.width<minWidth)issue='width:'+minWidth
- if(!issue&&ctx.height<minHeight)issue='height:'+minHeight
- return {id:form,minWidth,minHeight,preferredHeight,columns,rows,capacity,issue}
+ if(!issue&&!ctx.natural&&ctx.height<minHeight)issue='height:'+minHeight
+ return {id:form,minWidth,minHeight,preferredHeight,columns,rows,capacity,issue,stretch:formCapability(id,form).stretch,legacy:(p.ruleVersion??2)<2}
 }
 export function placementMinimum(id:WidgetId,p?:WidgetPreference,stacked=false){return resolvePresentation(id,p||defaultPreferences()[id],{width:1000,height:1000,role:stacked?'stacked':'ordinary',favoriteCount:4})}
 // Effective grid tracks follow CSS minmax(minimum, weight*fr), including
@@ -53,6 +62,7 @@ export function columnWidths(row:OrderedRow,width:number,prefs:WidgetPreferences
 }
 export function presentationHeight(row:OrderedRow,prefs:WidgetPreferences,width=1160,favoriteCount=4){
  const widths=columnWidths(row,width,prefs);let height=0,issue=''
+ if(row.heightMode){for(let ci=0;ci<row.columns.length;ci++){const c=row.columns[ci];let columnHeight=0;for(const id of c.cards){if(!id)continue;const p=resolvePresentation(id,prefs[id],{width:widths[ci],height:100000,role:c.cards.length===2?'stacked':'ordinary',favoriteCount,mobile:width<650,natural:true});if(p.issue)issue=p.issue;columnHeight+=p.preferredHeight}height=Math.max(height,columnHeight+18*(c.cards.length-1))}return {height:Math.ceil(height),issue}}
  row.columns.forEach((c,ci)=>c.cards.forEach((id,si)=>{if(!id)return;const stacked=c.cards.length===2,p=resolvePresentation(id,prefs[id],{width:widths[ci],height:100000,role:stacked?'stacked':row.columns.some(col=>col.cards.length===2)?'large':'ordinary',favoriteCount,mobile:width<650});if(p.issue&&!p.issue.startsWith('height:'))issue=p.issue;height=Math.max(height,stacked?p.minHeight/((si===0?c.split:100-c.split)/100)+18:p.minHeight)}))
  return {height:Math.ceil(height),issue}
 }

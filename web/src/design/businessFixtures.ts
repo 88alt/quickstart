@@ -27,6 +27,7 @@ function reset(scenario:string){
  }
  if(scenario==='many-disks')state['/nas/disk/status/'].disks=Array.from({length:24},(_,i)=>disk('disk-'+(i+1),{isSystemRoot:i===0}))
  if(scenario==='business-empty'){state['/nas/disk/status/'].disks=[];state['/raid/list/'].disks=[]}
+ if(scenario==='many-shares')state['/u/nas/service/status/'].sambas=Array.from({length:24},(_,i)=>({shareName:'preview-share-'+(i+1),path:'/mnt/sdb1/share-'+(i+1)}))
  if(scenario==='business-missing'){state['/u/nas/service/status/']={linkease:{enabel:false},sambas:[],webdav:{enable:true}};state['/guide/docker/status/']={status:'not installed'};state['/u/guide/ddns/']={ddnstoDomain:'',ipv4Domain:'Disabled',ipv6Domain:'Stopped'}}
  if(scenario==='business-ipv6')state['/u/guide/ddns/']={ddnstoDomain:'',ipv6Domain:'v6.example.invalid'}
  if(scenario==='business-stopped')state['/guide/docker/status/']={status:'stopped'}
@@ -39,7 +40,7 @@ export function businessFixture(key:string,method:string,body:Record<string,any>
  const result=(value:unknown)=>({status:200,data:{success:0,result:clone(value),previewOnly:true}})
  if(method==='GET'){
   if(!recovered&&((scenario==='storage-error'&&key==='/nas/disk/status/')||(scenario==='business-raid-error'&&key==='/raid/list/')||(scenario==='services-error'&&['/u/nas/service/status/','/guide/docker/status/','/guide/download-service/status/','/u/guide/ddns/'].includes(key))))return {status:503,data:{error:'Synthetic business read failure',previewOnly:true}}
-  if(key==='/system/status/')return result({cpuUsage:1,cpuTemperature:48,memAvailablePercentage:73,memTotal:'4 GiB',memAvailable:'3 GiB',uptime:109000+Math.floor((Date.now()-started)/1000),localtime:'2026-10-16 12:52:59'})
+  if(key==='/system/status/')return result(scenario==='system-missing'?{}:{cpuUsage:scenario==='system-zero'?0:scenario==='system-high'?96:1,cpuTemperature:scenario==='system-zero'?0:scenario==='system-high'?116:48,memAvailablePercentage:scenario==='system-zero'?0:scenario==='system-high'?4:73,memTotal:'4 GiB',memAvailable:'3 GiB',uptime:109000+Math.floor((Date.now()-started)/1000),localtime:'2026-10-16 12:52:59'})
   if(key==='/share/user/list/')return result({users})
   if(key==='/share/service/list/')return result({services:shares})
   if(key in state)return result(state[key])

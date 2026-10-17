@@ -1,5 +1,11 @@
 # Quickstart R有序首页：实现与验收索引
 
+本轮：统一边界调整1.5，[M66.50任务树与验收标准](quickstart-home-boundary-resize-m66-50.md)。默认内容自动布局；选中行可调列宽、堆叠分配和行空间。R37～R40覆盖下文禁止行高／上下调整的旧限制。当前证据归档在`docs/evidence/m66/boundary-resize/`，实施状态与通过结果分别记录。
+
+当前实现已进入[结构与形态解耦1.4](quickstart-home-structure-presentation-m66-44-49.md)，验收与边界见[当前192组检查](../evidence/m66/structure-presentation/48-review/acceptance.md)。以下历史固定图表／上下仅摘要规则由统一规范R31～R36替代。技术自检不代表本轮人工体验。
+
+本轮实施目标：用户已授权[M66.38～43自然高度和系统信息双形态](quickstart-home-natural-layout-m66-38-43.md)。下方固定height、上下比例、提高行高确认等是1.2历史实现；完成后以规范1.3 R25～R30和[新阶段状态](../evidence/m66/natural-home/status.md)为准，不再作为当前产品目标。
+
 当前实现（2026-10-16）：在已人工验收的M66.26～31布局基线上，M66.32～34对齐网络连接与独立接口状态；M66.35～37进一步直接复用磁盘信息、存储服务、Docker、下载服务、远程域名、系统信息的原Vue组件及配置表单。六组件业务基线见[源码／差异／任务树](quickstart-home-business-widgets-alignment.md)，当前证据见[本轮状态](../evidence/m66/business-widgets/status.md)。正式首页及系统菜单未迁移；下一步按组件逐一美化，不能重新删减业务。前轮网络证据见[阶段状态](../evidence/m66/network-widgets/status.md)。
 
 已验收布局基线：[规范1.2](quickstart-home-layout-interaction-spec.md)的模块形态、显示属性、版本化文档与三类适配协商已接入隔离Vue原型，M66.26～30技术检查通过，M66.31技术交付及用户人工验收通过。[该轮验收](../evidence/m66/widget-presentation/31-handoff/acceptance.md) · [架构参考](quickstart-home-widget-presentation-architecture.md) · [任务与标准](quickstart-home-widget-presentation-milestones.md)。该轮基线`952528c`，归档提交`bcf3c6a`；其中资产清单保留为历史快照。

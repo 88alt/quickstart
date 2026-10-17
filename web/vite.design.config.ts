@@ -14,6 +14,9 @@ const actionBridge={
   },
   load(id:string){if(!id.startsWith('\0design-native-action:'))return;const kind=id.slice('\0design-native-action:'.length);return `import {dispatchNativeAction} from ${JSON.stringify(path.resolve(__dirname,'src/design/nativeActionBridge.ts'))};import original from ${JSON.stringify(path.resolve(__dirname,'src/components',kind,'index.ts')+'?native-original')};export default (props={})=>dispatchNativeAction(${JSON.stringify(kind)},props,original);`},
   transform(code:string,id:string){
+    if(id===path.resolve(__dirname,'src/pages/index/components/Card.vue'))return code.replace('<script setup>','<script setup>\nimport NativeCardMenu from "/@/design/NativeCardMenu.vue"').replace('<!-- 下拉菜单 -->','<NativeCardMenu/><!-- 下拉菜单 -->')
+    const disk=id===path.resolve(__dirname,'src/pages/index/info/DiskInfo.vue'),sharing=id===path.resolve(__dirname,'src/pages/index/Storage/index.vue')
+    if(disk||sharing){let scoped=code.replace('<script lang="ts" setup>','<script lang="ts" setup>\nimport {useNativeReadScope} from "/@/design/nativePreviewScope"\nconst nativeReadScope=useNativeReadScope()');for(const [reader,channel]of (disk?[['request.Nas.Disk.Status.GET()','disks'],['request.Raid.List.GET()','raid']]:[['request.Nas.Service.Status.GET()','sharing']]))scoped=scoped.replace(reader,`nativeReadScope(${reader},'${channel}')`);return scoped}
     const frame=id===path.resolve(__dirname,'src/components/action-ddnsto/setup-ddnsto-login.vue')?'auth':id===path.resolve(__dirname,'src/components/action-ddnsto/setup-ddnsto-bind.vue')?'bind':''
     if(frame)return code.replace('<script setup lang="ts">','<script setup lang="ts">\nimport NativeRemoteFrame from "/@/design/NativeRemoteFrame.vue"').replace(/<iframe[^>]+\/>/,`<NativeRemoteFrame stage="${frame}"/>`)
     if(!['src/pages/index/info/Docker.vue','src/pages/index/service/DownloadService.vue'].some(file=>id===path.resolve(__dirname,file)))return

@@ -1,5 +1,7 @@
 // One finite command model for real slots and compact overview. No business writes.
 import {capability} from './moduleCapability'
+import {definition,formCapability} from './widgetPresentation'
+import {sizingIssue} from './rowSizing'
 import {clone,makeRow,templates,visibleIds,type OrderedRow,type Template} from './orderedLayout'
 import type {WidgetId} from './rowLayout'
 export type Slot={row:string;column:number;slot:number}
@@ -18,10 +20,11 @@ export function requiredHeight(row:OrderedRow){
 export function validate(rows:OrderedRow[]):{issue:string;row?:string;requiredHeight?:number}{
   const ids=visibleIds(rows);if(new Set(ids).size!==ids.length)return {issue:'duplicate'}
   for(const row of rows){
+    const sizeIssue=sizingIssue(row);if(sizeIssue)return {issue:sizeIssue,row:row.id}
     const template=templates.find(t=>t.id===row.template)
     if(!template||row.columns.length!==template.slots.length||row.columns.some((c,i)=>c.cards.length!==template.slots[i]||c.weight<=0||c.split<=0||c.split>=100)||Math.abs(row.columns.reduce((n,c)=>n+c.weight,0)-100)>.01)return {issue:'structure',row:row.id}
-    if(row.columns.some(c=>c.cards.length===2&&c.cards.some(id=>id&&!capability(id).stacked)))return {issue:'compact',row:row.id}
-    const minimum=requiredHeight(row);if(row.height<minimum)return {issue:'height:'+minimum,row:row.id,requiredHeight:minimum}
+    if(row.columns.some(c=>c.cards.length===2&&c.cards.some(id=>id&&!definition(id).forms.some(form=>formCapability(id,form).stacked))))return {issue:'compact',row:row.id}
+    const minimum=requiredHeight(row);if(!row.heightMode&&row.height<minimum)return {issue:'height:'+minimum,row:row.id,requiredHeight:minimum}
   }
   return {issue:''}
 }
@@ -47,6 +50,7 @@ export function reshape(rows:OrderedRow[],rowId:string,template:Template,keep?:W
   if(selected.length>capacity||new Set(selected).size!==selected.length||selected.some(id=>!ids.includes(id)))return {rows,issue:'retained',changed:false,hidden:[]}
   if(!keep&&((old.template==='left-big'&&template==='right-big')||(old.template==='right-big'&&template==='left-big'))){old.template=template;old.columns.reverse();if(height)old.height=height;return result(rows,next)}
   const replacement=makeRow(selected,template==='right-big'?'left-big':template,height||old.height,old.id)
+  if(old.minHeight!==undefined)replacement.minHeight=old.minHeight
   if(template==='right-big'){replacement.template=template;replacement.columns.reverse()}
   next[index]=replacement
   return result(rows,next,ids.filter(id=>!selected.includes(id)))
@@ -92,7 +96,7 @@ export function normalize(rows:OrderedRow[],accept:(id:WidgetId,row:OrderedRow)=
     if(!hasEmpty)return
     const stacked=row.columns.some(c=>c.cards.length===2)
     if(stacked&&!(ids.length===1&&row.columns.some(c=>c.cards.length===1&&c.cards[0]))){problems.push({row:row.id,issue:'incomplete-stack'});return}
-    const template=ids.length===1?'single':'pair',replacement=makeRow(ids,template,row.height,row.id)
+    const template=ids.length===1?'single':'pair',replacement=makeRow(ids,template,row.height,row.id);replacement.heightMode=row.heightMode;if(row.minHeight!==undefined)replacement.minHeight=row.minHeight
     if(template==='pair')replacement.columns.forEach(c=>c.weight=50)
     if(ids.some(id=>!accept(id,replacement))){problems.push({row:row.id,issue:'hard-spec'});return}
     next[index]=replacement

@@ -1,9 +1,9 @@
 <template>
-  <div class="layout-widget" ref="element" :class="['widget-'+id,{narrow:width<450,medium:width<650,short:height<310}]" :data-layout-card="id">
+  <div class="layout-widget" ref="element" :class="['widget-'+id,{narrow:width<450,medium:width<650,short:!natural&&height<310}]" :data-layout-card="id" :data-natural-card="natural||undefined" :data-presentation="resolved.id" :data-chart-stretch="id==='traffic'&&chartStretch||undefined">
     <template v-if="id==='traffic'"><NetworkFlow v-if="nativeVisible" :key="theme"/><button class="layout-speed" @click="$emit('navigate','/networkSpeedTest')" :aria-label="t('网络测速','Network speed test')"><StudioGlyph name="activity"/>{{t('测速','Test')}}</button><span v-if="errors.network" class="layout-data-notice">{{t('流量采样暂不可用','Traffic sampling unavailable')}}</span></template>
     <NetworkConnectionCard v-else-if="id==='connection'" :data="data.network" :error="errors.network" :summary="resolved.id==='summary'" @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
-    <NetworkInterfaceCard v-else-if="id==='networkInterface'" :data="data.ports" :error="errors.ports" :summary="resolved.id==='summary'" @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
-    <HomeApplications v-else-if="id==='applications'" :collapsed="false" :fallback-entries="[]" :contained="contained" :preference="preference" @navigate="$emit('navigate',$event)"/>
+    <NetworkInterfaceCard :legacy-summary="resolved.legacy" v-else-if="id==='networkInterface'" :data="data.ports" :error="errors.ports" :summary="resolved.id==='summary'" @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
+    <HomeApplications v-else-if="id==='applications'" :collapsed="false" :fallback-entries="[]" :contained="contained" :preference="preference" :natural="natural" @navigate="$emit('navigate',$event)"/>
     <NativeBusinessCard v-else-if="nativeBusiness&&['storage','sharing','docker','downloads','remote','system'].includes(id)" :id="id" :data="data" :errors="errors" :summary="resolved.id==='summary'" @retry="$emit('retry')"/>
     <CompactPreviewCard v-else-if="resolved.id==='summary'&&id!=='devices'" :id="id" :data="data" :errors="errors" @navigate="$emit('navigate',$event)" @retry="$emit('retry')"/>
     <CanvasModule v-else :item="moduleItem" :data="data" :errors="errors" :devices="devices" :summary="resolved.id==='summary'" :summary-limit="id==='devices'?resolved.capacity:undefined" :disk-limit="contained?4:undefined" contextual-actions @navigate="$emit('navigate',$event)" @device="$emit('device',$event)" @retry="$emit('retry')"/>
@@ -23,12 +23,12 @@ import NetworkInterfaceCard from './NetworkInterfaceCard.vue'
 import NativeBusinessCard from './NativeBusinessCard.vue'
 import {resolvePresentation,type WidgetPreference} from './widgetPresentation'
 import StudioGlyph from './StudioGlyph.vue'
-const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>;devices:DeviceListItem[];theme:string;contained?:boolean;preference?:WidgetPreference}>()
+const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>;devices:DeviceListItem[];theme:string;contained?:boolean;preference?:WidgetPreference;natural?:boolean;role?:'ordinary'|'stacked';chartStretch?:boolean}>()
 const nativeBusiness=inject<boolean>('quickstart-native-business',false)
 defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'retry'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
 const element=ref<HTMLElement|null>(null),width=ref(600),height=ref(320)
-const resolved=computed(()=>resolvePresentation(props.id,props.preference||{mode:'auto',iconRows:0},{width:width.value,height:height.value,role:'ordinary',favoriteCount:4,mobile:width.value<650}))
+const resolved=computed(()=>resolvePresentation(props.id,props.preference||{mode:'auto',iconRows:0},{width:width.value,height:props.natural?100000:height.value,role:props.role||'ordinary',favoriteCount:4,mobile:width.value<650,natural:props.natural}))
 // Design container owns visibility. The reused native chart has delayed setup;
 // unmounting while hidden also prevents a not-yet-started initial sample.
 const nativeVisible=ref(!document.hidden),visibility=()=>nativeVisible.value=!document.hidden

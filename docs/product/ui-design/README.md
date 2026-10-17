@@ -1,10 +1,36 @@
 # Quickstart Vue 首页设计原型
 
-## 最新：M66.35～M66.37 六组件对齐原业务
+## 最新：M66.50 统一边界调整
+
+[直接体验](http://192.168.9.19:5180/?layout=ordered&preset=network-stack&scenario=business-all) · [规则与任务树](../quickstart-home-boundary-resize-m66-50.md)。进入“自定义首页”，选中行可拖左右边界调宽、上下边界分配当前空间、底边增加行空间。默认仍自动；内容最低需求是硬边界。行布局面板可一次恢复自动。普通浏览与手机拆成单卡后不显示手柄；宽屏偏好保留。
+
+本轮验证脚本：`boundary-contract-review.cjs`、`boundary-interaction-review.cjs`、`boundary-touch-review.cjs`、`boundary-layout-review.cjs`、`boundary-state-review.cjs`、`boundary-resource-review.cjs`及`boundary-handoff-review.cjs`。193组场景、64文件保护及4组交付检查通过，优化2轮；[当前验收](../../evidence/m66/boundary-resize/acceptance.md)、[人工体验卡](../../evidence/m66/boundary-resize/handoff/review-guide.md)。继续用RTK＋SSD入口和独立证据目录，初始失败与优化记录保留。合成数据、内存草稿、刷新恢复示例的边界不变，人工体验需用户确认。
+
+## 历史：M66.44～M66.49 结构与形态解耦
+
+[完整连接＋紧凑端口](http://192.168.9.19:5180/?layout=ordered&preset=network-stack&scenario=business-all) · [左右镜像](http://192.168.9.19:5180/?layout=ordered&preset=network-stack-mirror&scenario=business-all) · [上下反转](http://192.168.9.19:5180/?layout=ordered&preset=network-stack-reverse&scenario=business-all) · [当前技术检查](../../evidence/m66/structure-presentation/48-review/acceptance.md) · [人工任务卡](../../evidence/m66/structure-presentation/49-handoff/review-guide.md) · [架构交接](../../evidence/m66/structure-presentation/49-handoff/development-handoff.md)。
+
+上下位置不再强制摘要。连接标准形态保留完整原连接信息；接口紧凑形态直接显示有界具名端口及状态／速率；组合图表真实绘图区可伸展，上下按内容分配。移动、替换、镜像和撤销共用计划；总览独立显示名称及实际形态，不把缩略高度用于真实卡片。旧rows/v1/v2迁移到v3，保留auto及各版本原推荐含义；通过现有显示设置／恢复推荐显式采用新规则。顶部设计预览可切三个网络组合。
+
+当前构建192组检查通过，原业务64文件未改。只开放已验证的形态／位置，不是全部模块任意嵌套。人工体验待本轮用户确认；旧记录不代替新验收。服务为隔离Vue构建、合成数据和内存草稿，刷新恢复示例，没有真实用户存储／设备验收。旧v2示例可加`legacy=1`，旧v1推荐可加`legacy=0`。任务与唯一规则见[M66.44～49](../quickstart-home-structure-presentation-m66-44-49.md)和[规范1.4](../quickstart-home-layout-interaction-spec.md)。
+
+新检查入口：`structure-spec-review.cjs`、`structure-contract-review.cjs`、`structure-render-review.cjs`、`structure-interaction-review.cjs`、`structure-compatibility-review.cjs`、`structure-matrix-review.cjs`、`structure-overview-review.cjs`、`structure-port-fit-review.cjs`、`structure-resource-review.cjs`、`structure-handoff-review.cjs`；仍用RTK＋SSD及独立证据目录。交付检查需先生成同一被测候选指纹、报告与任务卡。下方M66.38～43固定图表／上下限制为历史，冲突处以1.4为准。
+
+## 历史：M66.38～M66.43 自然高度与系统信息双形态
+
+[当前首页](http://192.168.9.19:5180/?layout=ordered) · [六组件示例](http://192.168.9.19:5180/?layout=ordered&preset=services&scenario=business-all) · [当前规则与任务树](../quickstart-home-natural-layout-m66-38-43.md) · [技术检查](../../evidence/m66/natural-home/42-review/acceptance.md) · [人工体验任务卡](../../evidence/m66/natural-home/43-handoff/review-guide.md) · [正式开发参考](../../evidence/m66/natural-home/43-handoff/development-handoff.md)。
+
+普通行按有限内容自然增高，同排等高；上下小卡按内容分配；网络曲线自身320px／手机300px保持。移除普通行高／上下比例及接受增高操作，保留结构、列宽、显示设置、移动排序及撤销。系统自动在普通槽560px分界选择紧凑概览／完整信息；明确选择完整信息在普通窄槽仍完整展示。标题一个主要操作加必要更多，底部不重复放详情按钮；磁盘首页合计3项、SAMBA2项，完整原组件和原向导仍可达。
+
+24组尺寸／主题／语言基准、临界宽度、原业务／表单、触摸、20次切换和实际卸载检查已通过，详见本轮证据。仅设计Vue构建适配、合成数据和内存草稿；当前人工体验待用户确认。原业务64文件未改；设计构建会注入标题菜单和有限读投影，正式集成应改为显式组件契约。刷新旧标签页加载当前资源。
+
+可重复入口：`natural-contract-review.cjs`、`natural-system-review.cjs`、`natural-layout-review.cjs`、`natural-interaction-review.cjs`、`natural-matrix-review.cjs`、`natural-resource-review.cjs`和`natural-handoff-review.cjs`。继续使用下方RTK＋SSD命令格式和独立证据目录；handoff脚本需已有当前候选指纹及任务卡。下文是历史版本记录，出现手动行高等冲突时以规范1.3 R25～R30为准。
+
+## 历史：M66.35～M66.37 六组件对齐原业务
 
 [六组件完整示例](http://192.168.9.19:5180/?layout=ordered&preset=services&scenario=business-all) · [磁盘状态示例](http://192.168.9.19:5180/?layout=ordered&preset=services&scenario=business-disks) · [业务基线与任务树](../quickstart-home-business-widgets-alignment.md) · [当前检查](../../evidence/m66/business-widgets/status.md)。
 
-磁盘信息、存储服务、Docker、下载服务、远程域名、系统信息直接复用当前Quickstart web的原Vue组件／子组件及配置表单，补回原分页签、完整字段、状态判断、开关、向导及具体高级入口。标准卡完整内容在卡内滚动；摘要打开同一原组件。保留布局交互及共同字体，暂不重做六组件视觉设计。
+磁盘信息、存储服务、Docker、下载服务、远程域名、系统信息直接复用当时Quickstart web的原Vue组件／子组件及配置表单，补回原分页签、完整字段、状态判断、开关、向导及具体高级入口。当时标准卡完整内容在卡内滚动；此规则已由1.3自然高度／有限首页投影替代。保留布局交互及共同字体，暂不重做六组件视觉设计。
 
 顶部“设计预览→数据场景”可切全部运行、RAID／SMART／未挂载、未安装／未配置、仅IPv6、局部失败、提交拒绝和Docker非空目录确认。真实API、外部链接及安装后跳转均不执行；DDNSTO外部授权／绑定以明确的模拟按钮演示。当前资源以本轮指纹为准，下列字体及网络PID／资源是历史候选。
 
