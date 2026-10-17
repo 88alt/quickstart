@@ -1,8 +1,8 @@
 <template>
- <div ref="surface" class="native-business-surface" :class="['native-'+id,{unbounded}]" :data-business-surface="id" @click.capture="capture">
+ <div ref="surface" class="native-business-surface" :class="['native-'+id,{unbounded,'native-compact':compact}]" :data-business-surface="id" @click.capture="capture">
   <div v-if="failed" class="native-read-state" role="status">{{title}} · {{t('读取失败，其他组件仍可使用','Unavailable; other widgets remain usable')}}<button @click="$emit('retry')">{{t('重试','Retry')}}</button></div>
   <template v-else><p v-if="partial" class="native-partial" role="status">{{t('部分磁盘信息读取失败，以下仅显示已取得的数据','Some disk information is unavailable; showing available data')}} <button @click="$emit('retry')">{{t('重试','Retry')}}</button></p><SystemOverview v-if="ready&&visible&&id==='system'&&compact" @details="$emit('details')"/><component v-else-if="ready&&visible" :is="component" :key="instanceKey"/><div v-else class="native-read-state" role="status">{{title}} · {{t('读取中…','Loading…')}}</div></template>
-  <p v-if="ready&&!unbounded&&projectionNotice" class="native-projection-notice" data-native-projection>{{projectionNotice}}</p>
+  <p v-if="ready&&!unbounded&&projectionWarning" class="native-partial" role="status" data-projection-warning>{{projectionWarning}}</p>
  </div>
 </template>
 <script setup lang="ts">
@@ -27,10 +27,10 @@ const titles:Record<string,string>={storage:t('磁盘信息','Disk information')
 const failed=computed(()=>props.id==='storage'?keys.value.every(k=>props.errors[k]):keys.value.some(k=>props.errors[k]))
 const partial=computed(()=>props.id==='storage'&&keys.value.some(k=>props.errors[k]))
 const ready=computed(()=>keys.value.every(k=>props.data[k]||props.errors[k]))
-const projectionNotice=computed(()=>{
- if(props.id==='storage'){const physical=props.errors.disks?[]:props.data.disks?.disks||[],raid=props.errors.raid?[]:props.data.raid?.disks||[],all=[...physical,...raid],hidden=all.slice(3),warnings=hidden.filter(d=>d.errorInfo||d.smartWarning||d.childrens?.some((p:any)=>p.isReadOnly&&p.filesystem!=='swap')).length;return (all.length>3?(english?`Showing 3 / ${all.length} disks · RAID ${raid.length}`:`显示 3 / ${all.length} 块磁盘 · RAID ${raid.length}`):'')+(warnings?(english?` · ${warnings} additional warnings; see complete information`:` · 其余 ${warnings} 项有异常，请查看完整信息`):'')}
- if(props.id==='sharing'&&props.data.sharing?.sambas?.length>2)return english?`Showing 2 / ${props.data.sharing.sambas.length} Samba shares; complete list in the title menu`:`SAMBA 显示 2 / ${props.data.sharing.sambas.length} 项，完整清单见标题菜单`
- return ''
+const projectionWarning=computed(()=>{
+ if(props.id!=='storage')return ''
+ const physical=props.errors.disks?[]:props.data.disks?.disks||[],raid=props.errors.raid?[]:props.data.raid?.disks||[]
+ return [...physical,...raid].slice(3).some(d=>d.errorInfo||d.smartWarning||d.childrens?.some((p:any)=>p.isReadOnly&&p.filesystem!=='swap'))?t('有未展开的磁盘异常，请在标题菜单查看完整信息。','Additional disks have warnings. Open complete information in the title menu.'):''
 })
 // Original remote polls its cached snapshot. Others read once; recreate only
 // when an explicit retry/action changes that snapshot, never on layout movement.
@@ -43,5 +43,5 @@ onUnmounted(()=>document.removeEventListener('visibilitychange',visibility))
 .native-business-surface{height:100%;min-height:0;min-width:0;overflow:auto;border-radius:10px;overscroll-behavior:contain;font:14px Arial,"Microsoft YaHei",sans-serif;color:var(--c-text);container-type:inline-size}.native-business-surface.unbounded{height:auto;overflow:visible}.native-business-surface>.reusable-card{min-height:100%;height:auto!important;box-sizing:border-box}.native-business-surface .card-header{flex-wrap:wrap;gap:10px}.native-business-surface .card-header .title{font-size:16px!important;font-weight:600!important}.native-business-surface .card-header .settings{margin-left:auto}.native-business-surface .card-header .btn_settings{font-size:14px;cursor:pointer}.native-business-surface .content{min-width:0}.native-business-surface a,.native-business-surface .name{overflow-wrap:anywhere}.native-business-surface .chart_box{flex-wrap:wrap!important;overflow:visible!important;gap:8px}.native-business-surface .chart_box .chart{flex:1 0 150px!important}.native-business-surface .info{grid-template-columns:repeat(2,minmax(0,1fr))!important}.native-business-surface .info .item{flex-wrap:wrap;gap:6px}.native-business-surface .info .item1{min-width:0;overflow-wrap:anywhere}.native-business-surface .info .item>span{line-height:1.5!important}.native-read-state{min-height:100%;padding:20px;background:var(--c-panel);box-sizing:border-box;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:12px}.native-read-state button,.native-partial button{font:inherit;border:0;color:var(--c-accent);background:none;cursor:pointer}.native-partial{padding:10px;margin:0;background:var(--c-soft);font-size:12px}
 @container(max-width:440px){.native-business-surface .card-header .title{font-size:14px!important}.native-business-surface .info{grid-template-columns:minmax(0,1fr)!important}.native-business-surface .info .item1{padding:12px!important}.native-business-surface .tab{gap:4px!important}.native-business-surface .tab>.item{min-width:0;padding:10px 4px!important}.native-business-surface .btn_settings{padding-left:8px!important}.native-business-surface .content{font-size:13px}}
 .native-business-surface .system-overview .card-header .title{font-size:14px!important}
-.native-business-surface:not(.unbounded) .settings-wrapper{display:flex;align-items:center;gap:6px}.native-business-surface:not(.unbounded) .rotation{display:none!important}.native-business-surface:not(.unbounded) .btn_settings{padding-right:12px!important}.native-business-surface:not(.unbounded) .dropdown-menu{display:none!important}.native-projection-notice{font-size:12px;line-height:1.6;color:var(--c-muted);padding:10px 14px;margin:0!important;background:var(--c-panel);border:1px solid var(--c-line);border-top:0;border-radius:0 0 10px 10px}
+.native-business-surface:not(.unbounded) .rotation{display:none!important}.native-business-surface:not(.unbounded) .dropdown-menu{display:none!important}
 </style>

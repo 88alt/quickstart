@@ -2,7 +2,7 @@
   <section v-if="!collapsed" ref="hub" class="home-applications fluid-applications" :class="{'applications-strip':resolved.id==='strip'}" :data-app-form="resolved.id" data-applications-hub>
     <header class="applications-heading">
       <div><StudioGlyph name="grid"/><h2>{{t('应用与工具','Apps & tools')}}</h2></div>
-      <div class="applications-actions"><button @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<small v-if="catalogueState==='ready'&&favorites.length>capacity" class="applications-overflow" data-app-overflow>{{t('还有','More: ')}}{{favorites.length-capacity}}{{t('个','')}}</small><StudioGlyph name="arrow" v-else/></button></div>
+      <div class="applications-actions widget-action-group"><button @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<small v-if="catalogueState==='ready'&&favorites.length>capacity" class="applications-overflow" data-app-overflow>{{t('还有','More: ')}}{{favorites.length-capacity}}{{t('个','')}}</small><StudioGlyph name="arrow" v-else/></button><WidgetMenu :label="t('应用与工具更多操作','More app and tool actions')" :items="[{id:'favorites',label:t('管理常用','Edit favorites')}]" @select="openBrowser(true)"/></div>
     </header>
     <div v-if="tab==='tools'" class="applications-system-tools" data-applications-tools><CanvasTools @navigate="navigate"/></div>
     <template v-else>
@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
 import StudioGlyph from './StudioGlyph.vue'
+import WidgetMenu from './WidgetMenu.vue'
 import CanvasTools from './CanvasTools.vue'
 import {configurationTools,quickEntrances} from './canvasLayout'
 import {homeApplications,homeApplicationSession,type HomeApplication} from './homeApplications'

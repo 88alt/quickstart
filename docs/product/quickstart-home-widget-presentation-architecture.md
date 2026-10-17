@@ -2,6 +2,8 @@
 
 布局阶段已由用户确认收口并提交`ed30df5`。下一阶段的[控件统一外观与独立业务建议](quickstart-home-widget-visual-standard.md)基于当前原Card、磁盘截图和11个控件源码，提出共享外壳／令牌／交互与独立业务的分工；状态为设计建议，尚未据此修改当前控件外观。布局规范1.5和既有业务基线继续有效。
 
+后续用户授权的公共视觉落地见[本轮验收](../evidence/m66/widget-standard/acceptance.md)：隔离原型通过`homeWidgetChrome.css`与`widgetActionGroup.css`消费同一组卡片／标题／操作令牌，移除磁盘及共享常规数量尾注；布局、业务读取owner、原动作与权限口径保持。上段是提出方案时的记录，正式业务组件结构重构仍按独立计划执行。
+
 1.5新增[统一边界调整M66.50](quickstart-home-boundary-resize-m66-50.md)，以统一规范R37～R40为准。布局v3新增可选`row.minHeight`与`column.upperShare`表达用户意图；旧`height/split`不激活。`rowSizing.ts`处理有限值校验与空间钳制，`useNaturalSizing.ts`只对已有DOM进行合并测量，不克隆组件、不创建读请求、不保存测量结果；`OrderedHome.vue`负责当前行手柄与共同草稿／历史。测量时同步临时恢复自然轨道，读取后在同一调用恢复样式，不绘制中间态；输入变化和既有容器观察器触发RAF，后台停止、卸载取消。形态与列表容量仍只依赖声明与宽度，不依赖测得高度。正式集成应将该测量适配作为可替换的布局层契约，并在真实业务下复验内容增长与资源预算，不能把本原型视为正式性能验收。
 
 1.4当前参考：[结构、形态与空间解耦任务](quickstart-home-structure-presentation-m66-44-49.md)、[实现交接](../evidence/m66/structure-presentation/49-handoff/development-handoff.md)、[当前证据](../evidence/m66/structure-presentation/48-review/acceptance.md)。上下位置不强制摘要；形态级能力、v3及分版本auto、混合图表伸展、独立总览缩略轨道为当前实现。下方1.2～1.3为历史，冲突处以统一规范1.4 R31～R36为准；人工体验待本轮确认。
