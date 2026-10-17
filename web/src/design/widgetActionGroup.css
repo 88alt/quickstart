@@ -23,6 +23,9 @@
 .natural-home :is(.widget-action-group,.native-business-surface:not(.unbounded):not(.native-compact)>.reusable-card>.card-header>.settings-wrapper)>.widget-menu>.widget-menu-trigger{flex:1}
 .natural-home .widget-action-group>button:only-child{border-radius:3px}
 .natural-home .widget-action-group>button:hover,.natural-home .settings-btn>.btn_settings:hover{background:var(--c-soft)}
+/* Existing native cards keep their original icon and handlers. Match the shared
+ * component's single leading icon and remove legacy inline extra right margin. */
+.natural-home .settings-btn>.btn_settings>svg{width:16px!important;height:16px!important;margin:0!important;flex:none;color:inherit!important}
 .natural-home .settings-btn>.btn_settings:focus-visible{outline:2px solid var(--c-accent);outline-offset:3px}
 @media(pointer:coarse){
  .natural-home :is(.widget-action-group,.native-business-surface:not(.unbounded):not(.native-compact)>.reusable-card>.card-header>.settings-wrapper){--widget-more-width:44px;--widget-more-height:44px;min-height:46px}

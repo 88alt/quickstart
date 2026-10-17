@@ -1,6 +1,6 @@
 <template>
   <article class="canvas-module" :class="['module-'+item.id,{'is-wide':item.span>=8,'is-device-summary':summary&&item.id==='devices'}]" :data-device-form="item.id==='devices'?(summary?'summary':'standard'):undefined" :data-canvas-module="item.id" :style="'--span:'+item.span">
-    <header><div><StudioGlyph :name="definition.glyph"/><h2>{{t(definition.zh,definition.en)}}</h2></div><div v-if="item.id==='devices'" class="device-header-actions widget-action-group"><button @click="navigate('/devicemanagement')" class="module-more" data-canvas-view-all :data-home-entry="contextualActions?'/devicemanagement':undefined">{{t('查看全部','View all')}}<StudioGlyph name="arrow"/></button><WidgetMenu v-if="contextualActions" :label="t('设备更多操作','More device actions')" :items="[{id:'parental',label:t('家长控制','Parental controls')}]" @select="navigate('/parental')"/></div><button v-else class="module-more" @click="navigate(destinations[item.id])" :aria-label="t('管理','Manage')+t(definition.zh,definition.en)"><StudioGlyph name="arrow"/></button></header>
+    <header><div><StudioGlyph :name="definition.glyph"/><h2>{{t(definition.zh,definition.en)}}</h2></div><div v-if="item.id==='devices'" class="device-header-actions widget-action-group"><WidgetPrimaryAction icon="devices" @click="navigate('/devicemanagement')" class="module-more" data-canvas-view-all :data-home-entry="contextualActions?'/devicemanagement':undefined">{{t('查看全部','View all')}}</WidgetPrimaryAction><WidgetMenu v-if="contextualActions" :label="t('设备更多操作','More device actions')" :items="[{id:'parental',label:t('家长控制','Parental controls')}]" @select="navigate('/parental')"/></div><button v-else class="module-more" @click="navigate(destinations[item.id])" :aria-label="t('管理','Manage')+t(definition.zh,definition.en)"><StudioGlyph name="arrow"/></button></header>
 
     <template v-if="item.id==='devices'">
       <div class="inventory-heading"><strong>{{loading||!devices.length&&errors.inventory?'—':devices.filter(d=>d.online).length}}<span>{{errors.inventory&&devices.length?t('上次在线','previously online'):t('在线','online')}}</span></strong><small>{{loading||!devices.length&&errors.inventory?t('数量待确认','Count unconfirmed'):`${devices.length} ${t('台 · 本次开机发现','discovered this boot')}`}}</small><button @click="$emit('retry')" :aria-label="t('刷新设备','Refresh devices')" data-refresh-inventory>↻</button></div>
@@ -37,6 +37,7 @@
   </article>
 </template>
 <script setup lang="ts">
+import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import StudioGlyph from './StudioGlyph.vue'
 import WidgetMenu from './WidgetMenu.vue'

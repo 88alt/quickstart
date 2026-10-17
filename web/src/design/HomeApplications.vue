@@ -2,7 +2,7 @@
   <section v-if="!collapsed" ref="hub" class="home-applications fluid-applications" :class="{'applications-strip':resolved.id==='strip'}" :data-app-form="resolved.id" data-applications-hub>
     <header class="applications-heading">
       <div><StudioGlyph name="grid"/><h2>{{t('应用与工具','Apps & tools')}}</h2></div>
-      <div class="applications-actions widget-action-group"><button @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<small v-if="favorites.length>capacity" class="applications-overflow" data-app-overflow>{{t('还有','More: ')}}{{favorites.length-capacity}}{{t('个','')}}</small><StudioGlyph name="arrow" v-else/></button><WidgetMenu :label="t('应用与工具更多操作','More app and tool actions')" :items="[{id:'favorites',label:t('编辑快捷入口','Edit shortcuts')}]" @select="openBrowser(true)"/></div>
+      <div class="applications-actions widget-action-group"><WidgetPrimaryAction icon="grid" @click="openBrowser(false)" data-all-apps>{{t('全部','All')}}<small v-if="favorites.length>capacity" class="applications-overflow" data-app-overflow>{{t('还有','More: ')}}{{favorites.length-capacity}}{{t('个','')}}</small></WidgetPrimaryAction><WidgetMenu :label="t('应用与工具更多操作','More app and tool actions')" :items="[{id:'favorites',label:t('编辑快捷入口','Edit shortcuts')}]" @select="openBrowser(true)"/></div>
     </header>
       <div v-if="!favorites.length" class="applications-state"><StudioGlyph name="grid"/><span>{{t('把常用应用放在这里','Keep your favorite apps here')}}</span><button @click="openBrowser(true)">{{t('选择应用','Choose apps')}}</button></div>
       <div v-else class="applications-favorites" :style="{gridTemplateColumns:'repeat('+columns+', minmax(0,1fr))'}" :data-app-columns="columns" :data-app-capacity="capacity"><button v-for="app in favorites.slice(0,capacity)" :key="app.id" @click="activate(app)" :title="t(app.zh,app.en)+(entryAvailability(app)==='available'?'':' · '+availabilityText(app))" :data-favorite-app="app.id" :data-availability="entryAvailability(app)"><span class="application-icon" :class="app.tone"><StudioGlyph :name="app.glyph"/><i v-if="app.tool==='firmware'&&systemStore.checkUpdate?.needUpdate" class="launcher-update-dot" :aria-label="t('有可用更新','Update available')"/></span><span><strong>{{t(app.zh,app.en)}}</strong><small v-if="entryAvailability(app)!=='available'">{{availabilityText(app)}}</small></span></button></div>
@@ -39,6 +39,7 @@
   <NetworkWidgetDialog v-if="unavailableApp" :title="t('入口暂不可用','Shortcut unavailable')" @close="unavailableApp=null"><div data-shortcut-unavailable><p>{{t(unavailableApp.zh,unavailableApp.en)}} · {{availabilityText(unavailableApp)}}</p><p>{{t('入口保留在原位置，你可以在编辑快捷入口中移除。','The shortcut stays in place. You can remove it in Edit shortcuts.')}}</p></div></NetworkWidgetDialog>
 </template>
 <script setup lang="ts">
+import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
 import StudioGlyph from './StudioGlyph.vue'
 import WidgetMenu from './WidgetMenu.vue'

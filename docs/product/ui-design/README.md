@@ -1,6 +1,10 @@
 # Quickstart Vue 首页设计原型
 
-## 当前：M66.63～M66.68 完整应用启动台
+## 当前：M66.69 标题主操作统一
+
+[体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [目标／任务树／验收](../quickstart-home-header-actions-m66-69.md) · [当前检查状态](../../evidence/m66/header-actions/status.md) · [人工体验卡](../../evidence/m66/header-actions/review/review-guide.md)。已有标题主操作统一为前置16px业务图标＋文字、6px间距；连体更多、原动作和正文导航保持。新设计卡共用WidgetPrimaryAction，原业务模板消费兼容样式。[当前19套210组验收](../../evidence/m66/header-actions/review/acceptance.md)及源代码／资源校验通过，1次检查优化已记录；人工确认独立，用户已要求[提交归档](../../evidence/m66/header-actions/commit-note.md)。
+
+## 应用与工具能力基线：M66.63～M66.68 完整应用启动台
 
 [体验首页](http://192.168.9.19:5180/?layout=ordered) · [35项完整库](http://192.168.9.19:5180/?layout=ordered&scenario=apps-35) · [120项分页](http://192.168.9.19:5180/?layout=ordered&scenario=apps-120&favorites=24) · [任务树与可测试目标](../quickstart-home-launchpad-m66-63-68.md) · [当前状态](../../evidence/m66/launchpad/status.md) · [人工体验卡](../../evidence/m66/launchpad/68-review/review-guide.md)。
 
