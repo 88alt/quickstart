@@ -1,5 +1,7 @@
 # 首页模块形态与显示设置：架构设计参考
 
+当前新增契约为[规范1.7](quickstart-home-layout-interaction-spec.md)R18B～D，[M66.63～68](quickstart-home-launchpad-m66-63-68.md)实施中。`launcherCatalog`单一读取所有者提供来源状态和最后快照；`launcherLibrary`负责入口合并、完整库查询／分页及用户链接事务；首页仅保留固定ID序列。48项分页、64用户链接、24首页固定分别计数。链接草稿、首页收藏草稿、布局草稿互斥，展示及查询不写业务配置。当前完成状态以[本轮证据](../evidence/m66/launchpad/status.md)为准；下文1.6为上一候选说明。
+
 当前应用契约为[交互规范1.6](quickstart-home-layout-interaction-spec.md)R14／R18／R18A，[M66.57～62](quickstart-home-launcher-m66-57-62.md)已完成隔离原型技术交付：八默认工具、最多24收藏、稳定宿主直接编辑，当前证据与正式集成前置见[开发交接](../evidence/m66/launcher/62-review/development-handoff.md)。下文早期“当前最多6项”、固定高度及旧版本方案均是对应阶段历史；不得与1.6同时作为产品基线。布局边界仍沿用1.5 R37～R40，人工体验待确认。
 
 布局阶段已由用户确认收口并提交`ed30df5`。下一阶段的[控件统一外观与独立业务建议](quickstart-home-widget-visual-standard.md)基于当前原Card、磁盘截图和11个控件源码，提出共享外壳／令牌／交互与独立业务的分工；状态为设计建议，尚未据此修改当前控件外观。布局规范1.5和既有业务基线继续有效。

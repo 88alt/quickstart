@@ -1,6 +1,6 @@
 // Design-only application catalogue: synthetic examples, never installation evidence.
 import { reactive } from 'vue'
-export type HomeApplication={id:string;zh:string;en:string;detail:string;detailEn:string;glyph:string;path:string;kind:'app'|'builtin'|'tool';tone:string;tool?:'lan'|'terminal'|'firmware'|'dns'|'source'|'sandbox'|'logs'|'maintenance'}
+export type HomeApplication={id:string;zh:string;en:string;detail:string;detailEn:string;glyph:string;path:string;kind:'app'|'builtin'|'tool'|'link';tone:string;tool?:'lan'|'terminal'|'firmware'|'dns'|'source'|'sandbox'|'logs'|'maintenance'}
 export const homeApplications:HomeApplication[]=[
   {id:'files',zh:'文件管理',en:'Files',detail:'磁盘与文件',detailEn:'Disks & files',glyph:'folder',path:'/nas',kind:'builtin',tone:'blue'},
   {id:'docker',zh:'Docker',en:'Docker',detail:'容器管理',detailEn:'Containers',glyph:'layers',path:'/docker',kind:'app',tone:'blue'},

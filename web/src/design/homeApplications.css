@@ -56,3 +56,33 @@
 .fluid-applications .applications-favorites>button:not([data-availability=available]) small{font-size:12px;line-height:16px;margin:0;color:var(--c-muted)}
 .application-icon{position:relative}.launcher-update-dot{position:absolute;right:-1px;top:-1px;width:8px;height:8px;border-radius:50%;background:var(--c-warning);border:2px solid var(--c-panel)}
 .launcher-unavailable-favorites{margin-top:22px;padding-top:18px;border-top:1px solid var(--c-line)}.launcher-unavailable-favorites h3{font-size:14px;font-weight:600;margin:0 0 8px}.launcher-unavailable-favorites>p{font-size:12px;line-height:1.7;color:var(--c-muted);margin:0 0 12px}
+
+/* Full library stays inside the system content area. Homepage tiles are unchanged. */
+.launchpad-browser{width:1120px;max-width:calc(100% - var(--design-system-reserve,0px) - 36px);top:18px;bottom:18px;right:18px;left:auto;border-radius:18px}
+.launchpad-browser.launchpad-editor{width:760px}.launchpad-browser.launchpad-form{width:760px}
+.launchpad-browser>header{padding:28px 30px 22px}.launchpad-browser>header>div{min-width:0}.launchpad-browser h2{font-size:22px;line-height:1.45;margin:4px 0 0;overflow-wrap:anywhere}
+.launchpad-browser .applications-close{width:44px;height:44px;min-height:44px;min-width:44px;border-radius:12px}
+.launchpad-browser .applications-browser-body{padding:0 30px 24px;overflow:auto;overscroll-behavior:contain}
+.launchpad-browser .application-search{margin:0 0 15px;padding:4px 14px;border-radius:12px;min-height:44px}.launchpad-browser .application-search input{min-height:44px}
+.launchpad-controls{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.launchpad-browser .browser-category-tabs{border:0;padding:3px;background:var(--c-soft);border-radius:10px;gap:2px;margin:0;display:flex;flex-wrap:wrap}
+.launchpad-browser .browser-category-tabs button{border:0;border-radius:8px;min-height:44px;min-width:44px;padding:8px 12px;line-height:1.4;font-size:14px}
+.launchpad-browser .browser-category-tabs [aria-pressed=true]{color:var(--c-accent);background:var(--c-panel);box-shadow:0 1px 4px #00000008}
+.launchpad-library-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.launchpad-library-actions button{min-height:44px;padding:8px 12px;border-radius:9px;font-size:13px}.launchpad-library-actions [data-add-link]{border:1px solid var(--c-line)}.launchpad-library-actions [aria-pressed=true]{background:var(--c-soft);color:var(--c-accent)}
+.launchpad-result-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;color:var(--c-muted);font-size:13px}.launchpad-result-line strong{font-weight:500;color:var(--c-text);margin-left:6px}.launchpad-result-line small{font-size:12px}
+.launchpad-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:14px 8px;align-items:start}
+.launchpad-tile{min-width:0;position:relative;border-radius:12px}.launchpad-browser .launchpad-open{width:100%;min-height:120px;display:flex;align-items:center;flex-direction:column;gap:10px;padding:12px 5px;border-radius:12px;min-width:0;text-align:center;transition:background .15s,transform .15s}
+.launchpad-open:hover{background:var(--c-soft);transform:translateY(-2px)}.launchpad-open .application-icon{width:52px;height:52px;border-radius:16px;box-shadow:inset 0 0 0 1px #ffffff18}.launchpad-open .application-icon svg{width:27px;height:27px}
+.launchpad-open strong{font-size:14px;line-height:20px;font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere;max-width:100%;max-height:40px}.launchpad-open small{font-size:12px;line-height:18px;color:var(--c-muted)}
+.launchpad-open:not([data-availability=available]) .application-icon{background:var(--c-soft);color:var(--c-muted)}
+.launchpad-pin{position:absolute;right:-2px;bottom:-2px;border-radius:50%;width:10px;height:10px;background:var(--c-accent);border:3px solid var(--c-panel)}
+.launchpad-browser .launchpad-link-edit{display:block;margin:0 auto 8px;min-height:44px;border:1px solid var(--c-line);border-radius:8px;padding:6px 14px;font-size:13px;background:var(--c-soft)}
+.launchpad-pagination{display:flex;justify-content:center;align-items:center;gap:18px;padding:25px 0 6px;font-size:13px}.launchpad-pagination button{min-height:44px;border:1px solid var(--c-line);border-radius:9px;padding:8px 14px}.launchpad-pagination button:disabled{opacity:.4;cursor:default}
+.launchpad-browser>footer{gap:12px;padding:16px 30px;flex-wrap:wrap;border-top:1px solid var(--c-line);flex:none}.launchpad-browser>footer button{min-height:44px;font-size:14px;white-space:normal}
+.launchpad-status{background:var(--c-soft);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:13px;line-height:1.7}.launchpad-status button{min-height:44px;font-size:13px}.launchpad-notice{font-size:13px;color:var(--c-good);line-height:1.7;margin:20px 0 0}
+.launchpad-browser :focus-visible{outline:2px solid var(--c-accent);outline-offset:3px}.launchpad-browser .application-search:focus-within{border-color:var(--c-accent)}
+@media(max-width:1350px){.launchpad-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:1100px){.launchpad-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:650px){.launchpad-browser{top:12px;bottom:12px;right:8px;left:auto;width:calc(100% - 16px);max-width:calc(100% - 16px);border-radius:16px}.launchpad-browser>header{padding:20px 18px 18px}.launchpad-browser h2{font-size:20px}.launchpad-browser .applications-browser-body{padding:0 18px 20px}.launchpad-browser>footer{padding:12px 18px}.launchpad-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 4px}.launchpad-controls{gap:8px;margin-bottom:16px}.launchpad-browser .browser-category-tabs{width:100%;justify-content:space-between}.launchpad-browser .browser-category-tabs button{font-size:13px;padding:8px 7px}.launchpad-result-line{align-items:start;flex-direction:column;gap:4px}.launchpad-open .application-icon{width:46px;height:46px;border-radius:14px}.launchpad-open strong{font-size:14px}.launchpad-browser .launchpad-open{min-height:116px;padding:10px 3px}}
+@media(max-width:360px){.launchpad-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.launchpad-browser>footer button{font-size:13px}.launchpad-browser .browser-category-tabs button{padding:8px 5px}}
+@media(prefers-reduced-motion:reduce){.launchpad-open{transition:none!important}.launchpad-open:hover{transform:none}}

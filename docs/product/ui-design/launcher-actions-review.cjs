@@ -1,6 +1,6 @@
 const {run}=require('./direct-test-utils.cjs');
 run('launcher-actions',async({page,visit,assert,report})=>{
- const open=async(id)=>{await page.locator('[data-applications-hub] [data-all-apps]').click();await page.getByRole('tab',{name:/系统工具/}).click();await page.locator(`[data-browser-tool="tool-${id}"]`).click();await page.locator('[data-launcher-action]').waitFor()};
+ const open=async(id)=>{await page.locator('[data-applications-hub] [data-all-apps]').click();await page.locator('[data-category=tools]').click();await page.locator(`[data-browser-tool="tool-${id}"]`).click();await page.locator('[data-launcher-action]').waitFor()};
  const close=()=>page.locator('[data-network-dialog-close]').click();
  await visit();
  for(const [id,text]of [['lan','IPv4'],['dns','DNS'],['source','软件源'],['sandbox','沙箱']]){await open(id);assert.ok((await page.locator('.launcher-tool-action').innerText()).includes(text));await close();report.checks.push(id+' original Vue form mounted')}

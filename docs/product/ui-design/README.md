@@ -1,6 +1,14 @@
 # Quickstart Vue 首页设计原型
 
-## 当前：M66.57～M66.62 应用与工具快捷启动台
+## 当前：M66.63～M66.68 完整应用启动台
+
+[体验首页](http://192.168.9.19:5180/?layout=ordered) · [35项完整库](http://192.168.9.19:5180/?layout=ordered&scenario=apps-35) · [120项分页](http://192.168.9.19:5180/?layout=ordered&scenario=apps-120&favorites=24) · [任务树与可测试目标](../quickstart-home-launchpad-m66-63-68.md) · [当前状态](../../evidence/m66/launchpad/status.md) · [人工体验卡](../../evidence/m66/launchpad/68-review/review-guide.md)。
+
+点击应用与工具“全部”，默认完整来源图标网格，支持全库搜索、轻量筛选、每页48项；首页仍只固定24项。可添加／编辑／删除最多64条用户链接，默认不固定；取消固定不删除链接。保存会定位至对应页，新安装应用不自动写首页。保留原八工具、常用拖动编辑与首页布局。[当前28套318组浏览器＋16组模型验收](../../evidence/m66/launchpad/68-review/acceptance.md)及341源码／64原业务保护通过；人工美感与易用性确认待用户完成。用户已要求提交归档，见[提交说明](../../evidence/m66/launchpad/commit-note.md)。
+
+仍为隔离Vue原型、合成目录、会话内存收藏／链接，刷新恢复；链接仅预览目的地址，不访问真实服务。正式API、ACL、持久化和设备验收另行实施。
+
+## 历史：M66.57～M66.62 应用与工具快捷启动台
 
 [体验默认首页](http://192.168.9.19:5180/?layout=ordered) · [六阶段任务树](../quickstart-home-launcher-m66-57-62.md) · [当前22套263组验收与指纹](../../evidence/m66/launcher/62-review/acceptance.md) · [人工体验卡](../../evidence/m66/launcher/62-review/review-guide.md)。
 

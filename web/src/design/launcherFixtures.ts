@@ -7,6 +7,8 @@ export function launcherFixture(key:string,method:string,body:Record<string,any>
   const apps=[...homeApplications.filter(a=>a.kind==='app'&&!(scenario==='apps-uninstalled'&&a.id==='docker')),...(['apps-many','apps-overflow-uninstalled'].includes(scenario)?sampleApplications.filter(a=>!(scenario==='apps-overflow-uninstalled'&&a.id==='example-6')):[])].map(installedSample)
   if(scenario==='apps-duplicates')apps.push({...apps[0]},{name:'tool-lan',title:'Conflicting app',entry:'/invalid'})
   if(scenario==='apps-no-entry')apps[0].entry=''
+  if(scenario==='apps-120'){const extra=Array.from({length:96},(_,i)=>({name:'library-'+i,title:'应用 '+(i+1),title_en:'Library app '+(i+1),entry:'/app-example/library-'+i}));apps.push(...sampleApplications.slice(0,7).map(installedSample),...extra)}
+  if(scenario==='apps-35')apps.push(...sampleApplications.slice(0,18).map(installedSample))
   return {status:200,data:scenario==='apps-empty'?[]:apps}
  }
  if(key==='/nas/sandbox/'&&method==='GET')return result({status:scenario==='sandbox-running'?'running':scenario==='sandbox-unsupported'?'unsupport':'stopped'})
