@@ -1,8 +1,10 @@
 # 首页模块形态与显示设置：架构设计参考
 
+七控件正文精修[M66.70～M66.75](quickstart-home-widget-body-m66-70-75.md)沿用本架构：布局只处理稳定ID、形态与用户空间意图，原业务Vue仍拥有字段/条件/动作，`homeWidgetDetails.css`消费原语义类与共同令牌。当前运行变更仅该CSS和网络隐藏遮罩模板，没有新建业务模型、请求所有者、图表观察器或通用字段解析器。正文取值只在[唯一外观规范VS09](quickstart-home-widget-visual-standard.md)维护；技术结果和人工确认见[执行状态](../evidence/m66/widget-body/status.md)。正式接入应逐项改为显式共享正文组件/槽位，不能把原型CSS适配当作业务迁移已完成。
+
 标题主操作[M66.69](quickstart-home-header-actions-m66-69.md)采用`WidgetPrimaryAction`统一原生button、前置装饰图标槽、文字槽和属性／点击透传；不持有请求、定时器、状态或权限判断。新设计卡传入原业务回调与语义图标；原业务卡保留原模板，通过共同标题CSS兼容图标尺寸／间距／主题。更多菜单仍为旁边独立交互目标，摘要仅菜单时不制造主操作。正式组件迁移可在保持原动作和条件前提下逐项接入该组件，当前只在隔离原型落地。结果见[本轮状态](../evidence/m66/header-actions/status.md)。
 
-当前新增契约为[规范1.7](quickstart-home-layout-interaction-spec.md)R18B～D，[M66.63～68](quickstart-home-launchpad-m66-63-68.md)实施中。`launcherCatalog`单一读取所有者提供来源状态和最后快照；`launcherLibrary`负责入口合并、完整库查询／分页及用户链接事务；首页仅保留固定ID序列。48项分页、64用户链接、24首页固定分别计数。链接草稿、首页收藏草稿、布局草稿互斥，展示及查询不写业务配置。当前完成状态以[本轮证据](../evidence/m66/launchpad/status.md)为准；下文1.6为上一候选说明。
+应用能力契约为[规范1.7](quickstart-home-layout-interaction-spec.md)R18B～D，[M66.63～68](quickstart-home-launchpad-m66-63-68.md)已完成隔离原型技术交付。`launcherCatalog`单一读取所有者提供来源状态和最后快照；`launcherLibrary`负责入口合并、完整库查询／分页及用户链接事务；首页仅保留固定ID序列。48项分页、64用户链接、24首页固定分别计数。链接草稿、首页收藏草稿、布局草稿互斥，展示及查询不写业务配置。完成状态以[应用能力证据](../evidence/m66/launchpad/status.md)为准；下文1.6为上一候选说明。
 
 当前应用契约为[交互规范1.6](quickstart-home-layout-interaction-spec.md)R14／R18／R18A，[M66.57～62](quickstart-home-launcher-m66-57-62.md)已完成隔离原型技术交付：八默认工具、最多24收藏、稳定宿主直接编辑，当前证据与正式集成前置见[开发交接](../evidence/m66/launcher/62-review/development-handoff.md)。下文早期“当前最多6项”、固定高度及旧版本方案均是对应阶段历史；不得与1.6同时作为产品基线。布局边界仍沿用1.5 R37～R40，人工体验待确认。
 

@@ -1,6 +1,10 @@
 # Quickstart Vue 首页设计原型
 
-## 当前：M66.69 标题主操作统一
+## 当前：M66.70～M66.75 七控件正文精修
+
+[体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [全部服务示例](http://192.168.9.19:5180/?layout=ordered&scenario=business-all) · [六阶段目标、任务树与验收标准](../quickstart-home-widget-body-m66-70-75.md) · [执行状态](../../evidence/m66/widget-body/status.md) · [人工体验卡与前后对照](../../evidence/m66/widget-body/75-review/review-guide.md)。M66.70～M66.75已连续完成，[当前31套380组及资源/源码/TypeScript核验](../../evidence/m66/widget-body/75-review/acceptance.md)通过。统一七控件正文阅读轴、服务选项、只读路径、磁盘动作、网络隐私外观和系统指标层级；布局结构、字段、动作与原字体保持，系统指标使用已有指标字阶。仍为合成数据/内存偏好的隔离Vue原型，人工审美确认待用户完成；用户已要求[提交归档](../../evidence/m66/widget-body/commit-note.md)。
+
+## 标题操作基线：M66.69
 
 [体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [目标／任务树／验收](../quickstart-home-header-actions-m66-69.md) · [当前检查状态](../../evidence/m66/header-actions/status.md) · [人工体验卡](../../evidence/m66/header-actions/review/review-guide.md)。已有标题主操作统一为前置16px业务图标＋文字、6px间距；连体更多、原动作和正文导航保持。新设计卡共用WidgetPrimaryAction，原业务模板消费兼容样式。[当前19套210组验收](../../evidence/m66/header-actions/review/acceptance.md)及源代码／资源校验通过，1次检查优化已记录；人工确认独立，用户已要求[提交归档](../../evidence/m66/header-actions/commit-note.md)。
 
