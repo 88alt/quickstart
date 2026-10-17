@@ -4,6 +4,7 @@ import { inventory } from './devices'
 import { deviceFixture } from './deviceFixtures'
 import { networkFixture } from './networkFixtures'
 import { businessFixture } from './businessFixtures'
+import { launcherFixture } from './launcherFixtures'
 const params=new URLSearchParams(location.search)
 export const demo = reactive({ scenario: params.get('scenario') || 'normal', authority: params.get('authority') || 'external', recovered: false, layout: params.get('layout') || 'baseline' })
 export const requests: Array<{ path: string; method: string; status: number }> = []
@@ -47,7 +48,9 @@ export function installFixtures() {
     if(method==='GET'&&key==='/network/port/list/'&&demo.scenario==='ports-loading'&&!demo.recovered)await new Promise(resolve=>setTimeout(resolve,1800))
     const deviceReply=url.origin===location.origin?deviceFixture(key,method,url,JSON.parse(String(init?.body||'{}'))):undefined
     const businessReply=url.origin===location.origin&&(demo.layout==='ordered'||!params.has('layout'))?businessFixture(key,method,JSON.parse(String(init?.body||'{}')),demo.scenario,demo.recovered):undefined
+    const launcherReply=url.origin===location.origin?launcherFixture(key,method,JSON.parse(String(init?.body||'{}')),url.searchParams.has('launcher-retry')?'normal':demo.scenario):undefined
     if (url.origin !== location.origin) { status=403; data={error:'External requests are disabled in design mode'} }
+    else if(launcherReply){status=launcherReply.status;data=launcherReply.data}
     else if(networkReply){status=networkReply.status;data=networkReply.data}
     else if(businessReply&&!(method==='GET'&&!demo.recovered&&demo.scenario==='system-error'&&key==='/system/status/')){status=businessReply.status;data=businessReply.data}
     else if (key === '/app/check/' && method === 'POST') data={result:{status:'installed'}}

@@ -370,3 +370,5 @@ scenes.unshift(['system-missing','系统指标缺失（原口径）','Missing me
 <style src="./rowSizing.css"></style>
 <style src="./widgetActionGroup.css"></style>
 <style src="./homeWidgetChrome.css"></style>
+<style src="./homeVisualTokens.css"></style>
+<style src="./homeWidgetDetails.css"></style>

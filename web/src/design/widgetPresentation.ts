@@ -22,7 +22,7 @@ export function automaticForm(id:WidgetId,p:WidgetPreference,ctx:PresentationCon
  return id==='system'&&ctx.width<560?'summary':id==='applications'?'grid':'standard'
 }
 export function resolvePresentation(id:WidgetId,p:WidgetPreference,ctx:PresentationContext):ResolvedPresentation{
- const d=definition(id),w=widget(id),count=Math.min(6,Math.max(0,ctx.favoriteCount)),role=ctx.role
+ const d=definition(id),w=widget(id),count=Math.min(id==='applications'?24:6,Math.max(0,ctx.favoriteCount)),role=ctx.role
  const form:PresentationId=p.mode==='auto'?automaticForm(id,p,ctx):p.mode
  let issue=preferenceIssue(id,p)||(role==='stacked'&&!formCapability(id,form).stacked?'compact':!d.forms.includes(form)?'form':'')
  let minWidth=ctx.mobile?240:form==='summary'&&id==='devices'?240:w.minWidth,minHeight=role==='stacked'&&form==='summary'?148:form==='summary'?(id==='devices'?(ctx.width<450?280:260):176):w.minHeight
@@ -32,9 +32,9 @@ export function resolvePresentation(id:WidgetId,p:WidgetPreference,ctx:Presentat
   // including the two border pixels. Header All also carries overflow count.
   // Columns remain bounded even in very wide rows. The preferred row count
   // changes packing, while fewer items never create fake empty tiles.
-  const maximum=Math.max(1,Math.min(6,Math.floor((ctx.width-32+12)/112))),target=form==='strip'?1:p.iconRows
+  const maximum=Math.max(1,Math.min(ctx.width<450?2:6,Math.floor((ctx.width-32+12)/112))),target=form==='strip'?1:p.iconRows
   columns=target?Math.min(maximum,Math.max(1,Math.ceil(count/target))):Math.min(maximum,Math.max(1,Math.ceil(count/Math.max(1,Math.ceil(count/maximum)))))
-  const desired=Math.max(1,Math.ceil(count/columns)),limit=target||3
+  const desired=Math.max(1,Math.ceil(count/columns)),limit=target||(maximum<=2?4:3)
   const tileHeight=form==='strip'?56:82,pitch=tileHeight+12
   rows=Math.min(limit,desired);preferredHeight=94+rows*tileHeight+(rows-1)*12
   minHeight=target?preferredHeight:176

@@ -1,0 +1,132 @@
+/* Native Card CSS is preserved. Explicit prototype-scoped adapters below
+ * normalize repeated visual roles without examining or changing business data. */
+.ordered-home .layout-widget .native-business-surface .content{color:var(--c-text)}
+.ordered-home .layout-widget .native-business-surface .content a{color:var(--c-accent)}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item{
+ border:1px solid transparent;border-radius:8px;background:var(--home-option);
+ color:var(--c-text);transition:background-color var(--home-motion),border-color var(--home-motion);
+}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item.active{
+ border-color:var(--home-option-border);background:var(--home-option-selected);
+}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item:hover{background:var(--c-hover)}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item:is(.cloud,.memory,.network)>.title{color:var(--c-text);font-weight:500}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item:is(.cloud,.memory,.network)>span{color:var(--c-muted)}
+.ordered-home .layout-widget :is(button,a,[role=button],summary):focus-visible{outline:2px solid var(--home-focus)!important;outline-offset:3px}
+.ordered-home .layout-widget :is(.widget-action-group,.settings-wrapper) :is(button,.btn_settings){transition:background-color var(--home-motion),color var(--home-motion)}
+.ordered-home .layout-widget .native-remote .info .status>span{background:var(--home-good-soft);color:var(--c-good)}
+.ordered-home .layout-widget .native-remote .info .status>span.offline{background:var(--c-soft);color:var(--c-muted)}
+.ordered-home .layout-widget .native-docker .status-icon{background:var(--home-good-soft);color:var(--c-good)}
+/* The original disabled branch owns its inline neutral state. Only its colors
+ * are adapted here; the branch and switch remain unchanged. */
+.ordered-home .layout-widget .native-docker .status-icon[style]{background:var(--c-soft)!important;color:var(--c-muted)!important}
+.ordered-home .layout-widget .native-business-surface :is(.docker_box>.path,.title_box>.path){
+ border-color:var(--home-field-border);border-radius:6px;background:var(--home-surface-inset);color:var(--c-text);
+}
+.ordered-home .layout-widget .native-business-surface :is(.docker_box>.path,.title_box>.path) a{color:var(--c-accent)}
+
+/* M66.53: service content uses the same rhythm, keeping every original field,
+ * tab, condition and handler. Long addresses wrap inside their existing cells. */
+.ordered-home .layout-widget :is(.native-sharing,.native-docker,.native-downloads,.native-remote) .content{
+ margin-top:16px;margin-bottom:0;
+}
+.ordered-home .layout-widget .native-business-surface .content .tab{gap:8px;margin-bottom:16px}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item{padding:12px 8px}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item>.title{margin-bottom:4px}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item>svg{margin-bottom:4px}
+.ordered-home .layout-widget :is(.native-sharing,.native-docker,.native-downloads) .content li[class$="-item"]{margin:12px 0}
+.ordered-home .layout-widget :is(.native-sharing,.native-docker,.native-downloads) .content :is([class$="_name"],[class$="_value"]){
+ min-width:0;white-space:normal;overflow:visible;overflow-wrap:anywhere;
+}
+.ordered-home .layout-widget .native-sharing .content .tit{font-size:var(--home-body-size);font-weight:500;color:var(--c-muted)}
+.ordered-home .layout-widget .native-business-surface .content :is(.configure,.use-url_app){color:var(--c-accent)}
+.ordered-home .layout-widget .native-docker .docker_box>.path{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.ordered-home .layout-widget .native-remote .info .status{padding-top:12px;border-color:var(--c-line)}
+.ordered-home .layout-widget .native-remote .info .status>div{font-size:var(--home-body-size);font-weight:500}
+.ordered-home .layout-widget .native-remote .info .title_box>.title{color:var(--c-muted)}
+.ordered-home .layout-widget .native-remote .path .item_btn{
+ border-color:var(--home-field-border);color:var(--c-accent);background:var(--c-panel);border-radius:4px;
+}
+.ordered-home .layout-widget .native-system .content{padding:0;margin:16px 0 0}
+.ordered-home .layout-widget .native-system .content .chart_box{padding-bottom:16px;margin-bottom:16px;border-color:var(--c-line)}
+.ordered-home .layout-widget .native-system .content .info{gap:12px}
+.ordered-home .layout-widget .native-system .content .info .item1{
+ margin-top:0;padding:16px;background:var(--home-surface-inset);border:1px solid var(--c-line);
+ border-radius:8px;color:var(--c-text);align-items:flex-start;text-align:left;
+}
+.ordered-home .layout-widget .native-system .content .info .item1>div{color:var(--c-muted);font-size:var(--home-caption-size);margin-bottom:8px}
+.ordered-home .layout-widget .native-system .content .info .item1>div>svg{width:20px;height:20px}
+.ordered-home .layout-widget .native-system .content .info .item1>span{font-weight:500!important;font-size:var(--home-body-size);line-height:1.5;overflow-wrap:anywhere}
+.ordered-home .layout-widget .native-system .content .info .item{justify-content:flex-start;padding:0 16px;color:var(--c-muted)}
+.ordered-home .layout-widget .native-system .content .info .item>div{color:var(--c-muted)}
+.ordered-home .layout-widget .native-system .content .info .item>span{font-size:var(--home-body-size);color:var(--c-text)}
+/* Gauge color/thresholds still belong to the original business component.
+ * A neutral center label is readable in both themes without recoloring rings. */
+.ordered-home .layout-widget .native-system .center-label{color:var(--c-text)!important;font-variant-numeric:tabular-nums}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item.cloud{--home-service-icon:var(--home-icon-blue)}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item.memory{--home-service-icon:var(--home-icon-teal)}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item.network{--home-service-icon:var(--home-icon-violet)}
+.ordered-home .layout-widget .native-downloads .content .tab>.item.cloud{--home-service-icon:var(--home-icon-orange)}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item>svg{color:var(--home-service-icon)}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item>svg [fill]:not([fill=none]){fill:currentColor}
+.ordered-home .layout-widget .native-business-surface .content .tab>.item>svg [stroke]:not([stroke=none]){stroke:currentColor}
+.ordered-home .layout-widget .native-remote .info .path .item_btn{color:var(--c-accent);border-color:var(--home-field-border)}
+
+/* M66.54: preserve the native curve, geometry and privacy implementation. */
+.ordered-home .layout-widget.widget-traffic .speed_item>span{color:var(--c-muted)!important}
+.ordered-home .layout-widget.widget-traffic .speed_item>div{font-weight:500;font-variant-numeric:tabular-nums}
+.ordered-home .layout-widget.widget-traffic .speed_item:first-child>div{color:var(--home-flow-down)!important}
+.ordered-home .layout-widget.widget-traffic .speed_item:last-child>div{color:var(--home-flow-up)!important}
+.ordered-home .layout-widget.widget-traffic .network_tag .tag_dn{background:var(--home-flow-down)!important}
+.ordered-home .layout-widget.widget-traffic .network_tag .tag_up{background:var(--home-flow-up)!important}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-uptime-badge.normal{color:var(--c-good);background:var(--home-good-soft)}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses dd{color:var(--c-text);margin-top:6px}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-ip-tag{background:var(--home-surface-inset);color:var(--c-muted);border-color:var(--c-line)}
+.ordered-home .layout-widget .connection-addresses [data-address-value]{font-variant-numeric:tabular-nums}
+.ordered-home .layout-widget .interface-link-mark{background:var(--c-soft)}
+.ordered-home .layout-widget .compact-ports .interface-list>button{background:var(--home-surface-inset);border-color:var(--c-line)}
+.ordered-home .layout-widget .interface-name strong{font-weight:500}
+.ordered-home .layout-widget .interface-link-state{font-variant-numeric:tabular-nums}
+
+/* M66.55: list rhythm and icon surfaces, without changing tile pitch, capacity,
+ * icon identity, disk thresholds or the original progress-fill width/color. */
+.ordered-home .layout-widget .canvas-devices>button{background:transparent;border-color:var(--c-line)}
+.ordered-home .layout-widget .canvas-devices>button:hover{background:var(--c-soft);border-color:var(--home-option-border)}
+.ordered-home .layout-widget .canvas-devices .device-scene-icon{background:var(--home-surface-inset);border-color:var(--c-line)}
+.ordered-home .layout-widget .canvas-devices strong{font-weight:500}
+.ordered-home .layout-widget .canvas-devices small{color:var(--c-muted)}
+.ordered-home .layout-widget .home-applications .application-icon{background:var(--home-icon-blue-bg);color:var(--home-icon-blue)}
+.ordered-home .layout-widget .home-applications .application-icon.teal{background:var(--home-icon-teal-bg);color:var(--home-icon-teal)}
+.ordered-home .layout-widget .home-applications .application-icon.violet{background:var(--home-icon-violet-bg);color:var(--home-icon-violet)}
+.ordered-home .layout-widget .home-applications .applications-favorites strong{font-weight:500}
+.ordered-home .layout-widget .home-applications .applications-favorites>button{transition:background-color var(--home-motion),color var(--home-motion)}
+.ordered-home .layout-widget .native-storage .content>.item{padding:12px 0;margin-top:0}
+.ordered-home .layout-widget .native-storage .content .item>.info{min-width:0}
+.ordered-home .layout-widget .native-storage .content .disk-item_name{
+ max-width:100%;min-width:0;white-space:normal;overflow:visible;overflow-wrap:anywhere;
+}
+.ordered-home .layout-widget .native-storage .content .disk-item_name>span{color:var(--c-muted);line-height:1.5}
+.ordered-home .layout-widget .native-storage .content :is(.disk_value,.disk-item_value){min-width:0}
+.ordered-home .layout-widget .native-storage .content .disk-item .disk_value .disk-item_value .value-data{white-space:normal}
+.ordered-home .layout-widget .native-storage .content .disk-item .value-data>div{flex-wrap:wrap;gap:6px;font-variant-numeric:tabular-nums}
+.ordered-home .layout-widget .native-storage .progress-bar{height:6px!important;border-radius:99px!important;background-color:var(--c-line)!important;box-shadow:none}
+.ordered-home .layout-widget .native-storage .progress-fill{border-radius:99px!important}
+.ordered-home .layout-widget .native-storage .content .item .info .name>div{font-weight:500}
+.ordered-home .layout-widget .native-storage .content .icon_box{background:var(--home-icon-blue-bg)}
+.ordered-home .layout-widget .native-storage .disk-item_name,.ordered-home .layout-widget .native-storage .value-data{font-variant-numeric:tabular-nums}
+/* Neutral native title/action icons stay legible in both themes. Preserve
+ * paths with fill=none and stroke=none, and leave the original curve untouched. */
+.ordered-home .layout-widget .card-header :is(.left,.settings-wrapper) svg{color:var(--c-muted)}
+.ordered-home .layout-widget .card-header :is(.left,.settings-wrapper) svg [fill]:not([fill=none]){fill:currentColor}
+.ordered-home .layout-widget .card-header :is(.left,.settings-wrapper) svg [stroke]:not([stroke=none]){stroke:currentColor}
+
+/* M66.56 matrix coverage: inactive labels remain readable; a hidden native
+ * tooltip must not widen a phone page or be clipped by a card. */
+.ordered-home .layout-widget .native-business-surface:is(.native-downloads,.native-sharing,.native-docker) .content span.configure.enabel{color:var(--c-muted)}
+.ordered-home .layout-widget .native-business-surface.native-storage .disk-item.load .disk_value .disk-item_value .value-data>button{color:var(--c-accent)}
+.ordered-home .layout-widget .native-storage .tooltip-trigger .tooltip-text.tooltip-top{
+ left:auto;right:0;transform:none;box-sizing:border-box;
+ max-width:min(260px,calc(100vw - 48px));
+}
+.ordered-home .layout-widget .native-storage .tooltip-trigger .tooltip-text .disk_dir_tip{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.ordered-home .layout-widget .native-storage .tooltip-trigger .tooltip-top::after{left:auto;right:8px;margin-left:0}
