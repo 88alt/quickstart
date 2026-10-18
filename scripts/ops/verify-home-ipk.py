@@ -14,6 +14,7 @@ p.add_argument('build_root', type=Path)
 p.add_argument('runtime', type=Path)
 p.add_argument('output', type=Path)
 p.add_argument('--arch', choices=['x86_64', 'aarch64'], required=True)
+p.add_argument('--package-release', default='2')
 a = p.parse_args()
 assert not a.output.exists(), 'Evidence already exists'
 assert (a.build_root / 'build.status').read_text().strip() == 'status=success'
@@ -43,10 +44,10 @@ def unpack(file):
 
 
 manifest = dict(line.split('=', 1) for line in (a.runtime / 'MANIFEST').read_text().splitlines())
-release = '-r1' if a.arch == 'aarch64' else '-1'
+release = ('-r' if a.arch == 'aarch64' else '-') + a.package_release
 expected_versions = {'quickstart': manifest['version'] + release,
                      'quickstart-netpolicy': '0.2.0-test20260928' + release,
-                     'luci-app-quickstart': manifest['version'] + '-r1'}
+                     'luci-app-quickstart': manifest['version'] + '-r' + a.package_release}
 files = sorted((a.build_root / 'ipk').rglob('*.ipk'))
 assert len(files) == 3, files
 seen = set()
@@ -70,7 +71,11 @@ for file in files:
         assert home_paths <= set(data['lib/upgrade/keep.d/quickstart'].decode().splitlines())
     elif name == 'quickstart-netpolicy':
         binary = data['usr/bin/quickstart-netpolicy']
-        assert json.loads(data['usr/share/quickstart-netpolicy/manifest.json'])
+        policy_manifest = json.loads(data['usr/share/quickstart-netpolicy/manifest.json'])
+        assert policy_manifest['product'] == name
+        assert policy_manifest['version'] == '0.2.0-test20260928'
+        assert policy_manifest['target'] == a.arch + '-unknown-linux-musl'
+        assert policy_manifest['binarySha256'] == digest(binary)
     else:
         binary = None
         assets = a.runtime / 'web/luci-static/quickstart'

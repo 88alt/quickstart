@@ -33,3 +33,15 @@ B普通 opkg update 已完成、所有源签名通过，日志在 `/root/quickst
 ## 目录补漏后的最终版本
 
 6fcc4ba 的0.16.0归档已经进入不可覆盖的测试下载缓存，后续目录身份异常补漏不能复用该文件名/hash。353533f 的同名本地归档仅保留为中间构建，未覆盖服务器缓存。最终候选升为 `0.16.1-test20261018`，重新生成完整runtime/资源版本/配方/SDK输入；旧0.16.0与慢构建仅为历史证据，不是最终安装候选。
+
+最终业务源码 `f2c7434e0769c273aa2077ed947894cc93692793`，runtime归档 SHA256 `6e4a111175ea3375e0edf962cdba44464d1ab0fc0c2dee32d60cec8cfea678b1`，资源版本 `0.16.1-test20261018-release-2332b07136c2`。已持久保存 `bin/releases/f2c7434/`，新增版本独立预置缓存，没有覆盖0.16.0。B完整候选 `b-candidate-f2c7434-1` 八项真实业务/主题断言通过，文件和进程匹配，API/控制台/pageerror零、配置恢复、会话销毁。最终源码 make test、104项前端、vue-tsc、make test-ops、make verify-lan-device-business 均通过；homeconfig/app 定向 race 通过；本地完整正式页面回归 `formal-f2c7434-final` 通过。
+
+## 包内容发现的问题与修正候选2
+
+`quickstart-home-arm64-0161-20261018-1` 的IPK已生成，但实际解包发现SDK再次strip预编译ELF：Quickstart预期93f3178c…而包内ef08226e…，NetPolicy manifest预期7fa35c1c…而包内80e0b2b3…。未安装这些包。配方现在RSTRIP=:保留runtime原始字节，两后端与LuCI包revision同步升2，检查脚本继续要求完整hash一致，未放宽断言。App Hub包契约新增原始payload和八条首页备份路径校验，2项通过；资源cache key旧版本相等假设更新为当前版本+内容hash格式，不删版本/三个资源键断言。
+
+同次ARM APK在lucihttp构建缺lua.h，原因是25.12的Lua已在官方packages feed，原profile只含base/luci。仅本次profiles显式启用各SDK默认packages固定commit：IPK21 `78bcd00c13587571b5c79ed2fc3363aa674aaef7`、IPK24 `23abaa6f3b0fdfd76b570031107e5718476ff0c8`、APK25 `268d92d3d46147efe1e81892e3a618f8bbd4806b`。从官方openwrt/packages镜像读取这些Git对象到本实例cache，checkout仍使用SDK默认canonical origin，fsck通过，无Git push。iStore依赖固定为此前成功canonical刷新得到的a97ace34f2da358a015b094d326bba2697697f2e，避免移动main分支和瞬时TLS失败改变输入。
+
+APK rooted feed种子落点修正为base_root，缺固定对象时先读取object cache再访问origin；真实Git测试覆盖root链接和缺pin补齐。本实例错误的旧种子移动到私有work/seed-diagnostics目录保留，未删除共享SDK/cache。构建器13项测试、preflight/release/deploy/verify通过；新runtime `runtime-138538c8fab5`。原构建器current仍为runtime-linkease-176-source-date-fix-20260930，未修改其他任务工作树。输入patch采用固定canonical基点的零上下文生成并在完整目录副本反向dry-run通过，避免patch正文上下文被Git源码空白lint误判。
+
+修正候选2 IDs：`quickstart-home-x64-0161-20261018-2`、`quickstart-home-arm64-0161-20261018-2`；正在构建。前一个构建的失败/中止日志与状态保留，不算最终通过。

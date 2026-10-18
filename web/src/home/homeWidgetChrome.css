@@ -42,4 +42,8 @@
 }
 @media(pointer:coarse){
  .natural-home .traffic-header-actions>.layout-speed,.natural-home .layout-widget .applications-actions.widget-action-group>button{min-height:44px}
+ /* The absolute action shares the title row. Reserve its full touch height
+  * before the rate labels, preserving the plotting area on narrow cards. */
+ .natural-home .layout-widget.widget-traffic .network_container .title_box{min-height:46px;box-sizing:border-box;align-items:center}
+ .natural-home .layout-widget.widget-traffic .network_container{min-height:330px}
 }
