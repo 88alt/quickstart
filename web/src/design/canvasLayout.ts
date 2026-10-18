@@ -5,7 +5,7 @@ export type CanvasLayoutItem={id:CanvasModuleKey;enabled:boolean;span:number}
 export const canvasModules:Array<{id:CanvasModuleKey;zh:string;en:string;glyph:string;fixed?:boolean}>= [
   {id:'connection',zh:'网络连接',en:'Connection',glyph:'network',fixed:true},
   {id:'tools',zh:'配置工具',en:'Configuration',glyph:'tune',fixed:true},
-  {id:'devices',zh:'局域网设备',en:'LAN devices',glyph:'devices'},
+  {id:'devices',zh:'设备列表',en:'LAN devices',glyph:'devices'},
   {id:'system',zh:'系统状态',en:'System health',glyph:'chip'},
   {id:'storage',zh:'磁盘信息',en:'Disks',glyph:'disk'},
   {id:'sharing',zh:'存储服务',en:'Storage services',glyph:'folder'},

@@ -2,6 +2,9 @@
 import { reactive } from 'vue'
 import { inventory } from './devices'
 import { deviceFixture } from './deviceFixtures'
+import { networkFixture } from './networkFixtures'
+import { businessFixture } from './businessFixtures'
+import { launcherFixture } from './launcherFixtures'
 const params=new URLSearchParams(location.search)
 export const demo = reactive({ scenario: params.get('scenario') || 'normal', authority: params.get('authority') || 'external', recovered: false, layout: params.get('layout') || 'baseline' })
 export const requests: Array<{ path: string; method: string; status: number }> = []
@@ -40,8 +43,16 @@ export function installFixtures() {
     if (!url.pathname.startsWith('/cgi-bin/') && url.origin === location.origin) return realFetch(input, init)
     let status = 200, data: unknown
     const key = url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname
+    const networkReply=url.origin===location.origin&&(demo.layout==='ordered'||!params.has('layout'))?networkFixture(key,method,JSON.parse(String(init?.body||'{}')),demo.scenario,demo.recovered):undefined
+    if(method==='GET'&&key==='/u/network/status/'&&demo.scenario==='network-loading'&&!demo.recovered)await new Promise(resolve=>setTimeout(resolve,1800))
+    if(method==='GET'&&key==='/network/port/list/'&&demo.scenario==='ports-loading'&&!demo.recovered)await new Promise(resolve=>setTimeout(resolve,1800))
     const deviceReply=url.origin===location.origin?deviceFixture(key,method,url,JSON.parse(String(init?.body||'{}'))):undefined
+    const businessReply=url.origin===location.origin&&(demo.layout==='ordered'||!params.has('layout'))?businessFixture(key,method,JSON.parse(String(init?.body||'{}')),demo.scenario,demo.recovered):undefined
+    const launcherReply=url.origin===location.origin?launcherFixture(key,method,JSON.parse(String(init?.body||'{}')),url.searchParams.has('launcher-retry')?'normal':demo.scenario):undefined
     if (url.origin !== location.origin) { status=403; data={error:'External requests are disabled in design mode'} }
+    else if(launcherReply){status=launcherReply.status;data=launcherReply.data}
+    else if(networkReply){status=networkReply.status;data=networkReply.data}
+    else if(businessReply&&!(method==='GET'&&!demo.recovered&&demo.scenario==='system-error'&&key==='/system/status/')){status=businessReply.status;data=businessReply.data}
     else if (key === '/app/check/' && method === 'POST') data={result:{status:'installed'}}
     else if (key === '/system/module-settings/' && method === 'GET') data={result:{diableDisplay:hiddenModules}}
     else if (key === '/system/module-settings/' && method === 'POST') { hiddenModules=JSON.parse(String(init?.body || '{}')).diableDisplay || []; data={result:{diableDisplay:hiddenModules},previewOnly:true} }
@@ -54,7 +65,7 @@ export function installFixtures() {
     else if (key==='/lanctrl/v2/device-traffic/' && method==='GET') {const available=!['no-speed','disabled','speed-error','unsupported'].includes(demo.scenario);data={result:{health:{state:available?'ready':'partial'},items:inventory().map((d,i)=>({deviceId:d.deviceId,uploadSpeed:available?(i===5?0:82000):-1,downloadSpeed:available?(i===5?0:2400000):-1,uploadBytes:available?1000000:-1,downloadBytes:available?10000000:-1,connectionCount:available?4:0,state:available?'ready':'partial',sampledAt:'2026-10-14T04:00:00Z'}))}}}
     else if (key==='/network/device/list/' && method==='GET' && demo.layout!=='baseline') data={result:{devices:!demo.recovered&&['loading','error','old','permission'].includes(demo.scenario)?[]:inventory().filter(d=>d.online).map(d=>({name:d.displayName,ipv4addr:d.addresses.current[0]?.address,mac:d.mac}))}}
     else if(method==='GET'&&((demo.scenario==='network-error'&&['/u/network/status/','/u/network/statistics/','/network/port/list/'].includes(key))||(demo.scenario==='storage-error'&&key==='/nas/disk/status/')||(demo.scenario==='services-error'&&['/u/nas/service/status/','/guide/docker/status/','/guide/download-service/status/','/u/guide/ddns/'].includes(key)))){status=503;data={error:'Synthetic module failure'}}
-    else if(method==='GET'&&demo.scenario==='system-error'&&['/system/status/','/u/system/version/'].includes(key)){status=503;data={error:'Synthetic system read failure'}}
+    else if(method==='GET'&&!demo.recovered&&demo.scenario==='system-error'&&['/system/status/','/u/system/version/'].includes(key)){status=503;data={error:'Synthetic system read failure'}}
     else if (method === 'GET' && key==='/nas/disk/status/'&&demo.scenario==='many-disks'){const original=(simple[key] as {disks:Record<string,unknown>[]}).disks;data={result:{disks:Array.from({length:24},(_,i)=>({...original[i%original.length],name:'disk-'+(i+1),isSystemRoot:i===0}))}}}
     else if (method === 'GET' && key in simple) data={result:simple[key]}
     else { status=method==='GET'?501:403; data={error:`Preview fixture is not defined for ${method} ${key}`,previewOnly:true} }

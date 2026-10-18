@@ -1,5 +1,27 @@
 # 首页模块形态与显示设置：架构设计参考
 
+当前七控件内部构图按[M66.76～M66.81](quickstart-home-widget-composition-m66-76-81.md)及[外观规范VS10](quickstart-home-widget-visual-standard.md)实施，结果见[执行状态](../evidence/m66/widget-composition/status.md)。新增`widgetComposition.ts`只在设计Vite构建中运行：限定模板锚点/解析后的节点重排系统资料与服务选择，保留原业务脚本和全部原绑定；生产配置不导入。原业务SFC未写入，网络卡只增展示类；共享正文CSS负责内部栅格与响应式，读取owner、图表实例、权限及布局事务不动。原型变换不是正式业务重构，正式接入仍须将已验证排布落实为显式内容组件/槽位，不能扩展成运行DOM扫描或长期的通用编译补丁。下段“仅两运行文件改动”属于前轮历史。
+
+七控件正文精修[M66.70～M66.75](quickstart-home-widget-body-m66-70-75.md)沿用本架构：布局只处理稳定ID、形态与用户空间意图，原业务Vue仍拥有字段/条件/动作，`homeWidgetDetails.css`消费原语义类与共同令牌。当前运行变更仅该CSS和网络隐藏遮罩模板，没有新建业务模型、请求所有者、图表观察器或通用字段解析器。正文取值只在[唯一外观规范VS09](quickstart-home-widget-visual-standard.md)维护；技术结果和人工确认见[执行状态](../evidence/m66/widget-body/status.md)。正式接入应逐项改为显式共享正文组件/槽位，不能把原型CSS适配当作业务迁移已完成。
+
+标题主操作[M66.69](quickstart-home-header-actions-m66-69.md)采用`WidgetPrimaryAction`统一原生button、前置装饰图标槽、文字槽和属性／点击透传；不持有请求、定时器、状态或权限判断。新设计卡传入原业务回调与语义图标；原业务卡保留原模板，通过共同标题CSS兼容图标尺寸／间距／主题。更多菜单仍为旁边独立交互目标，摘要仅菜单时不制造主操作。正式组件迁移可在保持原动作和条件前提下逐项接入该组件，当前只在隔离原型落地。结果见[本轮状态](../evidence/m66/header-actions/status.md)。
+
+应用能力契约为[规范1.7](quickstart-home-layout-interaction-spec.md)R18B～D，[M66.63～68](quickstart-home-launchpad-m66-63-68.md)已完成隔离原型技术交付。`launcherCatalog`单一读取所有者提供来源状态和最后快照；`launcherLibrary`负责入口合并、完整库查询／分页及用户链接事务；首页仅保留固定ID序列。48项分页、64用户链接、24首页固定分别计数。链接草稿、首页收藏草稿、布局草稿互斥，展示及查询不写业务配置。完成状态以[应用能力证据](../evidence/m66/launchpad/status.md)为准；下文1.6为上一候选说明。
+
+当前应用契约为[交互规范1.6](quickstart-home-layout-interaction-spec.md)R14／R18／R18A，[M66.57～62](quickstart-home-launcher-m66-57-62.md)已完成隔离原型技术交付：八默认工具、最多24收藏、稳定宿主直接编辑，当前证据与正式集成前置见[开发交接](../evidence/m66/launcher/62-review/development-handoff.md)。下文早期“当前最多6项”、固定高度及旧版本方案均是对应阶段历史；不得与1.6同时作为产品基线。布局边界仍沿用1.5 R37～R40，人工体验待确认。
+
+布局阶段已由用户确认收口并提交`ed30df5`。下一阶段的[控件统一外观与独立业务建议](quickstart-home-widget-visual-standard.md)基于当前原Card、磁盘截图和11个控件源码，提出共享外壳／令牌／交互与独立业务的分工；状态为设计建议，尚未据此修改当前控件外观。布局规范1.5和既有业务基线继续有效。
+
+后续用户授权的公共视觉落地见[本轮验收](../evidence/m66/widget-standard/acceptance.md)：隔离原型通过`homeWidgetChrome.css`与`widgetActionGroup.css`消费同一组卡片／标题／操作令牌，移除磁盘及共享常规数量尾注；布局、业务读取owner、原动作与权限口径保持。上段是提出方案时的记录，正式业务组件结构重构仍按独立计划执行。
+
+1.5新增[统一边界调整M66.50](quickstart-home-boundary-resize-m66-50.md)，以统一规范R37～R40为准。布局v3新增可选`row.minHeight`与`column.upperShare`表达用户意图；旧`height/split`不激活。`rowSizing.ts`处理有限值校验与空间钳制，`useNaturalSizing.ts`只对已有DOM进行合并测量，不克隆组件、不创建读请求、不保存测量结果；`OrderedHome.vue`负责当前行手柄与共同草稿／历史。测量时同步临时恢复自然轨道，读取后在同一调用恢复样式，不绘制中间态；输入变化和既有容器观察器触发RAF，后台停止、卸载取消。形态与列表容量仍只依赖声明与宽度，不依赖测得高度。正式集成应将该测量适配作为可替换的布局层契约，并在真实业务下复验内容增长与资源预算，不能把本原型视为正式性能验收。
+
+1.4当前参考：[结构、形态与空间解耦任务](quickstart-home-structure-presentation-m66-44-49.md)、[实现交接](../evidence/m66/structure-presentation/49-handoff/development-handoff.md)、[当前证据](../evidence/m66/structure-presentation/48-review/acceptance.md)。上下位置不强制摘要；形态级能力、v3及分版本auto、混合图表伸展、独立总览缩略轨道为当前实现。下方1.2～1.3为历史，冲突处以统一规范1.4 R31～R36为准；人工体验待本轮确认。
+
+1.3修订：用户已授权[自然高度与系统信息双形态](quickstart-home-natural-layout-m66-38-43.md)。当前方向为先按宽度／角色选有限形态，再布局内容，最后同排等高；普通行不受旧height约束，上下split仅保留兼容，实际高度不写布局快照。本文件以下固定高度／增高协商章节是1.2设计与实现记录，冲突处以规范1.3 R25～R30为准；技术完成状态见[本轮证据](../evidence/m66/natural-home/status.md)。
+
+1.3实现参考：[分层、设计专用适配及正式集成边界](../evidence/m66/natural-home/43-handoff/development-handoff.md)。系统两形态已经共用原store，schemaVersion 2兼容旧布局；560px实际阈值及有限内容、等高、后台／卸载清理已由当前候选自检验证。技术自检不代表人工体验或真实业务集成验收。
+
 2026-10-16，用户已认可并授权连续实施。唯一产品基线为[交互规范1.2](quickstart-home-layout-interaction-spec.md)R17～R24；本文件解释架构与实现建议，不另立产品规则。[M66.26～M66.31](quickstart-home-widget-presentation-milestones.md)已完成原型技术交付及用户人工验收；实现基线`952528c`，本轮按用户要求归档提交。[实际代码与正式开发交接](../evidence/m66/widget-presentation/31-handoff/business-handoff.md) · [当前验收](../evidence/m66/widget-presentation/31-handoff/acceptance.md)。
 
 ## 当前源码与截图说明
@@ -10,6 +32,14 @@
 - `moduleCapability.ts`已有full／standard／compact名称，但主要仍是一组标准最低宽高与单独的上下摘要高度；`LayoutPreviewCard.vue`自行推导设备数量等呈现细节。形态声明、校验与真实渲染尚未完全统一。
 
 ## 已认可的产品模型及架构解释
+
+六组件业务基线：磁盘信息、存储服务、Docker、下载服务、远程域名、系统信息按[原业务核对](quickstart-home-business-widgets-alignment.md)直接复用原组件与表单；统一布局架构不负责重新定义其状态和动作。标准卡有界滚动，摘要打开原完整详情；数据快照、动作宿主与安全目标预览只在当前有序设计入口启用。当前检查见[M66.35～37](../evidence/m66/business-widgets/status.md)。
+
+共享视觉基础：按用户要求，当前有序原型各模块统一采用[原字体与共同字阶](quickstart-home-typography.md)。相同信息角色共享字体规则，标准／摘要保留信息密度差异；字体适配不改变布局偏好、容量、业务状态或读取所有权。当前字体技术证据见[本轮检查](../evidence/m66/home-typography/acceptance.md)。
+
+业务对齐前置：统一展示架构已经实现，不表示原首页各控件的功能均已迁移等价。按用户2026-10-16要求，先核对原业务再升级内部交互；网络连接与网络接口状态各自独立。核对时的原型合并呈现已按M66.32～34拆分，并复用原DNS／软件源表单；实际检查见[执行状态](../evidence/m66/network-widgets/status.md)。字段／动作清单、现存疑点与验收定义见[业务对齐设计](quickstart-home-network-widget-business-alignment.md)。
+
+后续紧凑排版：当前连接标准形态声明最小220px（单卡参考240px），当前接口紧凑形态136px；数值为能力下限，不是强制高度。长值、异常、触屏与标题换行仍参与原自然测量；原完整接口形态、旧版摘要尺寸、布局文档及用户手动空间分配保持。只校准这两种形态的高度声明，不改变自然测量、分配、形态选择与历史算法。[产品规范及当前验收](quickstart-home-network-density.md)。
 
 | 概念 | 负责什么 | 示例 |
 |---|---|---|
@@ -24,6 +54,8 @@
 应用的2／3行图标是显示属性；只有卡片内容结构发生实质变化（例如横向启动条与完整启动面板），才登记为不同形态，避免为每个属性组合复制一个形态。
 
 ## 应用与工具的具体方案
+
+M66.57当前修订：本节原六项限制为历史记录，由唯一规范R14／R18／R18A替代，当前为默认八工具、最多24收藏、半宽4×2／手机2×4；显式行数与旧收藏仍兼容。稳定入口注册表、目录状态、独立收藏草稿及动作适配分离，布局引擎不保存收藏。完整实施与当前证据见[快捷启动台计划](quickstart-home-launcher-m66-57-62.md)。
 
 候选呈现为“启动条”和“图标网格”。启动条适合较宽较矮区域；图标网格适合与设备等模块并排。两者始终保留“全部应用与工具”入口及同一份常用项，不增加重复软件中心模块。
 

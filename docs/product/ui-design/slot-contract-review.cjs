@@ -18,7 +18,7 @@ try{
   assert.equal(m.assignSlot(before,a,'system').changed,false);assert.equal(m.assignSlot(before,{...a,slot:4},'system').issue,'target');
  });
  check('SC06 all 10 capabilities × exact minimum / width-1 / height-1 / stack role',()=>{
-  assert.equal(c.moduleCapabilities.length,10);for(const item of c.moduleCapabilities){assert.equal(c.spaceIssue(item.id,item.minWidth,item.minHeight),'');assert.match(c.spaceIssue(item.id,item.minWidth-1,item.minHeight),/^width:/);assert.match(c.spaceIssue(item.id,item.minWidth,item.minHeight-1),/^height:/);assert.equal(c.spaceIssue(item.id,item.minWidth,148,true),item.stacked?'':'compact')}
+  assert.equal(c.moduleCapabilities.length,11);for(const item of c.moduleCapabilities){assert.equal(c.spaceIssue(item.id,item.minWidth,item.minHeight),'');assert.match(c.spaceIssue(item.id,item.minWidth-1,item.minHeight),/^width:/);assert.match(c.spaceIssue(item.id,item.minWidth,item.minHeight-1),/^height:/);assert.equal(c.spaceIssue(item.id,item.minWidth,148,true),item.stacked?'':'compact')}
  });
  check('SC07–09 five templates, explicit retained items and mirrored roles',()=>{
   for(const t of o.templates){const ids=t.id==='left-big'?['traffic','system','connection']:t.id==='right-big'?['system','connection','traffic']:t.id==='triple'?['system','docker','remote']:['system'];assert.equal(m.validate([row(ids,t.id)]).issue,'')}
@@ -39,5 +39,5 @@ try{
   assert.equal(m.insertBeside([row(['system','docker','remote'],'triple')],'connection','test',1).issue,'capacity');assert.deepEqual(m.moveRowTo(before,'b','a').rows.map(r=>r.id),['b','a']);
   assert.equal(m.changeSize(before,'a',{weights:[80]}).issue,'structure');assert.equal(m.changeSize(before,'a',{height:1}).changed,false);
  });
- report.result='pass';console.log('PASS slot contract: '+report.checks.length+' groups; 10 capability boundary sets');
+ report.result='pass';console.log('PASS slot contract: '+report.checks.length+' groups; 11 capability boundary sets');
 }catch(e){report.result='fail';report.failure=e.stack;process.exitCode=1}finally{fs.writeFileSync(path.join(root,`attempt-${attempt}.json`),JSON.stringify(report,null,2)+'\n');if(original)Module._extensions['.ts']=original;else delete Module._extensions['.ts']}

@@ -1,6 +1,122 @@
 # Quickstart Vue 首页设计原型
 
-## 当前原型：M66.26～M66.31 模块形态与显示设置
+## 当前：网络连接与紧凑网络接口降高
+
+连接改为三个完整信息行，紧凑端口由三层收成两层；字体、状态来源、隐私、原表单和详情保持。约463px桌面卡宽下实测连接334→238px、接口161→136px；长值/异常/触屏可自然增高，手机完整接口形态保留原总数与字段。[目标及任务树](../quickstart-home-network-density.md)、[当前100组检查、截图与资源指纹](../../evidence/m66/network-density/acceptance.md)。下述按钮/命名规范继续有效，旧候选结果作为历史保留。
+
+## 设备“查看全部”按钮统一
+
+设备主按钮移除旧蓝色链接类及其悬停覆盖，复用现有标题分段按钮样式；字体、图标尺寸、边框与其他控件一致。导航、菜单、业务和布局保持。[当前截图、27组检查与资源指纹](../../evidence/m66/device-action-consistency/acceptance.md)。下述命名与图表例外继续有效，前轮验证作为历史保留。
+
+## 主按钮四字命名，图表保留“测速”例外
+
+用户明确要求网络流量按钮恢复“测速”及原图例间距，以保持图表简洁；其他按钮仍为设备管理、接口配置、查看全部、文件管理、存储配置、数据迁移、下载管理、域名配置、信息概览（设备/应用同为查看全部）。图标、更多、向导和目标保持；菜单图标不加文字，摘要不新增主按钮。规则见[VS12](../quickstart-home-widget-visual-standard.md)，当前资源及截图见[恢复验收](../../evidence/m66/widget-action-labels/traffic-restore/acceptance.md)。前轮四字按钮、标题与构图报告保留为历史，不能替代本次核验。
+
+## 当前小幅更新：中文卡片标题统一四字
+
+除Docker外，当前首页标题为网络流量、网络连接、网络接口、设备列表、应用工具、磁盘信息、存储服务、下载服务、远程域名、系统信息；标准/紧凑与布局编辑中的模块名称保持一致。仅缩短标题，不更改业务、模块ID、尺寸或布局算法。取值见[外观规范VS11](../quickstart-home-widget-visual-standard.md)，结果见[本轮标题验收](../../evidence/m66/widget-titles/acceptance.md)。下方M66.76～81为内部构图基线，当前预览资源以标题验收为准。
+
+## 当前：M66.76～M66.81 七控件内部布局重排
+
+用户授权的[六阶段目标、任务树与可测试标准](../quickstart-home-widget-composition-m66-76-81.md)已全部完成，当前七控件内部构图已进入5180：系统指标/资料双区、紧凑服务选择与全宽地址/目录、Docker状态区、网络地址分组、磁盘名称操作同排。[当前执行状态](../../evidence/m66/widget-composition/status.md)与[28套291组核心回归、额外41组可读性/状态及交付核验](../../evidence/m66/widget-composition/81-review/acceptance.md)通过。已用 `/config/playwright-runner` 截图并实际打开审查，[14张前后对照与体验卡](../../evidence/m66/widget-composition/81-review/optimization-1/review-guide.md)可查看。人工最终审美独立待完成，本轮未提交；合成数据/内存偏好的隔离原型边界保持。下方为前轮归档记录，不能用旧380组代替当前验收。
+
+## 历史：M66.70～M66.75 七控件正文精修
+
+[体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [全部服务示例](http://192.168.9.19:5180/?layout=ordered&scenario=business-all) · [六阶段目标、任务树与验收标准](../quickstart-home-widget-body-m66-70-75.md) · [执行状态](../../evidence/m66/widget-body/status.md) · [人工体验卡与前后对照](../../evidence/m66/widget-body/75-review/review-guide.md)。M66.70～M66.75已连续完成，[当前31套380组及资源/源码/TypeScript核验](../../evidence/m66/widget-body/75-review/acceptance.md)通过。统一七控件正文阅读轴、服务选项、只读路径、磁盘动作、网络隐私外观和系统指标层级；布局结构、字段、动作与原字体保持，系统指标使用已有指标字阶。仍为合成数据/内存偏好的隔离Vue原型，人工审美确认待用户完成；用户已要求[提交归档](../../evidence/m66/widget-body/commit-note.md)。
+
+## 标题操作基线：M66.69
+
+[体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [目标／任务树／验收](../quickstart-home-header-actions-m66-69.md) · [当前检查状态](../../evidence/m66/header-actions/status.md) · [人工体验卡](../../evidence/m66/header-actions/review/review-guide.md)。已有标题主操作统一为前置16px业务图标＋文字、6px间距；连体更多、原动作和正文导航保持。新设计卡共用WidgetPrimaryAction，原业务模板消费兼容样式。[当前19套210组验收](../../evidence/m66/header-actions/review/acceptance.md)及源代码／资源校验通过，1次检查优化已记录；人工确认独立，用户已要求[提交归档](../../evidence/m66/header-actions/commit-note.md)。
+
+## 应用与工具能力基线：M66.63～M66.68 完整应用启动台
+
+[体验首页](http://192.168.9.19:5180/?layout=ordered) · [35项完整库](http://192.168.9.19:5180/?layout=ordered&scenario=apps-35) · [120项分页](http://192.168.9.19:5180/?layout=ordered&scenario=apps-120&favorites=24) · [任务树与可测试目标](../quickstart-home-launchpad-m66-63-68.md) · [当前状态](../../evidence/m66/launchpad/status.md) · [人工体验卡](../../evidence/m66/launchpad/68-review/review-guide.md)。
+
+点击应用与工具“全部”，默认完整来源图标网格，支持全库搜索、轻量筛选、每页48项；首页仍只固定24项。可添加／编辑／删除最多64条用户链接，默认不固定；取消固定不删除链接。保存会定位至对应页，新安装应用不自动写首页。保留原八工具、常用拖动编辑与首页布局。[当前28套318组浏览器＋16组模型验收](../../evidence/m66/launchpad/68-review/acceptance.md)及341源码／64原业务保护通过；人工美感与易用性确认待用户完成。用户已要求提交归档，见[提交说明](../../evidence/m66/launchpad/commit-note.md)。
+
+仍为隔离Vue原型、合成目录、会话内存收藏／链接，刷新恢复；链接仅预览目的地址，不访问真实服务。正式API、ACL、持久化和设备验收另行实施。
+
+## 历史：M66.57～M66.62 应用与工具快捷启动台
+
+[体验默认首页](http://192.168.9.19:5180/?layout=ordered) · [六阶段任务树](../quickstart-home-launcher-m66-57-62.md) · [当前22套263组验收与指纹](../../evidence/m66/launcher/62-review/acceptance.md) · [人工体验卡](../../evidence/m66/launcher/62-review/review-guide.md)。
+
+默认八工具，半宽4×2／手机2×4；更多→编辑快捷入口，真实网格支持添加、移除、拖动、键盘、撤销、恢复与保存／取消。最多24项；保留旧收藏、显示偏好与不可用入口，全部／搜索承接溢出，软件中心保留原目标。编辑宿主独立于响应式槽位，布局与收藏两份事务互斥。原业务表单及目标语义沿用，其他控件与布局保护通过。
+
+本轮仍是合成目录及内存收藏，导航保留、刷新恢复示例。技术通过，待用户人工审美与易用性确认；下列早期候选组数属于历史，不能代替当前版本验收。重复执行可用SSD入口运行`launcher-final-runner.cjs`，见验收文档。
+
+## 历史：M66.51～M66.56 视觉精修
+
+[体验默认五行](http://192.168.9.19:5180/?layout=ordered) · [全部服务运行示例](http://192.168.9.19:5180/?layout=ordered&scenario=business-all) · [六阶段任务树](../quickstart-home-visual-refinement-m66-51-56.md) · [最终176组检查及截图](../../evidence/m66/visual-refinement/56-review/acceptance.md) · [人工体验清单](../../evidence/m66/visual-refinement/56-review/review-guide.md)。
+
+只精修原型样式：共享浅深主题、服务选中态、信息容器、字重与留白、系统中性面板、图例读数、设备／应用图标底座和磁盘轨道。卡片业务与布局核心不变，121实现和64原业务文件保护通过。技术完成，待用户人工审美确认；下列早期候选组数是历史证据。
+
+## 默认布局更新（2026-10-17）
+
+用户指定的默认首页为五行：左单右双（网络流量／右上网络连接／右下网络接口状态）；等宽双列（局域网设备／应用与工具）；等宽双列（磁盘信息／存储服务）；三列（Docker／下载服务／远程域名）；单列系统信息。
+
+[默认首页](http://192.168.9.19:5180/?layout=ordered)及“恢复推荐布局”采用此顺序。其他命名对照示例保持原样；组件业务、形态选择、响应式拆行及内存草稿机制不变。
+
+[本轮8组布局检查与截图](../../evidence/m66/default-layout/acceptance.md)通过。下面152组统一样式检查属于上轮候选，不能替代本轮默认布局验证。
+
+用户已确认首页自定义布局完成，归档提交`ed30df5`。随后开始[统一控件外观与独立业务设计](../quickstart-home-widget-visual-standard.md)，以磁盘卡为首个样张方向。用户校正的标题操作已恢复原版连体分段外观，共用外框／单条分隔线／零间隙；[前一候选55组检查与截图](../../evidence/m66/widget-action-group/acceptance.md)保留为历史。
+
+最新实施：11个控件已共用卡片圆角、边框、间距、标题字阶与操作样式；磁盘和SAMBA额外计数尾注已移除，完整信息入口、异常和权限说明保留。[当前候选152组检查、64文件保护与审图](../../evidence/m66/widget-standard/acceptance.md)。标题分段记录为前一候选，不能替代本轮验证；正式业务结构迁移尚未进行。
+
+## M66.50 统一边界调整
+
+[直接体验](http://192.168.9.19:5180/?layout=ordered&preset=network-stack&scenario=business-all) · [规则与任务树](../quickstart-home-boundary-resize-m66-50.md)。进入“自定义首页”，选中行可拖左右边界调宽、上下边界分配当前空间、底边增加行空间。默认仍自动；内容最低需求是硬边界。行布局面板可一次恢复自动。普通浏览与手机拆成单卡后不显示手柄；宽屏偏好保留。
+
+本轮验证脚本：`boundary-contract-review.cjs`、`boundary-interaction-review.cjs`、`boundary-touch-review.cjs`、`boundary-layout-review.cjs`、`boundary-state-review.cjs`、`boundary-resource-review.cjs`及`boundary-handoff-review.cjs`。193组场景、64文件保护及4组交付检查通过，优化2轮；[当前验收](../../evidence/m66/boundary-resize/acceptance.md)、[人工体验卡](../../evidence/m66/boundary-resize/handoff/review-guide.md)。继续用RTK＋SSD入口和独立证据目录，初始失败与优化记录保留。合成数据、内存草稿、刷新恢复示例的边界不变，人工体验需用户确认。
+
+## 历史：M66.44～M66.49 结构与形态解耦
+
+[完整连接＋紧凑端口](http://192.168.9.19:5180/?layout=ordered&preset=network-stack&scenario=business-all) · [左右镜像](http://192.168.9.19:5180/?layout=ordered&preset=network-stack-mirror&scenario=business-all) · [上下反转](http://192.168.9.19:5180/?layout=ordered&preset=network-stack-reverse&scenario=business-all) · [当前技术检查](../../evidence/m66/structure-presentation/48-review/acceptance.md) · [人工任务卡](../../evidence/m66/structure-presentation/49-handoff/review-guide.md) · [架构交接](../../evidence/m66/structure-presentation/49-handoff/development-handoff.md)。
+
+上下位置不再强制摘要。连接标准形态保留完整原连接信息；接口紧凑形态直接显示有界具名端口及状态／速率；组合图表真实绘图区可伸展，上下按内容分配。移动、替换、镜像和撤销共用计划；总览独立显示名称及实际形态，不把缩略高度用于真实卡片。旧rows/v1/v2迁移到v3，保留auto及各版本原推荐含义；通过现有显示设置／恢复推荐显式采用新规则。顶部设计预览可切三个网络组合。
+
+当前构建192组检查通过，原业务64文件未改。只开放已验证的形态／位置，不是全部模块任意嵌套。人工体验待本轮用户确认；旧记录不代替新验收。服务为隔离Vue构建、合成数据和内存草稿，刷新恢复示例，没有真实用户存储／设备验收。旧v2示例可加`legacy=1`，旧v1推荐可加`legacy=0`。任务与唯一规则见[M66.44～49](../quickstart-home-structure-presentation-m66-44-49.md)和[规范1.4](../quickstart-home-layout-interaction-spec.md)。
+
+新检查入口：`structure-spec-review.cjs`、`structure-contract-review.cjs`、`structure-render-review.cjs`、`structure-interaction-review.cjs`、`structure-compatibility-review.cjs`、`structure-matrix-review.cjs`、`structure-overview-review.cjs`、`structure-port-fit-review.cjs`、`structure-resource-review.cjs`、`structure-handoff-review.cjs`；仍用RTK＋SSD及独立证据目录。交付检查需先生成同一被测候选指纹、报告与任务卡。下方M66.38～43固定图表／上下限制为历史，冲突处以1.4为准。
+
+## 历史：M66.38～M66.43 自然高度与系统信息双形态
+
+[当前首页](http://192.168.9.19:5180/?layout=ordered) · [六组件示例](http://192.168.9.19:5180/?layout=ordered&preset=services&scenario=business-all) · [当前规则与任务树](../quickstart-home-natural-layout-m66-38-43.md) · [技术检查](../../evidence/m66/natural-home/42-review/acceptance.md) · [人工体验任务卡](../../evidence/m66/natural-home/43-handoff/review-guide.md) · [正式开发参考](../../evidence/m66/natural-home/43-handoff/development-handoff.md)。
+
+普通行按有限内容自然增高，同排等高；上下小卡按内容分配；网络曲线自身320px／手机300px保持。移除普通行高／上下比例及接受增高操作，保留结构、列宽、显示设置、移动排序及撤销。系统自动在普通槽560px分界选择紧凑概览／完整信息；明确选择完整信息在普通窄槽仍完整展示。标题一个主要操作加必要更多，底部不重复放详情按钮；磁盘首页合计3项、SAMBA2项，完整原组件和原向导仍可达。
+
+24组尺寸／主题／语言基准、临界宽度、原业务／表单、触摸、20次切换和实际卸载检查已通过，详见本轮证据。仅设计Vue构建适配、合成数据和内存草稿；当前人工体验待用户确认。原业务64文件未改；设计构建会注入标题菜单和有限读投影，正式集成应改为显式组件契约。刷新旧标签页加载当前资源。
+
+可重复入口：`natural-contract-review.cjs`、`natural-system-review.cjs`、`natural-layout-review.cjs`、`natural-interaction-review.cjs`、`natural-matrix-review.cjs`、`natural-resource-review.cjs`和`natural-handoff-review.cjs`。继续使用下方RTK＋SSD命令格式和独立证据目录；handoff脚本需已有当前候选指纹及任务卡。下文是历史版本记录，出现手动行高等冲突时以规范1.3 R25～R30为准。
+
+## 历史：M66.35～M66.37 六组件对齐原业务
+
+[六组件完整示例](http://192.168.9.19:5180/?layout=ordered&preset=services&scenario=business-all) · [磁盘状态示例](http://192.168.9.19:5180/?layout=ordered&preset=services&scenario=business-disks) · [业务基线与任务树](../quickstart-home-business-widgets-alignment.md) · [当前检查](../../evidence/m66/business-widgets/status.md)。
+
+磁盘信息、存储服务、Docker、下载服务、远程域名、系统信息直接复用当时Quickstart web的原Vue组件／子组件及配置表单，补回原分页签、完整字段、状态判断、开关、向导及具体高级入口。当时标准卡完整内容在卡内滚动；此规则已由1.3自然高度／有限首页投影替代。保留布局交互及共同字体，暂不重做六组件视觉设计。
+
+顶部“设计预览→数据场景”可切全部运行、RAID／SMART／未挂载、未安装／未配置、仅IPv6、局部失败、提交拒绝和Docker非空目录确认。真实API、外部链接及安装后跳转均不执行；DDNSTO外部授权／绑定以明确的模拟按钮演示。当前资源以本轮指纹为准，下列字体及网络PID／资源是历史候选。
+
+## 前轮：全部首页组件统一原字体
+
+[当前首页](http://192.168.9.19:5180/?layout=ordered) · [含三列服务的完整示例](http://192.168.9.19:5180/?layout=ordered&preset=services) · [共享字体规范](../quickstart-home-typography.md) · [本轮检查与资源](../../evidence/m66/home-typography/acceptance.md)。
+
+当前有序首页11个模块统一Arial／微软雅黑字体栈；标准标题16px、正文14px、辅助文字12px，窄卡／窄屏标题14px和正文13px，摘要标题14px。CPU／内存等关键数字保留原指标字号。对应应用／网络产品面板共用字阶；图表形态及左侧菜单保持原样。以下网络卡专项目录、PID和资源是此前候选记录，当前构建以本轮清单为准。
+
+## 当前反馈修正：网络连接标准形态
+
+[原版截图数据对照](http://192.168.9.19:5180/?layout=ordered&preset=network-business&scenario=network-reference) · [反馈、任务树与检查](../../evidence/m66/network-widgets/visual-fidelity/acceptance.md)。顶部“数据场景→原版截图对照”也可切换。标准卡恢复原字阶、图标、边框按钮、状态时长徽标和地址信息组；摘要形态继续单独适配。对照场景使用无IPv6及固定时长的模拟数据；“正常”场景保留双栈隐私演示，不代表当前路由器状态。M66.32～34下列清单及PID为上一候选历史证据，新构建以本轮记录为准。
+
+## 当前原型：M66.32～M66.34 网络控件业务对齐
+
+[连接与接口独立示例](http://192.168.9.19:5180/?layout=ordered&preset=network-business) · [当前执行及验收状态](../../evidence/m66/network-widgets/status.md) · [任务树与标准](../quickstart-home-network-widget-m66-32-34.md) · [原业务核对](../quickstart-home-network-widget-business-alignment.md) · [开发交接](../../evidence/m66/network-widgets/business-handoff.md)。
+
+- “网络连接和IP地址”保留原状态、协议、接口在线时长、独立IPv4／IPv6隐私、DNS及来源、设备管理，以及DNS／软件源异常动作；连接详情与标准／摘要共用业务逻辑。
+- “网络接口状态”独立添加、隐藏、移动及设置形态；端口详情可点击／键盘打开，保留MAC、双工、协商速率和包计数；完整清单有界分页。
+- 旧布局不自动插入接口卡。顶部“设计预览→布局示例→连接与接口独立”可查看新示例；在原布局中也可用“自定义首页→添加模块→网络接口状态”加入。
+- 顶部“数据场景”提供DNS、软件源、未联网、检测中、加载、接口失败及写入拒绝等场景。异常动作直接复用原配置表单，仅写本次合成内存；刷新恢复示例。
+- 正式首页、原业务源文件、系统菜单和原流量图未修改。当前资源与源指纹见[本轮清单](../../evidence/m66/network-widgets/34-review/final/candidate/candidate.json)，不能用下方历史资产标识代替当前版本。
+
+## 已验收布局基线：M66.26～M66.31 模块形态与显示设置
 
 用户已授权并完成M66.26～30的实现与当前候选技术检查；M66.31技术交付、正式开发交接及用户人工验收通过。[当前状态](../../evidence/m66/widget-presentation/status.md) · [验收与交付](../../evidence/m66/widget-presentation/31-handoff/acceptance.md) · [用户确认](../../evidence/m66/widget-presentation/31-handoff/user-signoff.md)。产品基线为[规范1.2](../quickstart-home-layout-interaction-spec.md)，架构见[设计参考](../quickstart-home-widget-presentation-architecture.md)，任务树及可测试目标见[六阶段计划](../quickstart-home-widget-presentation-milestones.md)。实现基线提交`952528c`，本轮按用户要求归档提交。
 
@@ -12,7 +128,7 @@
 4. 移动、替换、显示偏好与必要行高一次撤销；隐藏再添加保留设置，取消整份编辑恢复已应用文档。常用项内容管理仍独立，改变行数不删常用项。
 5. 行布局、整行直接排序、空位整理和系统菜单边界沿用已验收行为。仅设计fixture及内存草稿，刷新恢复URL示例；未接真实偏好存储或路由器。
 
-当前入口`index.61df59de.js`，三份JS/CSS及50个源指纹见[候选清单](../../evidence/m66/widget-presentation/31-handoff/candidate.json)。复验入口及当前结果见[30阶段技术验收](../../evidence/m66/widget-presentation/30-review/acceptance.md)。旧截图或原M66.25确认不代表新形态人工通过。
+该轮入口`index.61df59de.js`，三份JS/CSS及50个源指纹见[历史候选清单](../../evidence/m66/widget-presentation/31-handoff/candidate.json)。该轮技术结果见[30阶段验收](../../evidence/m66/widget-presentation/30-review/acceptance.md)，人工结果见该轮用户确认，不用旧截图或M66.25确认替代。
 
 ## 历史基线：M66.25 整行直接排序
 

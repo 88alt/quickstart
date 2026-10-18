@@ -1,6 +1,6 @@
 <template>
   <article class="canvas-module" :class="['module-'+item.id,{'is-wide':item.span>=8,'is-device-summary':summary&&item.id==='devices'}]" :data-device-form="item.id==='devices'?(summary?'summary':'standard'):undefined" :data-canvas-module="item.id" :style="'--span:'+item.span">
-    <header><div><StudioGlyph :name="definition.glyph"/><h2>{{t(definition.zh,definition.en)}}</h2></div><button v-if="item.id==='devices'" @click="navigate('/devicemanagement')" class="module-more" data-canvas-view-all :data-home-entry="contextualActions?'/devicemanagement':undefined">{{t('查看全部','View all')}}<StudioGlyph name="arrow"/></button><button v-else class="module-more" @click="navigate(destinations[item.id])" :aria-label="t('管理','Manage')+t(definition.zh,definition.en)"><StudioGlyph name="arrow"/></button></header>
+    <header><div><StudioGlyph :name="definition.glyph"/><h2>{{t(definition.zh,definition.en)}}</h2></div><div v-if="item.id==='devices'" class="device-header-actions widget-action-group"><WidgetPrimaryAction icon="devices" @click="navigate('/devicemanagement')" data-canvas-view-all :data-home-entry="contextualActions?'/devicemanagement':undefined">{{t('查看全部','View all')}}</WidgetPrimaryAction><WidgetMenu v-if="contextualActions" :label="t('设备更多操作','More device actions')" :items="[{id:'parental',label:t('家长控制','Parental controls')}]" @select="navigate('/parental')"/></div><button v-else class="module-more" @click="navigate(destinations[item.id])" :aria-label="t('管理','Manage')+t(definition.zh,definition.en)"><StudioGlyph name="arrow"/></button></header>
 
     <template v-if="item.id==='devices'">
       <div class="inventory-heading"><strong>{{loading||!devices.length&&errors.inventory?'—':devices.filter(d=>d.online).length}}<span>{{errors.inventory&&devices.length?t('上次在线','previously online'):t('在线','online')}}</span></strong><small>{{loading||!devices.length&&errors.inventory?t('数量待确认','Count unconfirmed'):`${devices.length} ${t('台 · 本次开机发现','discovered this boot')}`}}</small><button @click="$emit('retry')" :aria-label="t('刷新设备','Refresh devices')" data-refresh-inventory>↻</button></div>
@@ -8,7 +8,7 @@
       <div v-else-if="errors.inventory&&!devices.length" class="module-state"><StudioGlyph v-if="!summary" name="devices"/><strong>{{inventoryError}}</strong><p v-if="!summary">{{t('其他首页模块仍可使用。','Other modules remain available.')}}</p><button @click="$emit('retry')">{{t('重试','Retry')}}</button></div>
       <div v-else-if="!devices.length" class="module-state"><StudioGlyph v-if="!summary" name="devices"/><strong>{{t('暂未发现设备','No devices discovered')}}</strong><p v-if="!summary">{{t('本局域网设备上线后会自动出现。','Devices appear when observed on this LAN.')}}</p><button v-if="!summary" @click="navigate('/devicemanagement')">{{t('添加或查看设备','Add or view devices')}}</button></div>
       <template v-else><p v-if="errors.inventory" class="module-notice">{{t('上次快照 · 当前状态待确认','Previous snapshot · Current state unconfirmed')}}</p><div v-if="!summary" class="canvas-devices"><button v-for="device in shownDevices" :key="device.deviceId" @click="$emit('device',device.deviceId)" :data-canvas-device="device.deviceId"><DeviceSceneIcon :scene="device.scene" :icon-key="device.iconKey" :label="deviceCategoryLabel(device.scene,translate)"/><span><strong>{{deviceDisplayName(device,translate)}}</strong><small>{{[device.brand,device.classification.source==='fallback'?t('类型待确认','Type unconfirmed'):deviceCategoryLabel(device.scene,translate)].filter(Boolean).join(' · ')}}</small></span><span class="device-online" :class="{offline:!device.online}"><i></i>{{errors.inventory?t('上次记录','Last recorded'):devicePresenceLabel(device,translate)}}</span></button></div></template>
-      <p v-if="capabilityMissing" class="module-notice">{{capabilityText}} {{t('设备清单仍可使用。','Inventory remains available.')}}</p><footer class="inventory-footer"><small>{{t('仅显示本机观察到的设备','Only devices observed by this router')}}</small><button v-if="contextualActions" class="device-parental-action" @click="navigate('/parental')" data-home-entry="/parental"><StudioGlyph name="shield"/>{{t('家长控制','Parental controls')}}</button><details><summary>{{t('地址与路线权限','Address & path permissions')}}</summary><p>{{authorityText}}</p></details></footer>
+      <p v-if="capabilityMissing" class="module-notice">{{capabilityText}} {{t('设备清单仍可使用。','Inventory remains available.')}}</p><footer class="inventory-footer"><small>{{t('仅显示本机观察到的设备','Only devices observed by this router')}}</small><details><summary>{{t('地址与路线权限','Address & path permissions')}}</summary><p>{{authorityText}}</p></details></footer>
     </template>
 
     <template v-else-if="item.id==='system'">
@@ -37,8 +37,10 @@
   </article>
 </template>
 <script setup lang="ts">
+import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import StudioGlyph from './StudioGlyph.vue'
+import WidgetMenu from './WidgetMenu.vue'
 import DeviceSceneIcon from '../pages/device/components/deviceSceneIcon.vue'
 import { deviceCategoryLabel, deviceDisplayName, devicePresenceLabel } from '../pages/device/devicePresentation'
 import type { DeviceListItem } from '../pages/device/deviceInventory'

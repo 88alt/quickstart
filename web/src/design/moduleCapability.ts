@@ -2,7 +2,7 @@
 import {widgetDefinitions,type WidgetId} from './rowLayout'
 import {definition,resolvePresentation} from './widgetPresentation'
 export type DisplaySpec='full'|'standard'|'compact'
-const summaries:WidgetId[]=['connection','system','sharing','docker','downloads','remote']
+const summaries:WidgetId[]=['connection','networkInterface','system','sharing','docker','downloads','remote']
 export const moduleCapabilities=widgetDefinitions.map(w=>({
   id:w.id,minWidth:w.minWidth,minHeight:w.minHeight,
   mobileMinWidth:240,stacked:summaries.includes(w.id),compactHeight:summaries.includes(w.id)?148:0,

@@ -12,7 +12,7 @@ export const sessionLayouts=new Map<Variant,LayoutItem[]>()
 export const moduleCatalog: Array<{id:ModuleKey; title:string; en:string; description:string; glyph:string}> = [
   {id:'traffic',title:'网络流量',en:'Network activity',description:'实时速率与短时间趋势',glyph:'activity'},
   {id:'devices',title:'局域网设备',en:'LAN devices',description:'名称、品牌、连接状态与详情入口',glyph:'devices'},
-  {id:'connection',title:'连接与接口',en:'Connections',description:'地址、DNS 与物理接口',glyph:'network'},
+  {id:'connection',title:'网络连接和IP地址',en:'Connection & IP',description:'联网状态、地址与DNS；接口状态独立管理',glyph:'network'},
   {id:'storage',title:'存储空间',en:'Storage',description:'磁盘容量与占用情况',glyph:'disk'},
   {id:'services',title:'应用与服务',en:'Apps & services',description:'共享、容器、下载与远程访问',glyph:'layers'},
   {id:'system',title:'系统状态',en:'System health',description:'CPU、内存、温度与版本',glyph:'chip'},
@@ -35,6 +35,7 @@ const channels:Channel[] = [
   {id:'ports',modules:['traffic','connection'],seconds:30,get:request.Network.PortList.GET},
   {id:'inventory',modules:['devices'],seconds:30,get:request.DeviceMangement.deviceInventoryV2.GET},
   {id:'disks',modules:['storage'],seconds:60,get:request.Nas.Disk.Status.GET},
+  {id:'raid',modules:['storage'],seconds:60,get:request.Raid.List.GET},
   {id:'sharing',modules:['services','sharing'],seconds:60,get:request.Nas.Service.Status.GET},
   {id:'docker',modules:['services','docker'],seconds:60,get:request.Guide.DockerStatus.GET},
   {id:'download',modules:['services','downloads'],seconds:60,get:request.Guide.DownloadService.Status.GET},
@@ -42,7 +43,10 @@ const channels:Channel[] = [
   {id:'system',modules:['system'],seconds:30,get:request.System.Status.GET},
   {id:'version',modules:['system'],seconds:60,get:request.System.Version.GET},
 ]
-export function useStudioModel(layout:Ref<Array<{id:string;enabled:boolean}>>,skipChannels:string[]=[]) {
+export function useStudioModel(layout:Ref<Array<{id:string;enabled:boolean}>>,skipChannels:string[]=[],networkBusiness=false,nativeBusiness=false) {
+  // Archived design comparisons keep their original fixture readers. The current
+  // ordered prototype adopts the audited 5s status / 10s interface contracts.
+  const readers=channels.filter(c=>nativeBusiness||c.id!=='raid').map(c=>networkBusiness&&c.id==='network'?{...c,seconds:5}:networkBusiness&&c.id==='ports'?{...c,modules:['networkInterface'],seconds:10}:nativeBusiness&&c.id==='remote'?{...c,seconds:3}:nativeBusiness&&c.id==='system'?{...c,seconds:5}:nativeBusiness&&['disks','raid','sharing','docker','download','version'].includes(c.id)?{...c,seconds:0}:c)
   const data=reactive<Record<string,any>>({})
   const errors=reactive<Record<string,string>>({})
   const updated=reactive<Record<string,string>>({})
@@ -63,22 +67,23 @@ export function useStudioModel(layout:Ref<Array<{id:string;enabled:boolean}>>,sk
       data[channel.id]=channel.id==='traffic'?{...response.data.result,items:(response.data.result.items||[]).slice(-60)}:response.data.result
       errors[channel.id]='';updated[channel.id]=new Date().toISOString()
     }catch(e){if(active&&startedRevision===revision)errors[channel.id]=String(e)}
-    finally{pending.delete(channel.id);if(active&&!document.hidden&&wanted(channel)){if(startedRevision!==revision)void load(channel);else timers.set(channel.id,window.setTimeout(()=>void load(channel),channel.seconds*1000))}}
+    finally{pending.delete(channel.id);if(active&&!document.hidden&&wanted(channel)){if(startedRevision!==revision)void load(channel);else if(channel.seconds>0)timers.set(channel.id,window.setTimeout(()=>void load(channel),channel.seconds*1000))}}
   }
   // Moving/replacing cards must not restart readers that are still wanted.
   // Force refresh remains explicit for retry, visibility restoration and scenes.
   function refresh(force=false){
-    for(const channel of channels){
+    for(const channel of readers){
       const timer=timers.get(channel.id)
       if(!wanted(channel)||force){if(timer!==undefined)window.clearTimeout(timer);timers.delete(channel.id)}
-      if(wanted(channel)&&(force||!timers.has(channel.id)))void load(channel)
+      if(wanted(channel)&&(force||(!timers.has(channel.id)&&(!nativeBusiness||channel.seconds>0||!updated[channel.id]&&!errors[channel.id]))))void load(channel)
     }
   }
   function visibility(){stop();if(!document.hidden)refresh(true)}
   function retry(){demo.recovered=true;refresh(true)}
+  function businessRefresh(event:Event){for(const channel of readers)if((event as CustomEvent<string[]>).detail.includes(channel.id))void load(channel)}
   watch(()=>layout.value.filter(m=>m.enabled).map(m=>m.id).sort().join(','),()=>refresh())
   watch(()=>demo.scenario,()=>{revision++;delete data.inventory;errors.inventory='';if(demo.scenario==='stale')data.inventory={devices:inventory()};refresh(true)})
-  onMounted(()=>{active=true;refresh();document.addEventListener('visibilitychange',visibility)})
-  onUnmounted(()=>{active=false;stop();document.removeEventListener('visibilitychange',visibility)})
+  onMounted(()=>{active=true;refresh();document.addEventListener('visibilitychange',visibility);if(nativeBusiness)window.addEventListener('quickstart-business-refresh',businessRefresh)})
+  onUnmounted(()=>{active=false;stop();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('quickstart-business-refresh',businessRefresh)})
   return {data,errors,updated,devices,retry}
 }
