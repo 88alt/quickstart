@@ -21,5 +21,9 @@
 }
 .ordered-home h2,
 .network-dialog h2{
- padding:0!important;border:0;background:transparent;box-shadow:none;
+ padding:0!important;border:0;background:transparent;box-shadow:none;letter-spacing:normal;
+}
+.ordered-home :is(.canvas-module>header h2,.applications-heading h2,.network-business-card h2){line-height:1.25!important}
+.ordered-home :where(footer){
+ padding:0;text-align:initial;white-space:normal;overflow:visible;font-size:inherit;color:inherit;
 }

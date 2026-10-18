@@ -29,3 +29,7 @@ matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long
 优化1新增仅限 Quickstart 内容与自有弹窗的主题边界，清除外部语义 header 装饰并恢复按钮基础样式，保留组件显式尺寸和触屏规则；不改 LuCI 系统菜单。应用启动台兼容旧接口成功响应省略 success 字段的既有格式，仍要求有效 result。
 
 `luci-theme-regression-1` 注入遮挡装饰/按钮/h1/h2 规则后，完整本地保存、刷新、失败草稿、业务表单、六宽与主题回归通过；已实际打开桌面截图，网络行391.8px、连接237.8px、紧凑接口136px。该模拟回归不能代替修复候选重新部署后的 B 验收。
+
+`b-candidate-4009bbc-1` 在隐藏左单右双行的左侧流量卡后，按既有产品规则要求先处理空列，确认按钮正确禁用；脚本误当普通保存，失败证据保留。改用独占单行系统卡测试普通保存，`b-candidate-4009bbc-2` 的真实 root 双会话冲突/草稿保留、保存刷新、自定义链接刷新、deviceId 详情导航、五宽及深色全部通过，两个会话销毁，配置恢复基线。此 passed 只覆盖列明行为，不代表视觉最终通过。
+
+实图及 `b-density-diagnostic-4009bbc` 发现 LuCI 全局 footer padding16px、nowrap/overflow 和 h2 important 行高仍影响卡片；优化2补齐右侧 footer 基础边界与标题行高。`luci-theme-regression-2` 纳入这些真实主题规则后完整回归通过，已打开桌面图。修正资源版本计算：原先仅 index/en 参与 cache key，CSS 单独变化可能继续命中旧缓存；现在 CSS/vendor 也进入 key、release manifest 和部署前后指纹检查。增加 CSS 不匹配禁止安装测试；make test-ops 通过（首次被本机010强制目标覆盖影响，移除本机默认目标，显式指定 B 后重跑通过）。最终 B 须重新部署优化2冻结版本。
