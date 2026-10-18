@@ -42,9 +42,11 @@ def unpack(file):
     return fields, control, data
 
 
-expected_versions = {'quickstart': '0.16.0-test20261018-1',
-                     'quickstart-netpolicy': '0.2.0-test20260928-1',
-                     'luci-app-quickstart': '0.16.0-test20261018-r1'}
+manifest = dict(line.split('=', 1) for line in (a.runtime / 'MANIFEST').read_text().splitlines())
+release = '-r1' if a.arch == 'aarch64' else '-1'
+expected_versions = {'quickstart': manifest['version'] + release,
+                     'quickstart-netpolicy': '0.2.0-test20260928' + release,
+                     'luci-app-quickstart': manifest['version'] + '-r1'}
 files = sorted((a.build_root / 'ipk').rglob('*.ipk'))
 assert len(files) == 3, files
 seen = set()
@@ -77,7 +79,7 @@ for file in files:
                 key = 'www/luci-static/quickstart/' + str(source.relative_to(assets))
                 assert data[key] == source.read_bytes(), key
         template = data['usr/lib/lua/luci/view/quickstart/main.htm'].decode()
-        assert '0.16.0-test20261018-release-bd9944bb18ad' in template
+        assert manifest['asset_version'] in template
     if binary is not None:
         assert binary[:4] == b'\x7fELF' and binary[4] == 2 and binary[5] == 1
         assert struct.unpack_from('<H', binary, 18)[0] == machine

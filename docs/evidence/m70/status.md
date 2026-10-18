@@ -29,3 +29,7 @@ x64 Build ID `quickstart-home-x64-20261018-0750-6fcc4ba` 已启动；尚未据�
 最终启动 IDs：x64 `quickstart-home-x64-20261018-0803-6fcc4ba`，ARM64 `quickstart-home-arm64-20261018-0803-6fcc4ba`。独立 runtime `runtime-e9325f491a89`，输入补丁 SHA256 `294833706e0a65ab03d8adbaa5a060757e231f7bf9668159c0d9e2ed92adc104`。配方本地提交 nas `70405b1`、nas_luci `26f688d`、App Hub `bba2b39`，均未推送。
 
 B普通 opkg update 已完成、所有源签名通过，日志在 `/root/quickstart-package-candidates/home-016-6fcc4ba/opkg-update.log`；smartmontools-drivedb 7.5-r1 可用，无需删依赖或强制依赖。B正式包安装仍等待本轮产物核验。
+
+## 目录补漏后的最终版本
+
+6fcc4ba 的0.16.0归档已经进入不可覆盖的测试下载缓存，后续目录身份异常补漏不能复用该文件名/hash。353533f 的同名本地归档仅保留为中间构建，未覆盖服务器缓存。最终候选升为 `0.16.1-test20261018`，重新生成完整runtime/资源版本/配方/SDK输入；旧0.16.0与慢构建仅为历史证据，不是最终安装候选。
