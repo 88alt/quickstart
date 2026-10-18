@@ -27,22 +27,25 @@ const report={checks:[],cases:[],errors:[],result:'running',real};let browser,se
   });
   for(const [key,gate] of [['/system/status/',statusGate],['/u/system/version/',versionGate]])await context.route('**/cgi-bin/luci/istore'+key,async route=>{reads++;await gate;if(fail)await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({success:-1,error:'test unavailable'})});else if(real)await route.continue();else await route.fallback()});
   const page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));
-  const entry={...scenario};report.cases.push(entry);
+  const entry={...scenario};report.cases.push(entry);let preference=defaults.layout.widgetPreferences.system;
+  if(real){const response=await context.request.get(base+'/cgi-bin/luci/istore/home/v1/layout/');assert.equal(response.status(),200);preference=(await response.json()).result.value.widgetPreferences.system;entry.savedPreference=preference}
   try{
    await page.goto(home,{waitUntil:'domcontentloaded'});await page.locator('[data-layout-card=system]').waitFor();for(let i=0;i<100&&reads<2;i++)await page.waitForTimeout(30);assert.equal(reads,2);
    await page.evaluate(()=>document.fonts.ready);await page.evaluate(theme=>document.body.setAttribute('theme',theme),scenario.theme);await page.waitForTimeout(300);
    const card=page.locator('[data-layout-card=system]');
-   const measure=()=>card.evaluate(n=>({height:n.getBoundingClientRect().height,text:n.innerText,structure:!!n.querySelector('.reusable-card'),blur:n.querySelector('.card-body')?getComputedStyle(n.querySelector('.card-body')).filter:null,busy:n.querySelector('[aria-busy=true]')!==null,form:n.getAttribute('data-presentation')}));
+   const measure=()=>card.evaluate(n=>({width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height,stacked:n.closest('.ordered-column')?.querySelectorAll(':scope>.ordered-card').length>1,text:n.innerText,structure:!!n.querySelector('.reusable-card'),blur:n.querySelector('.card-body')?getComputedStyle(n.querySelector('.card-body')).filter:null,busy:n.querySelector('[aria-busy=true]')!==null,form:n.getAttribute('data-presentation')}));
    entry.pending=await measure();const original=entry.pending.structure?await card.locator('.reusable-card').elementHandle():null;await card.screenshot({path:path.join(out,scenario.width+'-'+scenario.theme+'-pending.png')});
    if(scenario.statusFirst)releaseStatus();else releaseVersion();await page.waitForTimeout(200);entry.partial=await measure();
-   releaseStatus();releaseVersion();await page.waitForFunction(()=>!!document.querySelector('[data-layout-card=system] .reusable-card'));await page.waitForTimeout(400);
+   releaseStatus();releaseVersion();await page.waitForFunction(()=>!!document.querySelector('[data-layout-card=system] .reusable-card')&&!document.querySelector('[data-layout-card=system] [data-system-loading]'),null,{timeout:15000});await page.waitForTimeout(100);
    entry.complete=await measure();await card.screenshot({path:path.join(out,scenario.width+'-'+scenario.theme+'-complete.png')});
-   assert.equal(entry.pending.structure,true,'Loading replaced the complete system card with a small message');assert.equal(entry.pending.busy,true);assert.match(entry.pending.blur,/blur\(/);assert.equal(entry.pending.form,scenario.form);
+   const expectedForm=preference.mode!=='auto'?preference.mode:entry.pending.stacked||preference.ruleVersion!==0&&entry.pending.width<560?'summary':'standard';
+   assert.equal(entry.pending.structure,true,'Loading replaced the complete system card with a small message');assert.equal(entry.pending.busy,true);assert.match(entry.pending.blur,/blur\(/);assert.equal(entry.pending.form,real?expectedForm:scenario.form,'Form must preserve the saved preference, stacked role and actual content width');
    assert.ok(!/0%|0℃/.test(entry.pending.text),'Unknown metrics must not appear as real zero readings');assert.equal(await original.evaluate(n=>n===document.querySelector('[data-layout-card=system] .reusable-card')),true,'Loading recreated the card instead of updating it');
    assert.ok(Math.abs(entry.pending.height-entry.complete.height)<=1,'System card shrank/grew on initial read: '+entry.pending.height+' -> '+entry.complete.height);
    assert.equal(entry.partial.height,entry.pending.height);assert.equal(entry.complete.busy,false);assert.equal(entry.complete.blur,'none');
-   if(scenario.fail){assert.match(entry.complete.text,/失败|Unavailable|unavailable/);fail=false;await card.getByRole('button',{name:scenario.english?'Retry':'重试',exact:true}).first().click();await page.waitForTimeout(600);assert.ok(!/失败|Unavailable/.test((await measure()).text));entry.retried=await measure()}
-   report.checks.push(scenario.width+' '+scenario.theme+' '+scenario.form+(scenario.fail?' failure/retry':' delayed read')+' stable');
+   if(scenario.fail){assert.match(entry.complete.text,/失败|Unavailable|unavailable/);fail=false;await card.getByRole('button',{name:scenario.english?'Retry':'重试',exact:true}).first().click();await page.waitForFunction(()=>{const n=document.querySelector('[data-layout-card=system]');return n&&!/失败|Unavailable|unavailable/.test(n.innerText)&&/\d+(?:\.\d+)?[%℃]/.test(n.innerText)},null,{timeout:15000});entry.retried=await measure()}
+   else{assert.ok(!/失败|Unavailable|unavailable/.test(entry.complete.text),'Real system reads failed');assert.match(entry.complete.text,/\d+(?:\.\d+)?[%℃]/,'No real system metrics appeared')}
+   report.checks.push(scenario.width+' '+scenario.theme+' '+entry.pending.form+(scenario.fail?' failure/retry':' delayed read')+' stable');
   }finally{releaseStatus();releaseVersion();await context.close()}
  }
  assert.equal(report.errors.length,0);report.result='passed';
