@@ -47,8 +47,12 @@ if os.environ.get('QS_EXPECT_MANIFEST'):
     assert actual == expected, 'Installed files do not match the runtime manifest'
     assert report['processFingerprints'] and all(line.split()[0] == manifest['quickstart.x86_64']
                                                for line in report['processFingerprints']), 'Running process differs from package'
-    expected_packages = {'quickstart - ' + manifest['version'] + '-2',
-                         'luci-app-quickstart - ' + manifest['version'] + '-r2',
+    package_version = manifest['version']
+    if os.environ.get('QS_ACCEPT_RUNTIME_CANDIDATE') == '1':
+        package_version = os.environ['QS_EXPECT_PACKAGE_VERSION']
+        report['installation'] = 'Direct runtime candidate; original opkg package records retained, not a package-install acceptance'
+    expected_packages = {'quickstart - ' + package_version + '-2',
+                         'luci-app-quickstart - ' + package_version + '-r2',
                          'quickstart-netpolicy - 0.2.0-test20260928-2'}
     assert set(report['packages']) == expected_packages, report['packages']
     policy_archive = Path(os.environ['QS_EXPECT_MANIFEST']).parent / 'quickstart-netpolicy-0.2.0-test20260928-x86_64-unknown-linux-musl.tar.gz'

@@ -90,15 +90,16 @@ actual_en_sha="$(sha256sum "${stage_web}/i18n/en.json" | cut -d ' ' -f1)"
 awk -v version="$asset_version" '
     {
         lines[NR] = $0
-        if ($0 ~ /^local asset_version = /) known = 1
+        if ($0 ~ /^[[:space:]]*local asset_version = /) known = 1
         if ($0 ~ /local jsonc = require/) anchor = NR
     }
     END {
         if (!known && !anchor) exit 42
         for (i = 1; i <= NR; i++) {
             line = lines[i]
-            if (line ~ /^local asset_version = /) {
-                print "local asset_version = \"" version "\""
+            if (line ~ /^[[:space:]]*local asset_version = /) {
+                sub(/local asset_version = .*/, "local asset_version = \"" version "\"", line)
+                print line
                 continue
             }
             # The pre-versioned LuCI template has exactly these three assets.

@@ -103,3 +103,16 @@ if QUICKSTART_TEST_STYLE_SHA=incorrect run_installer "$css_fixture" css-mismatch
 fi
 grep -Fqx 'old-binary' "$css_fixture/root/usr/sbin/quickstart"
 echo 'CSS mismatch rejected before changing installed candidate'
+
+indented_fixture="$test_root/indented"
+prepare_fixture "$indented_fixture"
+cat >"$indented_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm" <<'EOF'
+<%+header%>
+    local jsonc = require "luci.jsonc"
+    local asset_version = "old"
+<%+footer%>
+EOF
+run_installer "$indented_fixture" indented - 1 >/dev/null
+[ "$(grep -c 'local asset_version =' "$indented_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm")" = 1 ]
+grep -Fqx '    local asset_version = "0.14.0-test"' "$indented_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
+echo 'Indented cache key updated without a shadowing declaration'
