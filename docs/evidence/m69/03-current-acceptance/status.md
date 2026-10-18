@@ -37,3 +37,15 @@ matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long
 `b-candidate-7f68320-1` 在 B 上通过全部七项行为、五宽、浅深主题脚本检查，显式空首页刷新不被当成损坏。控制台/API/pageerror 均零，配置恢复、两会话销毁；网络行390.6px（连接宽444px处使用13px窄卡字体）、接口136px、设备/应用302.1px。已实际打开桌面、各行、390px和320px深色图；各行截图补足 LuCI 桌面内部滚动导致 fullPage 不覆盖下半页的问题。
 
 审图发现深色主题下设备/应用 h2 仍继承 LuCI 固定蓝色，脚本此前仅检查溢出，不能代表色彩通过。优化3将内容 h2 的颜色绑定产品主题变量；下一候选需加入计算颜色断言并复核深色原图。历史失败/不完整视觉结果均保留。
+
+## 优化3冻结结果
+
+`6fcc4ba` 已完整构建、部署 B；`b-candidate-6fcc4ba-1` 八项真实 root 业务/主题断言通过，控制台/API/pageerror 均零，五宽无页面横向溢出。两个会话销毁，布局和启动台基线恢复。已打开本次320px深色原图，设备/应用标题为产品浅色，三轮中定位的遮挡、额外底部留白和深色标题问题已解决。`luci-theme-final-6fcc4ba` 另通过本地完整业务表单/草稿/轮询/六宽回归。当前 B 仍属于候选部署；包安装闭环见 M70，不能把旧 opkg 元数据算匹配。
+
+## 英文与真实触屏模拟补验
+
+`b-english-6fcc4ba-1` 的 B 登录态英文、五宽、主题检查通过，控制台/API/pageerror 零，文件与进程完整指纹匹配冻结候选；已打开桌面与390px原图。
+
+`b-touch-6fcc4ba-1`、`b-touch-measure-6fcc4ba`、`b-touch-input-6fcc4ba` 的44px断言失败，诊断 `b-touch-diagnostic-6fcc4ba` 显示初始桌面触屏44px正常，后续截图后 maxTouchPoints 变0、pointer:coarse 变false。空白页面最小实验同样复现：fullPage截图前 `{coarse:true,points:1}`，之后 `{coarse:false,points:0}`；普通视口截图前后仍为 `{coarse:true,points:1}`。这是当前 Playwright 截图工具改变模拟输入，并非第四轮产品修改；历史 matrix-touch-1 不能当作所有宽度的有效触屏证据。
+
+工具改用触屏视口/逐卡截图，保留原44px断言并新增每个宽度输入模式断言。`b-touch-viewport-6fcc4ba` 全部通过；每宽 coarse=true/points=1，320px六个可见 WidgetPrimaryAction 均44px，十一控件390px逐卡截图保存。已实际打开完整手机接口与应用卡原图；接口字段/说明完整、触控目标扩大后自然增高，无写回配置。以上会话销毁、配置不变，产品源码仍为6fcc4ba。

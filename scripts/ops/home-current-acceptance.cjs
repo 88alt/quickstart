@@ -1,6 +1,7 @@
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const host=process.env.QS_ACCEPT_HOST;if(host!=='192.168.30.244')throw new Error('B-only acceptance');
 const out=process.env.QS_ACCEPT_OUT,base='http://'+host,home=base+'/cgi-bin/luci/admin/quickstart/';
+const english=process.env.QS_ACCEPT_LANGUAGE==='en',touch=process.env.QS_ACCEPT_TOUCH==='1';
 const report={checkedAt:new Date().toISOString(),checks:[],errors:[],consoleErrors:[],httpErrors:[],views:[],restoration:[]};
 let browser,page,first,second,layout,launcher,layoutVersion,launcherVersion;
 async function read(context,domain){const r=await context.request.get(base+'/cgi-bin/luci/istore/home/v1/'+domain+'/');assert.equal(r.status(),200);const body=await r.json();assert.equal(body.success,0);assert.equal(body.result.state,'saved');return body.result}
@@ -8,15 +9,15 @@ async function write(context,domain,value,expectedVersion){const r=await context
 (async()=>{
  try{
   browser=await chromium.launch();
-  async function context(sid){const c=await browser.newContext({viewport:{width:1440,height:1000},locale:'zh-CN'});await c.addCookies([{name:'sysauth_http',value:sid,domain:host,path:'/'}]);return c}
+  async function context(sid){const c=await browser.newContext({viewport:{width:1440,height:1000},locale:english?'en-US':'zh-CN',hasTouch:touch});await c.addCookies([{name:'sysauth_http',value:sid,domain:host,path:'/'}]);return c}
   first=await context(process.env.QS_ACCEPT_SID);second=await context(process.env.QS_ACCEPT_SECOND_SID);
   const originalLayout=await read(first,'layout'),originalLauncher=await read(first,'launcher');layout=originalLayout.value;launcher=originalLauncher.value;layoutVersion=originalLayout.version;launcherVersion=originalLauncher.version;
   const unauthenticated=await browser.newContext();const denied=await unauthenticated.request.get(base+'/cgi-bin/luci/istore/home/v1/layout/');assert.equal(denied.status(),403);await unauthenticated.close();report.checks.push('Unauthenticated config read denied');
   page=await first.newPage();const other=await second.newPage();page.on('pageerror',e=>report.errors.push(e.message));other.on('pageerror',e=>report.errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error'&&report.consoleErrors.length<100)report.consoleErrors.push(m.text())});
   page.on('response',r=>{if(r.status()>=400&&report.httpErrors.length<100)report.httpErrors.push({path:new URL(r.url()).pathname,status:r.status()})});
-  const capture=async name=>{await page.screenshot({path:path.join(out,name+'.png'),fullPage:true});report.views.push({name,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),cards:await page.locator('[data-layout-card]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.layoutCard,form:n.dataset.presentation,w:n.getBoundingClientRect().width,h:n.getBoundingClientRect().height})))})};
-  async function ready(p){await p.goto(home,{waitUntil:'networkidle'});await p.locator('[data-ordered-home]').waitFor();await p.waitForTimeout(1200);assert.equal(await p.getByRole('button',{name:'自定义首页',exact:true}).isEnabled(),true);assert.equal(await p.locator('.modal,.cbi-map').filter({hasText:'Session expired'}).count(),0)}
+  const capture=async name=>{await page.screenshot({path:path.join(out,name+'.png'),fullPage:!touch});report.views.push({name,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),input:await page.evaluate(()=>({coarse:matchMedia('(pointer:coarse)').matches,points:navigator.maxTouchPoints})),cards:await page.locator('[data-layout-card]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.layoutCard,form:n.dataset.presentation,w:n.getBoundingClientRect().width,h:n.getBoundingClientRect().height})))})};
+  async function ready(p){await p.goto(home,{waitUntil:'networkidle'});await p.locator('[data-ordered-home]').waitFor();await p.waitForTimeout(1200);assert.equal(await p.getByRole('button',{name:english?'Customize home':'自定义首页',exact:true}).isEnabled(),true);assert.equal(await p.locator('.modal,.cbi-map').filter({hasText:'Session expired'}).count(),0)}
   async function finish(p){await p.locator('[data-apply]').click();if(await p.locator('[data-confirm-finish]').count())await p.locator('[data-confirm-finish]').click()}
   await ready(page);await ready(other);await capture('b-home-1440');
   for(const [index,row] of (await page.locator('[data-ordered-row]').all()).entries()){await row.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'b-row-'+(index+1)+'-1440.png')})}
@@ -25,6 +26,13 @@ async function write(context,domain,value,expectedVersion){const r=await context
   report.density=await page.locator('[data-layout-card=networkInterface] *,.inventory-header,.inventory-footer,.applications-header').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n);return {tag:n.tagName,cls:n.className,h:n.getBoundingClientRect().height,margin:s.margin,padding:s.padding,minHeight:s.minHeight,lineHeight:s.lineHeight,font:s.font,display:s.display}}));
   const expectedWidgets=layout.rows.flatMap(r=>r.columns.flatMap(c=>c.cards)).filter(Boolean);assert.equal(await page.locator('[data-layout-card]').count(),expectedWidgets.length);
   report.checks.push('Real root session renders persisted homepage');
+  if(process.env.QS_ACCEPT_READONLY==='1'){
+   if(english)assert.equal(await page.locator('[data-layout-card=connection] h2').innerText(),'Connection & IP');
+   for(const width of [1024,768,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(300);await capture('b-home-'+width);assert.equal(report.views.at(-1).overflow,false);if(touch){assert.equal(report.views.at(-1).input.coarse,true,'Touch emulation lost');if(width===390){for(const card of await page.locator('[data-layout-card]').all()){await card.screenshot({path:path.join(out,'b-touch-390-'+await card.getAttribute('data-layout-card')+'.png')})}await page.locator('.lab-header').scrollIntoViewIfNeeded()}}}
+   if(touch){report.touchInput=await page.evaluate(()=>({coarse:matchMedia('(pointer:coarse)').matches,points:navigator.maxTouchPoints}));const heights=await page.locator('.widget-primary-action').evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length).map(n=>({widget:n.closest('[data-layout-card]')?.dataset.layoutCard,text:n.textContent,height:n.getBoundingClientRect().height,minHeight:getComputedStyle(n).minHeight})));report.touchTargets=heights;assert.ok(heights.length&&heights.every(n=>n.height>=44),'Touch primary action smaller than 44px');report.checks.push('Real LuCI touch primary actions retain 44px target')}
+   await page.getByRole('button',{name:english?'Toggle theme':'切换主题',exact:true}).click();await page.waitForTimeout(300);await capture('b-home-320-dark');
+   assert.equal(report.errors.length,0);report.checks.push(english?'Real LuCI English responsive surface':'Real LuCI touch responsive surface');report.result='passed';return;
+  }
   if(process.env.QS_ACCEPT_DIAGNOSTICS==='1'){report.metrics=await page.locator('.ordered-home header,.ordered-home h1,.ordered-home .card-header,.ordered-home .network-business-card,.ordered-home .widget-menu-trigger,.ordered-home .widget-primary-action,.ordered-home .lab-edit-button').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),b=getComputedStyle(n,'::before'),a=getComputedStyle(n,'::after');return {tag:n.tagName,cls:n.className,display:s.display,height:s.height,minHeight:s.minHeight,padding:s.padding,margin:s.margin,lineHeight:s.lineHeight,font:s.font,position:s.position,background:s.backgroundColor,before:{content:b.content,display:b.display,position:b.position,width:b.width,height:b.height,background:b.backgroundColor},after:{content:a.content,display:a.display,position:a.position}}}));report.result='diagnostic';return}
   await page.getByRole('button',{name:'自定义首页',exact:true}).click();await other.getByRole('button',{name:'自定义首页',exact:true}).click();
   // Removing the left half of a stacked row deliberately requires a layout

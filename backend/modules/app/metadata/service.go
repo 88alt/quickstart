@@ -3,6 +3,7 @@ package metadata
 import (
 	"encoding/json"
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/istoreos/quickstart/backend/models"
@@ -21,6 +22,8 @@ type Store interface {
 type Service struct {
 	store Store
 }
+
+var catalogueName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.+-]{0,127}$`)
 
 func NewService(store Store) *Service {
 	return &Service{store: store}
@@ -61,6 +64,9 @@ func (service *Service) list(root string, strict bool) ([]*models.AppInstalled, 
 				return nil, errors.New("application metadata unavailable")
 			}
 			continue
+		}
+		if strict && !catalogueName.MatchString(modelApp.Name) {
+			return nil, errors.New("application metadata unavailable")
 		}
 		modelApp.Time = fi.ModTimeUnix
 		modelApps = append(modelApps, modelApp)
