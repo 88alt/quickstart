@@ -10,7 +10,7 @@ async function write(context,domain,value,expectedVersion){const r=await context
 (async()=>{
  try{
   browser=await chromium.launch();
-  async function context(sid){const c=await browser.newContext({viewport:{width:1440,height:1000},locale:english?'en-US':'zh-CN',hasTouch:touch});await c.addCookies([{name:'sysauth_http',value:sid,domain:host,path:'/'}]);return c}
+  async function context(sid){const c=await browser.newContext({viewport:{width:1440,height:1000},locale:english?'en-US':'zh-CN',hasTouch:touch,colorScheme:process.env.QS_ACCEPT_COLOR_SCHEME||'light'});await c.addCookies([{name:'sysauth_http',value:sid,domain:host,path:'/'}]);return c}
   first=await context(process.env.QS_ACCEPT_SID);second=await context(process.env.QS_ACCEPT_SECOND_SID);
   const originalLayout=await read(first,'layout'),originalLauncher=await read(first,'launcher');layout=originalLayout.value;launcher=originalLauncher.value;layoutVersion=originalLayout.version;launcherVersion=originalLauncher.version;
   const unauthenticated=await browser.newContext();const denied=await unauthenticated.request.get(base+'/cgi-bin/luci/istore/home/v1/layout/');assert.equal(denied.status(),403);await unauthenticated.close();report.checks.push('Unauthenticated config read denied');

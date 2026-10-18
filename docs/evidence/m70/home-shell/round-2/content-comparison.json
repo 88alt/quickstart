@@ -2,5 +2,7 @@
   "sameData": true,
   "sameViewports": true,
   "comparedCards": 88,
-  "differences": []
+  "differences": [],
+  "sameAPIFixtures": true,
+  "sameBodyStyles": true
 }
