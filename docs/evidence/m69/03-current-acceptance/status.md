@@ -49,3 +49,13 @@ matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long
 `b-touch-6fcc4ba-1`、`b-touch-measure-6fcc4ba`、`b-touch-input-6fcc4ba` 的44px断言失败，诊断 `b-touch-diagnostic-6fcc4ba` 显示初始桌面触屏44px正常，后续截图后 maxTouchPoints 变0、pointer:coarse 变false。空白页面最小实验同样复现：fullPage截图前 `{coarse:true,points:1}`，之后 `{coarse:false,points:0}`；普通视口截图前后仍为 `{coarse:true,points:1}`。这是当前 Playwright 截图工具改变模拟输入，并非第四轮产品修改；历史 matrix-touch-1 不能当作所有宽度的有效触屏证据。
 
 工具改用触屏视口/逐卡截图，保留原44px断言并新增每个宽度输入模式断言。`b-touch-viewport-6fcc4ba` 全部通过；每宽 coarse=true/points=1，320px六个可见 WidgetPrimaryAction 均44px，十一控件390px逐卡截图保存。已实际打开完整手机接口与应用卡原图；接口字段/说明完整、触控目标扩大后自然增高，无写回配置。以上会话销毁、配置不变，产品源码仍为6fcc4ba。
+
+## 当前冻结版本 eda99c4 / 0.16.2
+
+触屏逐卡审图发现390px测速按钮与速率标签碰撞，独立子任务及失败证据见 [touch-traffic](touch-traffic/status.md)。优化1保留44px目标并让标题自然增高，当前B touch复验通过，实际打开流量卡及320px深色原图。未改变桌面视觉或保存DOM尺寸。
+
+`b-candidate-eda99c4-final` 当前设备完整登录态八项行为通过：认证拒绝、持久布局、两个root会话冲突保留草稿、保存刷新、合法空首页、HTTP自定义链接刷新、真实deviceId详情导航、深色标题。控制台/pageerror/关键HTTP错误均空，文件与进程为同一eda99c4，两个短期会话销毁、配置恢复。桌面连接236.6px、紧凑接口136px、设备与应用302.1px；这组数值来自当前B，卡宽444/555px，不冒充旧463px原型数据。
+
+`final-matrix-eda99c4` 英文、触屏、未来、备份、损坏、无权限、不可用七组全通过，每组八张视图/六宽及深浅主题、曲线绘制、隐藏暂停。已实际打开英文390px、未来配置桌面图。
+
+`final-recovery-eda99c4` 补充四组全部通过：布局单域不可用时启动台仍可编辑；启动台单域不可用时布局仍可编辑；localStorage/sessionStorage抛SecurityError仍可用；目录身份异常显示读取失败而非空安装列表。已打开单域390px及目录异常启动台原图。这些为本地受控故障场景，不冒充B真实磁盘/权限故障。M70仍需匹配安装包后再次登录态验收。

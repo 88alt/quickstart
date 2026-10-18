@@ -45,3 +45,17 @@ B普通 opkg update 已完成、所有源签名通过，日志在 `/root/quickst
 APK rooted feed种子落点修正为base_root，缺固定对象时先读取object cache再访问origin；真实Git测试覆盖root链接和缺pin补齐。本实例错误的旧种子移动到私有work/seed-diagnostics目录保留，未删除共享SDK/cache。构建器13项测试、preflight/release/deploy/verify通过；新runtime `runtime-138538c8fab5`。原构建器current仍为runtime-linkease-176-source-date-fix-20260930，未修改其他任务工作树。输入patch采用固定canonical基点的零上下文生成并在完整目录副本反向dry-run通过，避免patch正文上下文被Git源码空白lint误判。
 
 修正候选2 IDs：`quickstart-home-x64-0161-20261018-2`、`quickstart-home-arm64-0161-20261018-2`；正在构建。前一个构建的失败/中止日志与状态保留，不算最终通过。
+
+## 当前最终业务版本：0.16.2
+
+触屏390px的测速按钮与上传速率标签碰撞，经独立子任务优化1解决，见M69 touch-traffic。当前冻结提交 `eda99c4f5fcb03395024e09b8540a8da5464c6c9`，版本 `0.16.2-test20261018`。三架构runtime归档 SHA256 `4af68fb8009d1055a85c4ac7aa2e9d8c64a469b76a74b1751d8897ec74fc2ff4`，资源版本 `0.16.2-test20261018-release-a2b747a25e6e`，持久保存bin/releases/eda99c4及MANIFEST/SHA256SUMS。没有覆盖既有下载缓存。
+
+B的 `b-candidate-eda99c4-final` 八项真实登录态业务断言通过，控制台/HTTP/pageerror为空；文件与运行进程逐项匹配，两个短期root会话销毁，首页测试配置恢复。当前源码make verify-lan-device-business通过，含104项前端、Go、vue-tsc、部署/安装器契约和局域网确定性场景；这些场景不证明真实限速数据面。七组本地兼容矩阵通过，触屏B另行通过。此刻仍是候选部署，opkg仍为旧包，不能标为安装通过。
+
+App Hub `29d1837`，nas测试工作树 `fcd6112`、nas_luci `fde0e6a` 已同步0.16.2及runtime内原始资源。两项包契约通过。SDK输入补丁 `80084c4f78e0f09a81b45f8aae2550203cf3a00f8046b2f9185aa1e8806aaf88`，完整目录副本反向dry-run通过；构建器 `8f43e098f02b`、13项测试及preflight通过。旧0.16.1构建继续保留历史证据，最终交付必须重新使用0.16.2输入。
+
+公开Release在2026-10-18重新查询：0.15.0标签只有x64 NetPolicy资产，ARM64仍缺。最终测试配方把未改变的两个NetPolicy归档与Go runtime统一指向0.16.2发布批次，三份精确hash归档均已准备在bin/releases/eda99c4。当前仅为未发布缓存输入；需要明确授权后才可上传该新标签资产及推送canonical feed，本轮未执行发布。
+
+旧0.16.1两组任务按容器BUILD_ID及output挂载核对归属后停止，保留中止状态及日志，不计通过。ARM依赖unbound源站下载缓慢，从OpenWrt官方sources镜像读取同名归档，hash `0fe8b6277b0959cfd17562debac0aa5f71e0b02dc4ffa9c60271c583edab586f` 与SDK固定配方一致，仅预置缺失下载文件，没有替换配方或降低校验。当前构建器runtime `runtime-8f43e098f02b` release/deploy/verify通过。
+
+当前最终构建：`quickstart-home-x64-0162-20261018-1` 与 `quickstart-home-arm64-0162-20261018-1`，FORMATS=both、FEED_REFRESH=always、JOBS=4。等待构建及包内核验，尚未安装。B重新只读预检确认NetPolicy包、二进制、配置与服务均不存在；新包默认enabled=0，不为首页验收开启策略引擎。B /tmp余60.9MiB，安装临时目录使用/root自己的候选目录；默认路由仍经A .1。
