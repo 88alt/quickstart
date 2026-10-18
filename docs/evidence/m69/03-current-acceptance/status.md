@@ -33,3 +33,7 @@ matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long
 `b-candidate-4009bbc-1` 在隐藏左单右双行的左侧流量卡后，按既有产品规则要求先处理空列，确认按钮正确禁用；脚本误当普通保存，失败证据保留。改用独占单行系统卡测试普通保存，`b-candidate-4009bbc-2` 的真实 root 双会话冲突/草稿保留、保存刷新、自定义链接刷新、deviceId 详情导航、五宽及深色全部通过，两个会话销毁，配置恢复基线。此 passed 只覆盖列明行为，不代表视觉最终通过。
 
 实图及 `b-density-diagnostic-4009bbc` 发现 LuCI 全局 footer padding16px、nowrap/overflow 和 h2 important 行高仍影响卡片；优化2补齐右侧 footer 基础边界与标题行高。`luci-theme-regression-2` 纳入这些真实主题规则后完整回归通过，已打开桌面图。修正资源版本计算：原先仅 index/en 参与 cache key，CSS 单独变化可能继续命中旧缓存；现在 CSS/vendor 也进入 key、release manifest 和部署前后指纹检查。增加 CSS 不匹配禁止安装测试；make test-ops 通过（首次被本机010强制目标覆盖影响，移除本机默认目标，显式指定 B 后重跑通过）。最终 B 须重新部署优化2冻结版本。
+
+`b-candidate-7f68320-1` 在 B 上通过全部七项行为、五宽、浅深主题脚本检查，显式空首页刷新不被当成损坏。控制台/API/pageerror 均零，配置恢复、两会话销毁；网络行390.6px（连接宽444px处使用13px窄卡字体）、接口136px、设备/应用302.1px。已实际打开桌面、各行、390px和320px深色图；各行截图补足 LuCI 桌面内部滚动导致 fullPage 不覆盖下半页的问题。
+
+审图发现深色主题下设备/应用 h2 仍继承 LuCI 固定蓝色，脚本此前仅检查溢出，不能代表色彩通过。优化3将内容 h2 的颜色绑定产品主题变量；下一候选需加入计算颜色断言并复核深色原图。历史失败/不完整视觉结果均保留。
