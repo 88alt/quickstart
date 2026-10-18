@@ -67,7 +67,10 @@ for file in files:
         binary = data['usr/sbin/quickstart']
         assert binary == (a.runtime / ('quickstart.' + a.arch)).read_bytes()
         assert 'smartmontools-drivedb' in fields['Depends']
-        assert home_paths <= set(control['conffiles'].decode().splitlines())
+        # OpenWrt removes runtime-only paths from conffiles: the package must
+        # not ship placeholder JSON (which would break missing-only migration).
+        assert '/etc/config/quickstart' in set(control['conffiles'].decode().splitlines())
+        assert all(path.removeprefix('/') not in data for path in home_paths)
         assert home_paths <= set(data['lib/upgrade/keep.d/quickstart'].decode().splitlines())
     elif name == 'quickstart-netpolicy':
         binary = data['usr/bin/quickstart-netpolicy']

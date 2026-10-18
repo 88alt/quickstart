@@ -56,6 +56,7 @@ for file in files:
    assert 'smartmontools-drivedb' in metadata['depends']
    keep=(target/'lib/upgrade/keep.d/quickstart').read_text().splitlines()
    assert all('/etc/quickstart/home-'+domain+'.json'+suffix in keep for domain in ['layout','launcher'] for suffix in ['', '.bak','.damaged','.bak.damaged'])
+   assert all(not (target/('etc/quickstart/home-'+domain+'.json'+suffix)).exists() for domain in ['layout','launcher'] for suffix in ['', '.bak','.damaged','.bak.damaged'])
   elif name=='quickstart-netpolicy':
    binary=(target/'usr/bin/quickstart-netpolicy').read_bytes()
    m=json.loads((target/'usr/share/quickstart-netpolicy/manifest.json').read_text())

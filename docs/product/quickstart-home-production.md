@@ -141,4 +141,8 @@ backend/modules/homeconfig/         已有契约/存储/HTTP基础及待接的�
 
 首版不启用浏览器持久缓存：当前已有 LuCI 上下文尚不足以在读取服务端前可靠识别换机/恢复出厂，先采用“内置默认加载状态＋并行读取路由器准本”。这不是把同IP缓存当可信配置，也不自动上传。后续仅在身份协议和性能测量证明收益后启用已确认缓存；本地存储不可用不会影响此版本。没有测量结论前不承诺秒开。
 
-当前阶段证据见 [M69.2](../evidence/m69/02-business/status.md) 与 [M69.3](../evidence/m69/03-current-acceptance/status.md)。包装保留路径已在 app-hub 本地配方加入主/备/损坏原件，并新增 keep.d；尚未据此声称 SDK 包或实机升级保留已验收。
+当前阶段证据见 [M69.2](../evidence/m69/02-business/status.md)、[M69.3](../evidence/m69/03-current-acceptance/status.md) 与 [M70](../evidence/m70/status.md)。冻结版本0.16.2已完成六个IPK构建/解包和B匹配安装；APK因宿主DNSTAP生成器缺失暂停，不计通过。
+
+SDK会从包控制信息的conffiles中过滤未随包安装的运行时配置，并通过package-ipkg.mk追加到keep.d。首页八条主/备/损坏原件路径同时显式登记keep.d，按路径集合验证（允许SDK追加重复行）。包中不得安装空JSON占位文件。B的sysupgrade -l和实际sysupgrade -b均覆盖当前四份主/备文件，归档逐项字节一致；没有执行系统恢复或声称跨版本恢复全部通过。
+
+原有包升级会启动DHNS，首次初始化可能为桥增加dheth0并reload B网络。本轮精确验证仅增加此一端口行，其余network字节、LAN地址和默认路由保持。首页配置保存不调用该初始化。保留检查默认严格，仅经明确审查的既有初始化允许该单行差异；不能一般化忽略network变化或删除原业务端口凑通过。

@@ -1,5 +1,19 @@
 # M70 首页包与安装
 
+## 当前结论（覆盖下方历史候选状态）
+
+安装后补充审查发现原有限速准备入口向已安装NetPolicy重复提供安装动作（旧selected=eqos，状态与固定安装目标不一致）。新增独立子任务[netpolicy-preparation](netpolicy-preparation/status.md)，0.16.3源码修正正在冻结/打包；不把0.16.2的局部能力降级通过扩展为全部限速准备正确，也不覆盖原失败。下面是0.16.2已完成事实，0.16.3须重新验收。
+
+业务冻结提交 `eda99c4`，正式版本 `0.16.2-test20261018`。B `192.168.30.244` 已通过普通opkg安装 Quickstart `0.16.2-test20261018-2`、LuCI `0.16.2-test20261018-r2`、NetPolicy `0.2.0-test20260928-2`。包元数据、实际ELF/Web、运行进程、API和LuCI资源key一致；不是仅candidate覆盖。NetPolicy保持enabled=0、无进程，不由首页测试开启数据面。
+
+当前通过六个IPK（x64/ARM64各三包），两个独立构建status成功、fetch及包内字节校验通过。APK在DNSTAP宿主生成器依赖处失败，已按三轮优化边界暂停；ARM64未实装，24小时观察仍延期。因此M70仅IPK+B安装支线收口，完整多格式交付尚未完成。详见[精确输入](release-inputs.md)及下方失败证据。
+
+B实际root登录态验收见 `b-installed-0162-full-1/`：九项断言通过，包括独立root会话并发冲突/保留草稿、保存刷新、合法空首页、HTTP来源自定义链接持久化、设备ID真实导航和深色标题。英文五宽度/主题、触屏五宽度/44px点击区域分别见english-1、touch-1；控制台、pageerror和HTTP错误均为空，测试内容恢复，短期会话销毁。系统圆环早期截图异常单独补查，停稳后的两主题数值/图标断言及审图通过，见[审查记录](system-meters/status.md)，未为此更改生产代码。
+
+升级保留：首页主/备文件和旧业务资料在安装后、UI写入前的指纹保持；UI验收合法更新revision后恢复原配置内容。既有DHNS安装初始化仅增加network中dheth0桥端口行并reload B，不能称所有网络原文字节不变；其余原文、.244/24及默认路由经精确校验保持。四个现有首页主/备文件进入实际sysupgrade归档且逐项字节一致（`b-sysupgrade-archive-0162.log`）；未执行系统恢复。
+
+所有公开发布操作均未执行。A/C/D未操作；原共享构建器与其他仓库任务保留。下方按执行顺序保存历史候选/失败，不把早期“尚未安装”视作当前状态。
+
 任务树：冻结业务提交 → 三架构 runtime → App Hub 配方/资源 → 独立 feed 工作树 → 可审计 SDK 测试输入 → x64/ARM64 IPK+APK → fetch/元数据/ELF/Web → B IPK 安装/配置保留/真实 root UI 复验。
 
 验收标准：各架构 build.status 成功、六包准确、SHA256SUMS 与输入补丁/feed/SDK 锁一致；包内二进制和 Web 与冻结提交一致；B 的 opkg 版本/实际文件/进程/API/UI 一致；首页配置与网络配置保持。APK 无适用固件时只记录构建，不冒充实装。24小时观察仍延期，ARM64 数据面问题不由打包通过代替。
@@ -61,3 +75,25 @@ App Hub `29d1837`，nas测试工作树 `fcd6112`、nas_luci `fde0e6a` 已同步0
 当前最终构建：`quickstart-home-x64-0162-20261018-1` 与 `quickstart-home-arm64-0162-20261018-1`，FORMATS=both、FEED_REFRESH=always、JOBS=4。等待构建及包内核验，尚未安装。B重新只读预检确认NetPolicy包、二进制、配置与服务均不存在；新包默认enabled=0，不为首页验收开启策略引擎。B /tmp余60.9MiB，安装临时目录使用/root自己的候选目录；默认路由仍经A .1。
 
 `reject-candidate-package-metadata` 为当前B反向验证：候选文件/进程已匹配eda，但旧opkg 0.9.9/0.8.17元数据仍被QS_EXPECT_MANIFEST门禁拒绝；未创建任何短期会话。安装后复验强制同时匹配三包版本、五个文件hash、实际进程及LuCI资源key，浏览器/API错误不可通过。当前两架构IPK阶段均完成、feed为fresh，APK仍在构建，不计整组build.status成功。
+
+`ipk-stage-0162.json` 是明确标记stageOnly的提前解包诊断：两架构各三包版本/架构正确，Quickstart及NetPolicy ELF都保留runtime原始hash，CSS亦匹配。不是整组构建或安装通过。
+
+APK下载并发子任务：x64并行编译报告lvm2 normal失败；其构建目录只有prepared-check空标记、未进入configure。共享LVM2.2.03.33.tgz读取先后得到2fb1dfd3…（0条目）、edb9b0b3…（313条目），均不等于配方be4babd8…。官方sources镜像同名归档独立下载的SHA与配方一致。检查SDK download.pl确认临时.dl/.hash位于共享DL而锁位于各SDK tmp，跨SDK竞争与上述动态指纹一致。按精确BUILD_ID停止本任务ARM容器，改为串行调度；随后缓存已由SDK下载流程成为正确be4babd8…，无需人工替换任何共享文件。异常原字节当时已被SDK替换，未伪造归档；观测指纹/归档条目数和原失败日志保留在 `cache-download-repair-0162.json`。x64继续等待自动串行重试；ARM必须使用新编号、在x64完成后重建。没有删除NAS依赖或放宽hash。
+
+进一步进程核对发现x64实际等待OpenSSL源站curl超过1130秒，而非持续编译；独立官方镜像与共享已完成归档均匹配配方 b28c9153…。核对容器BUILD_ID及容器内PID1022完整URL后，仅终止该慢curl，构建器进入正常串行重试，后续iproute2编译继续。未替换正确缓存、未重启目标设备、未动其他进程，见 `openssl-download-0162.json`。
+
+## 分格式结果与当前安装
+
+x64双格式任务最终APK在unbound配置阶段失败：DNSTAP启用却缺少宿主protoc/protoc-c，详见 `apk-dnstap-failure-0162.log`。按本轮三轮优化边界暂停APK闭环，不删除DNS/NAS依赖凑通过。后续方向是核对SDK功能选择及宿主生成器依赖；尚未实现或验证该修正。原双格式失败/中止状态保持，不据其IPK阶段产物声明整组成功。
+
+独立IPK任务 `quickstart-home-x64-ipk-0162-20261018-1` 与 `quickstart-home-arm64-ipk-0162-20261018-1` 均build.status=success、fresh feed，fetch全部SHA256SUMS通过。`x64-ipk-0162-1.json`、`arm64-ipk-0162-1.json` 解包校验通过：各三包版本、架构、原始ELF、完整36份资源集合/字节、模板key、合法SMART依赖和八条keep.d路径。输入patch仍80084c4f…，builder runtime仍8f43e098f02b。产物和完整输入已持久归档 `bin/releases/eda99c4/sdk/<BUILD_ID>/`。这是六个IPK通过；没有APK通过或ARM实装结论。
+
+包保留契约修正：真实SDK的scripts/ipkg-build会将未随包安装的运行时路径过滤出conffiles，include/package-ipkg.mk再把这些路径追加到keep.d。后者与配方显式keep文件可出现重复行，按集合验证。检查器保留/etc/config/quickstart的conffiles校验，要求八条运行时保留路径齐全，并新增断言包内不得携带占位JSON，防止破坏缺文件时初始化。不是删除保留断言凑通过；实际安装和sysupgrade清单另行验证。
+
+B安装准备：私有目录 `/root/quickstart-package-candidates/home-0162-eda99c4-r2` 权限700、备份600，保存当前程序/Web/首页与原软件包文件/记录。普通opkg update通过八源签名检查；包传输SHA、配置指纹、--noaction预演通过。实际普通opkg安装三包及smartmontools-drivedb 7.5-r1成功，未force-depends。旧Quickstart配置被正确保留，新默认另存quickstart-opkg；该配置保留提示不是依赖失败。
+
+### 安装保留检查的红灯与精确解释
+
+`b-install-preservation-0162.log` 首轮严格指纹检查在network报红，未掩盖。应用diagnosing-bugs流程：保留红灯；依次验证DHNS桥端口、UCI格式变化、接口配置变化三个假设。`b-network-change-diagnosis-0162.json` 证明唯一差异为新增 `list ports 'dheth0'`：从当前原文移除此一行，恰恢复安装前SHA49f8c014…。不是LAN被改成DHCP；其余原始字节全部相同。源码确认原有quickstart.uci-default会启动startdhns boot，后者调用uciChange；既有netns.PlanBridgePortCommands负责追加该虚拟端口并在B触发network reload，已存在端口时不再写。定向TestBridgePortCommands通过。未改这一原业务，也未删除其端口迫使hash过关；A/C/D未操作。
+
+原私有备份只留network指纹、遗漏单独原文，已明确承认。按上述可证实的SHA重建安装前原文，存为 `backup/network.before.recovered`（600），没有写回活动network文件。新的 `verify-home-preservation.py` 默认严格模式仍报红，`b-preservation-strict-0162.json` 保留；仅显式--allow-dhns-init且精确移除此一行还原原SHA时允许该已有初始化，任何其他字节变化都失败。`b-preservation-reviewed-init-0162.json` 通过：四份现有首页文件及其余缺失状态、DHCP/firewall/Quickstart/业务资料/执行方偏好、.244/24与默认网关.1保持。不得把此结果概括成所有网络文件字节完全不变。

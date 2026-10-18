@@ -12,6 +12,7 @@ import secrets
 import shlex
 import subprocess
 import sys
+import tarfile
 
 HOST = '192.168.30.244'
 OUT = Path(sys.argv[1])
@@ -50,6 +51,18 @@ if os.environ.get('QS_EXPECT_MANIFEST'):
                          'luci-app-quickstart - ' + manifest['version'] + '-r2',
                          'quickstart-netpolicy - 0.2.0-test20260928-2'}
     assert set(report['packages']) == expected_packages, report['packages']
+    policy_archive = Path(os.environ['QS_EXPECT_MANIFEST']).parent / 'quickstart-netpolicy-0.2.0-test20260928-x86_64-unknown-linux-musl.tar.gz'
+    with tarfile.open(policy_archive) as archive:
+        frozen_policy = json.load(archive.extractfile('manifest.json'))
+    installed_policy = json.loads(remote('cat /usr/share/quickstart-netpolicy/manifest.json'))
+    assert installed_policy == frozen_policy, 'Installed NetPolicy manifest differs from the frozen archive'
+    policy_sha = remote('sha256sum /usr/bin/quickstart-netpolicy').split()[0]
+    assert policy_sha == frozen_policy['binarySha256'], 'Installed NetPolicy binary differs from its archive'
+    policy_enabled = remote('uci -q get quickstart-netpolicy.main.enabled').strip()
+    policy_process = remote('pidof quickstart-netpolicy || true').strip()
+    assert policy_enabled == '0' and not policy_process, 'Homepage package acceptance must not enable the policy engine'
+    report['netpolicy'] = {'binarySha256': policy_sha, 'manifest': installed_policy,
+                           'enabled': policy_enabled, 'running': bool(policy_process)}
     report['matchedManifest'] = manifest['git_sha']
     os.environ['QS_EXPECT_ASSET_VERSION'] = manifest['asset_version']
 try:

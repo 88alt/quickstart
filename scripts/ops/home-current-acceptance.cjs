@@ -21,18 +21,42 @@ async function write(context,domain,value,expectedVersion){const r=await context
   async function finish(p){await p.locator('[data-apply]').click();if(await p.locator('[data-confirm-finish]').count())await p.locator('[data-confirm-finish]').click()}
   async function trafficTouch(){const bounds=await page.locator('[data-layout-card=traffic]').evaluate(n=>{const rect=x=>{const r=x.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom}};return {width:innerWidth,action:rect(n.querySelector('.traffic-header-actions')),labels:[...n.querySelectorAll('.speed_item>span')].map(rect)}});(report.trafficTouchBounds??=[]).push(bounds);assert.ok(bounds.labels.every(r=>r.right<=bounds.action.left-4||r.left>=bounds.action.right+4||r.top>=bounds.action.bottom+4||r.bottom<=bounds.action.top-4),'Touch speed-test action overlaps traffic rate labels')}
   await ready(page);await ready(other);await capture('b-home-1440');
-  for(const [index,row] of (await page.locator('[data-ordered-row]').all()).entries()){await row.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'b-row-'+(index+1)+'-1440.png')})}
+  for(const [index,row] of (await page.locator('[data-ordered-row]').all()).entries()){await row.scrollIntoViewIfNeeded();await page.waitForTimeout(800);await page.screenshot({path:path.join(out,'b-row-'+(index+1)+'-1440.png')})}
   await page.locator('.lab-header').scrollIntoViewIfNeeded();
   report.themeStyles=await page.evaluate(()=>Array.from(document.styleSheets).map(s=>s.href).filter(Boolean));
+  report.systemCenters=await page.locator('[data-layout-card=system] .pie-chart-wrapper,[data-layout-card=system] .center-content,[data-layout-card=system] .center-label').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),r=n.getBoundingClientRect();return {cls:n.className,text:n.textContent,display:s.display,position:s.position,visibility:s.visibility,opacity:s.opacity,color:s.color,left:r.left,top:r.top,width:r.width,height:r.height,transform:s.transform,zIndex:s.zIndex}}));
   if(process.env.QS_EXPECT_ASSET_VERSION){assert.ok(report.themeStyles.some(url=>new URL(url).pathname==='/luci-static/quickstart/style.css'&&new URL(url).searchParams.get('v')===process.env.QS_EXPECT_ASSET_VERSION),'Installed LuCI template has a stale resource cache key');report.checks.push('Installed package, running process and LuCI resource version match the frozen runtime')}
   report.density=await page.locator('[data-layout-card=networkInterface] *,.inventory-header,.inventory-footer,.applications-header').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n);return {tag:n.tagName,cls:n.className,h:n.getBoundingClientRect().height,margin:s.margin,padding:s.padding,minHeight:s.minHeight,lineHeight:s.lineHeight,font:s.font,display:s.display}}));
   const expectedWidgets=layout.rows.flatMap(r=>r.columns.flatMap(c=>c.cards)).filter(Boolean);assert.equal(await page.locator('[data-layout-card]').count(),expectedWidgets.length);
   report.checks.push('Real root session renders persisted homepage');
+  if(process.env.QS_ACCEPT_SYSTEM==='1'){
+   const card=page.locator('[data-layout-card=system]');report.systemThemes=[];
+   for(const theme of ['light','dark']){
+    if(theme==='dark')await page.getByRole('button',{name:'切换主题',exact:true}).click();
+    await card.scrollIntoViewIfNeeded();await page.waitForTimeout(800);
+    const centers=await card.locator('.center-content,.center-label').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n),r=n.getBoundingClientRect();return {cls:n.className,text:n.textContent,display:s.display,color:s.color,width:r.width,height:r.height}}));
+    report.systemThemes.push({theme,centers});assert.equal(await card.locator('.center-label:visible').count(),3,'System ring values are hidden after LuCI content scroll');assert.equal(await card.locator('.center-icon:visible').count(),3,'System ring icons are hidden');
+    await page.screenshot({path:path.join(out,'b-system-rested-'+theme+'.png')});
+   }
+   report.checks.push('All three standard system ring labels and icons remain visible after real LuCI scroll in both themes');report.result='passed';return;
+  }
   if(process.env.QS_ACCEPT_CAPABILITY==='1'){
+   const globalResponse=await first.request.get(base+'/cgi-bin/luci/istore/lanctrl/globalConfigs/');assert.equal(globalResponse.status(),200);const global=(await globalResponse.json()).result;report.speedCapability={selected:global.speedLimit?.provider,providers:global.speedLimit?.providers,capability:global.capabilities?.items?.device_speed_limit??global.capabilities?.speedLimit};
    const response=await first.request.get(base+'/cgi-bin/luci/istore/lanctrl/v2/router-context/');assert.equal(response.status(),200);const context=(await response.json()).result;assert.equal(typeof context.routeEditability.editable,'boolean');report.routeEditability=context.routeEditability;
    const device=page.locator('[data-canvas-device]').first();assert.ok(await device.count(),'Capability test requires an observed device');await device.click();await page.locator('.drawer-backdrop').waitFor();await page.locator('.drawer-tabs').getByRole('button',{name:'网络与上网',exact:true}).click();await page.locator('.policy-card').waitFor();
    if(!context.routeEditability.editable){assert.equal(await page.locator('.policy-toggle input').first().isDisabled(),true);const preview=page.getByRole('button',{name:'预览地址与上网路线',exact:true});if(await preview.count())assert.equal(await preview.isDisabled(),true);await page.locator('.policy-reason').first().waitFor();report.checks.push('Real DHCP authority keeps route/address policy read only with guidance')}
-   await page.screenshot({path:path.join(out,'b-device-network-authority.png')});await page.locator('.drawer-tabs').getByRole('button',{name:'使用管理',exact:true}).click();await page.getByRole('button',{name:/^(安装限速服务|启用限速服务)$/}).waitFor();await page.screenshot({path:path.join(out,'b-device-optional-netpolicy.png')});report.checks.push('Unavailable optional NetPolicy leaves inventory and policy guidance usable without enabling it');assert.equal(report.errors.length,0);report.result='passed';return;
+   await page.screenshot({path:path.join(out,'b-device-network-authority.png')});await page.locator('.drawer-tabs').getByRole('button',{name:'使用管理',exact:true}).click();
+   if(report.speedCapability.capability?.reason==='selected_provider_unavailable')await page.getByText('已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。',{exact:true}).waitFor();
+   else await page.getByRole('button',{name:/^(安装限速服务|启用限速服务)$/}).waitFor();
+   await page.screenshot({path:path.join(out,'b-device-optional-netpolicy.png')});report.checks.push('Unavailable optional NetPolicy leaves inventory and policy guidance usable without enabling it');
+   if(process.env.QS_ACCEPT_PROVIDER_GUARD==='1'){
+    const native=report.speedCapability.providers?.find(p=>p.id==='quickstart-native');const actions=report.speedCapability.capability?.actions??[];
+    assert.ok(native,'Native provider diagnostics missing');assert.ok(!(native.installed&&actions.some(a=>a.kind==='install'&&a.target==='quickstart-netpolicy')),'Capability install action targets an already installed NetPolicy package');
+    if(native.installed&&report.speedCapability.selected!=='quickstart-native'){
+     assert.equal(await page.getByRole('button',{name:'安装限速服务',exact:true}).count(),0);await page.locator('.drawer-close').click();await page.locator('.primary-tabs').getByRole('tab',{name:'局域网设置'}).click();await page.locator('.lan-settings .setting-card').first().waitFor();assert.equal(await page.getByRole('button',{name:'安装所需服务',exact:true}).count(),0);await page.getByText('已安装限速服务，但当前执行方式不可用；请在下方高级设置中查看服务状态，选择后预览。',{exact:true}).waitFor();await page.screenshot({path:path.join(out,'b-selected-provider-guidance.png')});report.checks.push('Installed alternative is not reinstalled or selected automatically; existing settings preview remains available');
+    }
+   }
+   assert.equal(report.errors.length,0);report.result='passed';return;
   }
   if(process.env.QS_ACCEPT_LIFECYCLE==='1'){
    await other.close();let trafficRequests=0;page.on('request',r=>{if(new URL(r.url()).pathname==='/cgi-bin/luci/istore/u/network/statistics/')trafficRequests++});
