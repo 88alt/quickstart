@@ -1,10 +1,14 @@
-/* Restore the former formal top; keep the approved widget area below it. */
-.home-top{max-width:1640px;margin:0 auto 10px;min-width:0}
-.home-top-actions{height:48px;display:flex;justify-content:flex-end;align-items:flex-start;gap:16px;color:var(--c-text)}
+/* Only this homepage consumes LuCI's content margin. Put the same inset back
+ * into its body gutter, keeping the accepted widget widths unchanged. */
+:global(#maincontent>.container:has(> #app [data-ordered-home])){margin-left:0;margin-right:0;--home-host-inset:20px}
+.ordered-home{--home-gutter:32px;padding-left:calc(var(--home-gutter) + var(--home-host-inset,0px));padding-right:calc(var(--home-gutter) + var(--home-host-inset,0px));padding-bottom:24px;min-height:0}
+.home-top{margin:0 calc(0px - var(--home-gutter) - var(--home-host-inset,0px)) 20px;min-width:0;background:var(--primary,#606de8);color:#fff;padding:0 16px}
+.home-top-actions{height:48px;display:flex;justify-content:flex-end;align-items:center;gap:16px;color:#fff}
 .home-top-actions>a{line-height:1.5;font-size:14px}
 .home-top-actions>.home-module-settings{display:flex;align-items:center;justify-content:center;min-width:24px;min-height:24px;padding:0;color:inherit}
 .home-module-settings>svg{width:16px;height:16px}
-/* No reserved footer or fixed launcher space after the final content row. */
-.ordered-home{padding-bottom:24px;min-height:0}
-.home-top:deep(.title),.home-top:deep(.subtitle){overflow-wrap:anywhere}
-@media(pointer:coarse){.home-top-actions{align-items:center}.home-top-actions>a{display:flex;align-items:center;min-height:44px}.home-top-actions>.home-module-settings{min-width:44px;min-height:44px}}
+.home-top :focus-visible{outline-color:#fff!important}
+@media(max-width:1200px){.ordered-home{--home-gutter:24px}}
+@media(max-width:760px){.ordered-home{--home-gutter:14px}}
+@media(max-width:600px){:global(#maincontent>.container:has(> #app [data-ordered-home])){--home-host-inset:16px}}
+@media(pointer:coarse){.home-top-actions>a{display:flex;align-items:center;min-height:44px}.home-top-actions>.home-module-settings{min-width:44px;min-height:44px}}

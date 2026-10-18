@@ -1,5 +1,5 @@
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const {checkHomeShell,setSystemTheme}=require('./home-shell-checks.cjs');
+const {checkHomeShell,setSystemTheme,checkHomeHeader}=require('./home-shell-checks.cjs');
 const host=process.env.QS_ACCEPT_HOST;if(host!=='192.168.30.244')throw new Error('B-only acceptance');
 const out=process.env.QS_ACCEPT_OUT,base='http://'+host,home=base+'/cgi-bin/luci/admin/quickstart/';
 const english=process.env.QS_ACCEPT_LANGUAGE==='en',touch=process.env.QS_ACCEPT_TOUCH==='1';
@@ -30,17 +30,32 @@ async function write(context,domain,value,expectedVersion){const r=await context
   report.density=await page.locator('[data-layout-card=networkInterface] *,.inventory-header,.inventory-footer,.applications-header').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n);return {tag:n.tagName,cls:n.className,h:n.getBoundingClientRect().height,margin:s.margin,padding:s.padding,minHeight:s.minHeight,lineHeight:s.lineHeight,font:s.font,display:s.display}}));
   const expectedWidgets=layout.rows.flatMap(r=>r.columns.flatMap(c=>c.cards)).filter(Boolean);assert.equal(await page.locator('[data-layout-card]').count(),expectedWidgets.length);
   report.checks.push('Real root session renders persisted homepage');
+  if(process.env.QS_ACCEPT_HEADER_INSPECT==='1'){
+   report.headerAncestors=await page.locator('[data-home-top]').evaluate(top=>{const result=[];for(let n=top;n;n=n.parentElement){const s=getComputedStyle(n),r=n.getBoundingClientRect();result.push({tag:n.tagName,id:n.id,cls:n.className,x:r.x,y:r.y,width:r.width,height:r.height,background:s.backgroundColor,padding:s.padding,margin:s.margin,primary:s.getPropertyValue('--primary')})}return result});
+   report.result='diagnostic';return;
+  }
   await checkHomeShell(page,report,{touch});
   if(process.env.QS_ACCEPT_SHELL==='1'){
    await other.close();let installs=0;page.on('request',r=>{if(new URL(r.url()).pathname==='/cgi-bin/luci/istore/app/install/')installs++});
    const check=await first.request.post(base+'/cgi-bin/luci/istore/app/check/',{data:{name:'app-meta-fastnet'}});assert.equal(check.status(),200);const fastnet=await check.json();assert.ok(fastnet.result&&!fastnet.error);
    if(fastnet.result.status!=='installed'){
-    const dialog=page.waitForEvent('dialog');const click=page.locator('[data-home-quick=speed]').click();const prompt=await dialog;assert.equal(prompt.type(),'confirm');assert.match(prompt.message(),/FastNet/);await prompt.dismiss();await click;assert.equal(installs,0);report.checks.push('Original FastNet installation prompt retained; cancelling makes no installation request');
+    const dialog=page.waitForEvent('dialog');const click=page.locator('[data-layout-card=traffic] .layout-speed').click();const prompt=await dialog;assert.equal(prompt.type(),'confirm');assert.match(prompt.message(),/FastNet/);await prompt.dismiss();await click;assert.equal(installs,0);report.checks.push('Traffic widget retains FastNet installation prompt; cancelling makes no installation request');
    }
-   for(const [icon,route] of [['navigation','/network'],['topology','/devicemanagement']]){await page.locator('[data-home-quick='+icon+']').focus();await page.keyboard.press('Enter');await page.waitForURL(url=>url.pathname.endsWith(route));await page.waitForTimeout(1000);await capture('b-old-top-'+icon);await ready(page)}
-   report.checks.push('Original network and complete device-management shortcuts navigate with keyboard');
+   await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-open-app=network]').focus();await page.keyboard.press('Enter');await page.waitForURL(url=>url.pathname.endsWith('/network'));await capture('b-network-library-navigation');await ready(page);
+   await page.locator('[data-layout-card=devices] [data-canvas-view-all]').focus();await page.keyboard.press('Enter');await page.waitForURL(url=>url.pathname.endsWith('/devicemanagement'));await capture('b-complete-device-navigation');await ready(page);
+   report.checks.push('Network setup remains reachable in the library and complete device management in the device widget via keyboard');
+   const parentalCheck=await first.request.post(base+'/cgi-bin/luci/istore/app/check/',{data:{name:'luci-app-oaf'}});assert.equal(parentalCheck.status(),200);const parental=await parentalCheck.json();assert.ok(parental.result&&!parental.error);
+   await page.locator('[data-layout-card=devices] [data-widget-more]').click();
+   if(parental.result.status==='installed'){
+    await page.locator('[data-layout-card=devices] [data-widget-menu-item=parental]').click();await page.waitForURL(url=>url.pathname==='/cgi-bin/luci/admin/services/appfilter');await capture('b-parental-navigation');await ready(page);
+   }else{
+    const dialog=page.waitForEvent('dialog');const click=page.locator('[data-layout-card=devices] [data-widget-menu-item=parental]').click();const prompt=await dialog;assert.equal(prompt.type(),'confirm');await prompt.dismiss();await click;assert.equal(installs,0);
+   }
+   report.checks.push('Device menu retains real parental-control action without a duplicate shortcut strip');
    await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-applications-browser]').waitFor();await page.setViewportSize({width:390,height:900});await page.waitForTimeout(400);assert.equal(await page.locator('[data-applications-browser]').count(),1);await page.keyboard.press('Escape');assert.equal(await page.locator('[data-layout-card=applications] [data-all-apps]').evaluate(n=>n===document.activeElement),true);assert.equal(await page.locator('body[lock-scroll]').count(),0);assert.equal(await page.evaluate(()=>document.body.style.overflow),'');
-   report.checks.push('Renderless library host survives responsive rows; close restores focus and scrolling');await setSystemTheme(page,'dark');await capture('b-old-top-390-dark');await page.setViewportSize({width:1440,height:1000});await setSystemTheme(page,'light');await capture('b-old-top-final-light');report.result='passed';return;
+   report.checks.push('Renderless library host survives responsive rows; close restores focus and scrolling');
+   for(const theme of ['dark','light']){await setSystemTheme(page,theme);for(const width of [1440,1024,768,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(300);await checkHomeHeader(page);await capture('b-blue-header-'+theme+'-'+width);assert.equal(report.views.at(-1).overflow,false)}}
+   assert.equal(report.errors.length,0);assert.equal(report.consoleErrors.length,0);assert.equal(report.httpErrors.length,0);report.result='passed';return;
   }
   if(process.env.QS_ACCEPT_SYSTEM==='1'){
    const card=page.locator('[data-layout-card=system]');report.systemThemes=[];
