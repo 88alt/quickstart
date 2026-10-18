@@ -34,6 +34,24 @@ report = {'checkedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
           'fingerprints': remote('sha256sum /usr/sbin/quickstart /www/luci-static/quickstart/index.js /www/luci-static/quickstart/style.css /www/luci-static/quickstart/vendor.js /www/luci-static/quickstart/i18n/en.json').strip().splitlines(),
           'processFingerprints': remote('for pid in $(pidof quickstart); do sha256sum /proc/$pid/exe; done').strip().splitlines(),
           'packages': remote("opkg list-installed | awk '$1 ~ /^(quickstart|luci-app-quickstart|quickstart-netpolicy)$/ {print}'").strip().splitlines()}
+if os.environ.get('QS_EXPECT_MANIFEST'):
+    manifest = dict(line.split('=', 1) for line in Path(os.environ['QS_EXPECT_MANIFEST']).read_text().splitlines())
+    assert report['version'].split()[:2] == [manifest['version'], manifest['git_sha']], report['version']
+    expected = {'/usr/sbin/quickstart': manifest['quickstart.x86_64'],
+                '/www/luci-static/quickstart/index.js': manifest['web.index.js'],
+                '/www/luci-static/quickstart/style.css': manifest['web.style.css'],
+                '/www/luci-static/quickstart/vendor.js': manifest['web.vendor.js'],
+                '/www/luci-static/quickstart/i18n/en.json': manifest['web.i18n.en.json']}
+    actual = {line.split()[1]: line.split()[0] for line in report['fingerprints']}
+    assert actual == expected, 'Installed files do not match the runtime manifest'
+    assert report['processFingerprints'] and all(line.split()[0] == manifest['quickstart.x86_64']
+                                               for line in report['processFingerprints']), 'Running process differs from package'
+    expected_packages = {'quickstart - ' + manifest['version'] + '-2',
+                         'luci-app-quickstart - ' + manifest['version'] + '-r2',
+                         'quickstart-netpolicy - 0.2.0-test20260928-2'}
+    assert set(report['packages']) == expected_packages, report['packages']
+    report['matchedManifest'] = manifest['git_sha']
+    os.environ['QS_EXPECT_ASSET_VERSION'] = manifest['asset_version']
 try:
     for _ in range(2):
         sid = ubus('create', {'timeout': 900})['ubus_rpc_session']

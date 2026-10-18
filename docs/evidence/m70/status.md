@@ -59,3 +59,5 @@ App Hub `29d1837`，nas测试工作树 `fcd6112`、nas_luci `fde0e6a` 已同步0
 旧0.16.1两组任务按容器BUILD_ID及output挂载核对归属后停止，保留中止状态及日志，不计通过。ARM依赖unbound源站下载缓慢，从OpenWrt官方sources镜像读取同名归档，hash `0fe8b6277b0959cfd17562debac0aa5f71e0b02dc4ffa9c60271c583edab586f` 与SDK固定配方一致，仅预置缺失下载文件，没有替换配方或降低校验。当前构建器runtime `runtime-8f43e098f02b` release/deploy/verify通过。
 
 当前最终构建：`quickstart-home-x64-0162-20261018-1` 与 `quickstart-home-arm64-0162-20261018-1`，FORMATS=both、FEED_REFRESH=always、JOBS=4。等待构建及包内核验，尚未安装。B重新只读预检确认NetPolicy包、二进制、配置与服务均不存在；新包默认enabled=0，不为首页验收开启策略引擎。B /tmp余60.9MiB，安装临时目录使用/root自己的候选目录；默认路由仍经A .1。
+
+`reject-candidate-package-metadata` 为当前B反向验证：候选文件/进程已匹配eda，但旧opkg 0.9.9/0.8.17元数据仍被QS_EXPECT_MANIFEST门禁拒绝；未创建任何短期会话。安装后复验强制同时匹配三包版本、五个文件hash、实际进程及LuCI资源key，浏览器/API错误不可通过。当前两架构IPK阶段均完成、feed为fresh，APK仍在构建，不计整组build.status成功。

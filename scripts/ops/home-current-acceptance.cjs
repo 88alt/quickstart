@@ -24,9 +24,16 @@ async function write(context,domain,value,expectedVersion){const r=await context
   for(const [index,row] of (await page.locator('[data-ordered-row]').all()).entries()){await row.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(out,'b-row-'+(index+1)+'-1440.png')})}
   await page.locator('.lab-header').scrollIntoViewIfNeeded();
   report.themeStyles=await page.evaluate(()=>Array.from(document.styleSheets).map(s=>s.href).filter(Boolean));
+  if(process.env.QS_EXPECT_ASSET_VERSION){assert.ok(report.themeStyles.some(url=>new URL(url).pathname==='/luci-static/quickstart/style.css'&&new URL(url).searchParams.get('v')===process.env.QS_EXPECT_ASSET_VERSION),'Installed LuCI template has a stale resource cache key');report.checks.push('Installed package, running process and LuCI resource version match the frozen runtime')}
   report.density=await page.locator('[data-layout-card=networkInterface] *,.inventory-header,.inventory-footer,.applications-header').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n);return {tag:n.tagName,cls:n.className,h:n.getBoundingClientRect().height,margin:s.margin,padding:s.padding,minHeight:s.minHeight,lineHeight:s.lineHeight,font:s.font,display:s.display}}));
   const expectedWidgets=layout.rows.flatMap(r=>r.columns.flatMap(c=>c.cards)).filter(Boolean);assert.equal(await page.locator('[data-layout-card]').count(),expectedWidgets.length);
   report.checks.push('Real root session renders persisted homepage');
+  if(process.env.QS_ACCEPT_CAPABILITY==='1'){
+   const response=await first.request.get(base+'/cgi-bin/luci/istore/lanctrl/v2/router-context/');assert.equal(response.status(),200);const context=(await response.json()).result;assert.equal(typeof context.routeEditability.editable,'boolean');report.routeEditability=context.routeEditability;
+   const device=page.locator('[data-canvas-device]').first();assert.ok(await device.count(),'Capability test requires an observed device');await device.click();await page.locator('.drawer-backdrop').waitFor();await page.locator('.drawer-tabs').getByRole('button',{name:'网络与上网',exact:true}).click();await page.locator('.policy-card').waitFor();
+   if(!context.routeEditability.editable){assert.equal(await page.locator('.policy-toggle input').first().isDisabled(),true);const preview=page.getByRole('button',{name:'预览地址与上网路线',exact:true});if(await preview.count())assert.equal(await preview.isDisabled(),true);await page.locator('.policy-reason').first().waitFor();report.checks.push('Real DHCP authority keeps route/address policy read only with guidance')}
+   await page.screenshot({path:path.join(out,'b-device-network-authority.png')});await page.locator('.drawer-tabs').getByRole('button',{name:'使用管理',exact:true}).click();await page.getByRole('button',{name:/^(安装限速服务|启用限速服务)$/}).waitFor();await page.screenshot({path:path.join(out,'b-device-optional-netpolicy.png')});report.checks.push('Unavailable optional NetPolicy leaves inventory and policy guidance usable without enabling it');assert.equal(report.errors.length,0);report.result='passed';return;
+  }
   if(process.env.QS_ACCEPT_LIFECYCLE==='1'){
    await other.close();let trafficRequests=0;page.on('request',r=>{if(new URL(r.url()).pathname==='/cgi-bin/luci/istore/u/network/statistics/')trafficRequests++});
    report.lifecycle=[];
@@ -71,6 +78,6 @@ async function write(context,domain,value,expectedVersion){const r=await context
   // Compare versions captured after our writes; never overwrite another root
   // session's concurrent change during cleanup.
   if(first)for(const [domain,value,version] of [['layout',layout,layoutVersion],['launcher',launcher,launcherVersion]])if(value&&version){try{const current=await read(first,domain);if(JSON.stringify(current.value)===JSON.stringify(value))report.restoration.push(domain+': unchanged');else {assert.equal(current.version,version,'Concurrent edit detected; cleanup stopped');await write(first,domain,value,version);report.restoration.push(domain+': restored')}}catch(error){report.restoration.push(domain+': failed: '+error.message);report.result='failed';process.exitCode=1}}
-  await browser?.close();fs.writeFileSync(path.join(out,'ui.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+  await browser?.close();if(process.env.QS_EXPECT_ASSET_VERSION&&report.result==='passed'&&(report.errors.length||report.consoleErrors.length||report.httpErrors.length)){report.result='failed';report.failure='Matched package acceptance reported browser/API errors';process.exitCode=1}fs.writeFileSync(path.join(out,'ui.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }
 })().catch(error=>{console.error(error);process.exitCode=1});

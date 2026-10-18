@@ -6,7 +6,7 @@
 
 已确认的交互只在[布局规范](quickstart-home-layout-interaction-spec.md)维护，视觉只在[外观规范 VS01～VS12](quickstart-home-widget-visual-standard.md)维护。默认五行、十一稳定控件、四字名称及测速例外、前置业务图标、连体操作组、自然高度和用户尺寸意图均保留。设备业务遵循[产品架构](../lan-device-management-product-architecture.md)与两个既有 ADR。本文补充正式运行契约，不重新规定审美。
 
-源码重新核验：正式 `pages/index/index.vue` 仍是旧显隐布局；设计 `homeDocument` 为 v3，但 revision 是草稿版本；应用固定及链接在内存。`widgetComposition.ts` 为设计构建转换，不能进入正式构建。原请求层存在 HTTP 200 业务错误；新接口独立严格处理，不改变全部旧请求行为。
+接手时源码重新核验：正式 `pages/index/index.vue` 当时仍是旧显隐布局；设计 `homeDocument` 为 v3，但 revision 是草稿版本；应用固定及链接在内存。现已按文末实施补充替换正式入口并持久化。`widgetComposition.ts` 为设计构建转换，不能进入正式构建。原请求层存在 HTTP 200 业务错误；新接口独立严格处理，不改变全部旧请求行为。
 
 设备重新核验：B 的系统报告为 iStoreOS 24.10.1 / kernel 6.6.86 / x86/64，包记录 quickstart 0.9.9-r1、luci-app-quickstart 0.8.17-r1，未列出 netpolicy。后续只读预检也确认运行文件为0.9.9、设备清单/路由上下文/设备流量v2均404，登录态UI为旧版；详见执行状态，不沿用历史 M64 的设备通过结论。
 
@@ -22,7 +22,7 @@
 - 选择两个独立原子 JSON 文件：`/etc/quickstart/home-layout.json`、`home-launcher.json`，各自有效备份 `.bak`。没有跨域原子事务需求，不为节省一个文件扩大故障范围。恢复布局不会覆盖启动台。
 - 文件封装包含随机 generation、单调 revision 和内容。并发令牌包含 generation，恢复出厂/重建配置后旧缓存或旧标签不能覆写新配置。所有更新必须带读到的版本；冲突保留草稿，显式重新加载，不自动覆盖或合并。
 - 保存流程：限制请求大小→严格解码/结构验证→锁定并读当前文件→版本检查→无变化直接返回→同步有效旧备份→临时文件0600写入/fsync→rename→父目录fsync。错误响应不记录链接内容。提交后同步失败属于结果未知，客户端读回确认，不能直接重复写。
-- 读取不存在可返回内置默认值；真实空布局/零固定必须保留。第一次成功写入形成持久化配置；浏览器缓存永不自动上传。旧显隐迁移必须先取得完整旧设置，不能把读取失败当作默认；只迁移一次，保留旧配置和迁移来源，不双写旧键。
+- 本域主备文件都不存在时，首次认证GET在完整读取旧设置后原子初始化并保留迁移来源；后续GET不写。真实空布局/零固定必须保留。浏览器缓存永不自动上传。不能把旧设置读取失败当作默认；迁移只执行一次，不双写旧键。
 - 配置空文件、截断、超限或结构无效：尝试有效备份用于展示并标明恢复状态；禁止普通保存覆盖损坏原件。显式恢复需先保留损坏证据。未来版本：只读保留，旧代码禁止降级覆盖。读取失败临时展示默认值和错误，不写文件。
 - 首版结构有界：32行、每行1～3列、每列1～2槽且仅五种合法模板、11控件全页唯一、行ID有界且唯一、权重和比例有限、空间意图不超过既有1600px范围。禁止未知字段/控件/形态；未来版本整体只读，不能忽略未知字段再保存。
 - 链接只接受有主机的 HTTP(S)，名称/URL/图标/ID有界，拒绝控制字符、凭据字段和可执行协议；不在服务器探测URL、不抓远程图标。正文以文本绑定，外开链接使用 noopener/noreferrer。
@@ -55,11 +55,11 @@ Seam 位于布局渲染控件及业务填入外壳的位置。正式实现抽取
 
 读取所有权以逐项源码盘点为准：状态/系统5秒、端口10秒及远程3秒等原节奏先登记；隐藏模块停止适用消费、后台暂停、卸载取消在途回调/计时器/观察器及dispose图表。不增加频率，连续20次切换检查owner和实例回到基线。性能先记录JS/语言/路由/图表/模板开销再定预算，不预称秒开。
 
-## 旧配置迁移规则（实施前须形成可执行样例）
+## 旧配置迁移规则（已实现，共用样例与集成测试覆盖）
 
 `diableDisplay` 保持既有拼写并只读：networkFlow→traffic、networkConnection→connection、networkInterface→networkInterface、diskInfo→storage、storage→sharing、docker→docker、downloadService→downloads、remoteDomain→remote、systemInfo→system。隐藏模块按原选择隐藏，不将旧用户直接重置新默认。
 
-quickActions 与 configModule 合为 applications，但两个旧域的原入口/安装判断都必须在完整库可达；两者都隐藏时 applications 不主动显示。新增 devices 是否默认进入已存在的旧配置，需明确迁移说明；首版推荐仅新安装默认含设备卡，已有有效旧配置不擅自新增。旧 quickActions 的网络向导、设备管理、测速、家长控制和应用商店仍须可达，不能因八工具默认而删除。
+quickActions 与 configModule 合为 applications，但两个旧域的原入口/安装判断都必须在完整库可达；两者都隐藏时 applications 不主动显示。已实现的首版迁移：仅新安装默认含 devices；已有有效旧显隐配置不主动加入设备卡，用户可在原布局编辑器添加。旧 quickActions 的网络向导、设备管理、测速、家长控制和应用商店仍可达，不能因八工具默认而删除。可执行样例见 `backend/modules/homeconfig/integration_test.go`；旧配置全隐藏保持合法空首页，UCI读取失败不落盘。
 
 ## 阶段任务树与验收
 

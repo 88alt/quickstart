@@ -61,3 +61,5 @@ matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long
 `final-recovery-eda99c4` 补充四组全部通过：布局单域不可用时启动台仍可编辑；启动台单域不可用时布局仍可编辑；localStorage/sessionStorage抛SecurityError仍可用；目录身份异常显示读取失败而非空安装列表。已打开单域390px及目录异常启动台原图。这些为本地受控故障场景，不冒充B真实磁盘/权限故障。M70仍需匹配安装包后再次登录态验收。
 
 `b-lifecycle-eda99c4` 为真实B的20次SPA设备详情/首页往返：每次离开首页无布局卡/流量canvas，首末两次离开后5.3秒无流量请求；每次回来恰好一张canvas、无滚动锁。20次共20次初始化读取，最后5.5秒仅1次周期读取，没有累积20套轮询。控制台/HTTP/pageerror为空，配置未变，两会话销毁。已打开20次后原始截图；这是有限导航/清理测试，不是24小时观察。
+
+`b-capability-eda99c4-1` 当前B只读验收通过：实际router-context返回editable=false、external_dhcp_authority；首页设备深链进入网络与上网后，地址预留和路线提交禁用，并显示去实际地址分配路由器修改的说明。使用管理仍可进入，缺NetPolicy显示安装入口，设备清单正常。未点击安装或提交策略。已打开两个详情原图；控制台/HTTP/pageerror为空，配置未变，两会话销毁。安装NetPolicy包后需再次核对禁用能力的降级状态，不把本条沿用为安装后结果。
