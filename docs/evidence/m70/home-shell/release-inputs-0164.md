@@ -1,5 +1,7 @@
 # 顶部恢复候选 0.16.4
 
+历史输入：系统深色偏好检查失败后不安装。SDK构建最终status=success，但不能代替UI验收；最终候选见[0.16.5](release-inputs-0165.md)。
+
 业务冻结提交 `250606049160352ff3262eb5b7dbdd789665ef6f`，版本 `0.16.4-test20261018`。三个架构runtime由干净已提交源码的 `make release` 生成；显式BUILD_DIR在SSD，web/dist为项目既有输出目录，归档/manifest及未改的两份NetPolicy归档持久保存 `bin/releases/2506060/`。
 
 Quickstart归档SHA256：`78d9dd2838ea732c31276be861959f7d0541e28cca95daf97866707731ce2a41`。资源key：`0.16.4-test20261018-release-e32029eb8f9e`。NetPolicy x64/ARM64仍为a2602b4b…/d49ce90f…原版原字节，不启用执行服务。
