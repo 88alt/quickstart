@@ -365,3 +365,4 @@ onUnmounted(()=>{observer?.disconnect();interruptMove();window.removeEventListen
 <style src="./homeWidgetChrome.css"></style>
 <style src="./homeVisualTokens.css"></style>
 <style src="./homeWidgetDetails.css"></style>
+<style src="./luciHomeBoundary.css"></style>

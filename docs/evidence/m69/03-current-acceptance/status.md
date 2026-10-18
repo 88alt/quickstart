@@ -8,7 +8,7 @@
 
 测试工具记录：`02-business/final-candidate-1` 与视觉脚本误用了同一临时5181端口，安全失败 EADDRINUSE，未停止其他服务；后续严格串行运行。5180仍归属原工作树，未修改。
 
-当前 B 尚未部署新版。历史安装、原型和本地模拟 API 不代替真实登录态验收。
+此处初检时 B 尚未部署新版；后续真实设备记录见下文。历史安装、原型和本地模拟 API 不代替真实登录态验收。
 
 ## 优化2与实际审图
 
@@ -19,3 +19,13 @@
 matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long-network-1 九套本地模拟场景各通过六宽、深浅主题、曲线像素和隐藏暂停检查；配置异常时保持可见且禁止普通编辑，控件失败局部降级。已打开英文桌面、触屏390深色、损坏配置桌面截图；英文旧字段缺译随后由 english-review-2 修正并另行审图。模拟场景不冒充真实认证/磁盘故障。
 
 后续草稿重读和控件恢复读取修正由 draft-reconciliation-1 定向证明；最终 B 仍需用冻结源码和资源重新验收。
+
+## B 实机首轮与优化1
+
+已将干净提交 a45aa7a 的完整后端/Web 候选部署至 192.168.30.244，备份 `/root/quickstart-backups/home-016-a45aa7a-20261018-1`。文件与运行进程匹配候选；这是候选部署，opkg 仍是旧包元数据，不能算匹配包安装通过。
+
+`b-candidate-a45aa7a-1` 因浏览器语言与中文选择器不一致失败，属于验收工具错误。改为 zh-CN 后，`b-candidate-a45aa7a-2` 实际截图发现 LuCI 全局 `header::after` 遮挡自定义按钮，通用按钮 margin/padding 和 h2 padding 也改变控件尺寸；该版本不通过 UI 验收。诊断原始数据保留在 `b-theme-diagnostic-a45aa7a`、`b-controls-diagnostic-a45aa7a`。以上均未进入配置写入，两个临时 root 会话均销毁。
+
+优化1新增仅限 Quickstart 内容与自有弹窗的主题边界，清除外部语义 header 装饰并恢复按钮基础样式，保留组件显式尺寸和触屏规则；不改 LuCI 系统菜单。应用启动台兼容旧接口成功响应省略 success 字段的既有格式，仍要求有效 result。
+
+`luci-theme-regression-1` 注入遮挡装饰/按钮/h1/h2 规则后，完整本地保存、刷新、失败草稿、业务表单、六宽与主题回归通过；已实际打开桌面截图，网络行391.8px、连接237.8px、紧凑接口136px。该模拟回归不能代替修复候选重新部署后的 B 验收。
