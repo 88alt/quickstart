@@ -11,9 +11,11 @@ import subprocess
 p = argparse.ArgumentParser()
 p.add_argument('output', type=Path)
 p.add_argument('--allow-dhns-init', action='store_true')
+p.add_argument('--stage', default='/root/quickstart-package-candidates/home-0162-eda99c4-r2')
 a = p.parse_args()
 assert not a.output.exists()
-stage = '/root/quickstart-package-candidates/home-0162-eda99c4-r2'
+stage = a.stage
+assert re.fullmatch(r'/root/quickstart-package-candidates/home-[a-z0-9-]+', stage), 'Invalid private B stage'
 
 
 def remote(command, data=None):

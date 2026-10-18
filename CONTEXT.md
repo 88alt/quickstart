@@ -10,6 +10,8 @@ Formal implementation is frozen at `eda99c4`, version `0.16.2-test20261018`: roo
 
 This context describes how Quickstart identifies LAN devices, presents their state, and applies per-device network policy.
 
+Post-install review found an existing speed-preparation mismatch: selected eQoS is absent while NetPolicy is installed/disabled, yet the old capability offers installing NetPolicy again. Fix c78f62c freezes 0.16.3, preserving provider/rules and replacing that misleading action with settings guidance. Local Go/105 frontend/type/business gates and formal UI passed. The new runtime and package inputs are archived; matched SDK/B upgrade is in progress under [the M70 follow-up](docs/evidence/m70/netpolicy-preparation/status.md). Do not report 0.16.3 installed until those current checks pass. APK remains paused; this follow-up does not reset its three-round boundary.
+
 ## Language
 
 **Device**:
