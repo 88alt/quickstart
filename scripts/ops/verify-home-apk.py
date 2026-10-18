@@ -62,6 +62,8 @@ for file in files:
    assert m['product']==name and m['version']=='0.2.0-test20260928'
    assert m['target']==c['arch']+'-unknown-linux-musl' and m['binarySha256']==digest(binary)
   else:
+   assets=target/'www/luci-static/quickstart'
+   assert {str(f.relative_to(assets)) for f in assets.rglob('*') if f.is_file()}==set(c['assets'])
    for relative,sha in c['assets'].items():
     assert digest((target/'www/luci-static/quickstart'/relative).read_bytes())==sha,relative
    assert c['manifest']['asset_version'] in (target/'usr/lib/lua/luci/view/quickstart/main.htm').read_text()

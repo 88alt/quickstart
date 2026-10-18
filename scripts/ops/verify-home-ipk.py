@@ -79,6 +79,9 @@ for file in files:
     else:
         binary = None
         assets = a.runtime / 'web/luci-static/quickstart'
+        asset_prefix = 'www/luci-static/quickstart/'
+        assert {key.removeprefix(asset_prefix) for key in data if key.startswith(asset_prefix)} == {
+            str(source.relative_to(assets)) for source in assets.rglob('*') if source.is_file()}
         for source in assets.rglob('*'):
             if source.is_file():
                 key = 'www/luci-static/quickstart/' + str(source.relative_to(assets))

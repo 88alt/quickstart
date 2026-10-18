@@ -27,6 +27,16 @@ async function write(context,domain,value,expectedVersion){const r=await context
   report.density=await page.locator('[data-layout-card=networkInterface] *,.inventory-header,.inventory-footer,.applications-header').evaluateAll(nodes=>nodes.map(n=>{const s=getComputedStyle(n);return {tag:n.tagName,cls:n.className,h:n.getBoundingClientRect().height,margin:s.margin,padding:s.padding,minHeight:s.minHeight,lineHeight:s.lineHeight,font:s.font,display:s.display}}));
   const expectedWidgets=layout.rows.flatMap(r=>r.columns.flatMap(c=>c.cards)).filter(Boolean);assert.equal(await page.locator('[data-layout-card]').count(),expectedWidgets.length);
   report.checks.push('Real root session renders persisted homepage');
+  if(process.env.QS_ACCEPT_LIFECYCLE==='1'){
+   await other.close();let trafficRequests=0;page.on('request',r=>{if(new URL(r.url()).pathname==='/cgi-bin/luci/istore/u/network/statistics/')trafficRequests++});
+   report.lifecycle=[];
+   for(let i=0;i<20;i++){
+    const device=page.locator('[data-canvas-device]').first();assert.ok(await device.count(),'Lifecycle test requires a real observed device');await device.click();await page.locator('.drawer-backdrop').waitFor();assert.equal(await page.locator('[data-layout-card]').count(),0);assert.equal(await page.locator('.network_container canvas').count(),0);
+    await page.waitForTimeout(150);const before=trafficRequests;if(i===0||i===19){await page.waitForTimeout(5300);assert.equal(trafficRequests,before,'Unmounted homepage retained a traffic reader')}
+    const initialRead=page.waitForResponse(r=>new URL(r.url()).pathname==='/cgi-bin/luci/istore/u/network/statistics/');await page.goBack();await initialRead;await page.locator('[data-layout-card=traffic] canvas').waitFor();await page.waitForTimeout(150);assert.equal(await page.locator('[data-layout-card=traffic] canvas').count(),1);assert.equal(await page.locator('body[lock-scroll]').count(),0);report.lifecycle.push({cycle:i+1,trafficRequests});
+   }
+   const before=trafficRequests;await page.waitForTimeout(5500);const delta=trafficRequests-before;assert.ok(delta>=1&&delta<=2,'Homepage traffic pollers accumulated across navigation');report.lifecyclePollsIn5500ms=delta;await capture('b-home-after-20-navigation-cycles');assert.equal(report.errors.length,0);report.checks.push('Twenty real SPA device/home cycles clean up charts and traffic readers without accumulating pollers');report.result='passed';return;
+  }
   if(process.env.QS_ACCEPT_READONLY==='1'){
    if(english)assert.equal(await page.locator('[data-layout-card=connection] h2').innerText(),'Connection & IP');
    for(const width of [1024,768,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(300);await capture('b-home-'+width);assert.equal(report.views.at(-1).overflow,false);if(touch){assert.equal(report.views.at(-1).input.coarse,true,'Touch emulation lost');await trafficTouch();if(width===390){for(const card of await page.locator('[data-layout-card]').all()){await card.screenshot({path:path.join(out,'b-touch-390-'+await card.getAttribute('data-layout-card')+'.png')})}await page.locator('.lab-header').scrollIntoViewIfNeeded()}}}

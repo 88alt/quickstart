@@ -59,3 +59,5 @@ matrix-english/touch/future/backup/damaged/forbidden/unavailable/raid-error/long
 `final-matrix-eda99c4` 英文、触屏、未来、备份、损坏、无权限、不可用七组全通过，每组八张视图/六宽及深浅主题、曲线绘制、隐藏暂停。已实际打开英文390px、未来配置桌面图。
 
 `final-recovery-eda99c4` 补充四组全部通过：布局单域不可用时启动台仍可编辑；启动台单域不可用时布局仍可编辑；localStorage/sessionStorage抛SecurityError仍可用；目录身份异常显示读取失败而非空安装列表。已打开单域390px及目录异常启动台原图。这些为本地受控故障场景，不冒充B真实磁盘/权限故障。M70仍需匹配安装包后再次登录态验收。
+
+`b-lifecycle-eda99c4` 为真实B的20次SPA设备详情/首页往返：每次离开首页无布局卡/流量canvas，首末两次离开后5.3秒无流量请求；每次回来恰好一张canvas、无滚动锁。20次共20次初始化读取，最后5.5秒仅1次周期读取，没有累积20套轮询。控制台/HTTP/pageerror为空，配置未变，两会话销毁。已打开20次后原始截图；这是有限导航/清理测试，不是24小时观察。
