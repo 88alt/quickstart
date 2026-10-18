@@ -1,20 +1,20 @@
 <template>
-    <Card :title='$gettext("系统信息")' :showFooter="false" style="width: 100%;height: 100%; display: block;">
+    <Card :home-menu="[{label:$gettext('系统监控'),action:onClickSystem},{label:$gettext('备份升级'),href:'/cgi-bin/luci/admin/system/flash'},{label:$gettext('插件备份'),href:'/cgi-bin/luci/admin/store/pages/maintance'}]" :title='$gettext("系统信息")' :showFooter="false" style="width: 100%;height: 100%; display: block;">
         <template #icon>
             <computerIcon class="icon computerIcon" />
         </template>
         <template #settings>
-            <div class="btn_settings" @click="openInfo">
+            <button type="button" class="btn_settings" @click="openInfo">
                 <computerIcon color="#0a0a0a" class="icon2 computerIcon" style="margin-right: 6px;" />
                 <span>{{ $gettext('信息概览') }}</span>
-            </div>
+            </button>
         </template>
         <template #settings-menu>
             <div><a @click="onClickSystem">{{ $gettext("系统监控") }}</a></div>
             <div><a href="/cgi-bin/luci/admin/system/flash">{{ $gettext("备份升级") }}</a></div>
             <div><a href="/cgi-bin/luci/admin/store/pages/maintance">{{ $gettext("插件备份") }}</a></div>
         </template>
-        <div class="content">
+        <div class="content system-composition">
             <div class="chart_box">
                 <div class="chart">
                     <PieChart :value="getCpuUsage" :color="getCpuUsageColor" icon="chip" :label="`${getCpuUsage}%`" width="150px"
@@ -45,7 +45,7 @@
                         <systemIcon color="#00a63e" class="icon1" style="margin-bottom: 0;" />
                         <span>{{ $gettext("固件版本") }}</span>
                     </div>
-                    <span style="font-weight: bold;margin-top: 2px;">{{ version?.firmwareVersion }}（{{ $gettext("内核")}}：{{ version?.kernelVersion }}）</span>
+                    <span style="font-weight: bold;margin-top: 2px;">{{ version?.firmwareVersion }}<small class="system-kernel">{{ $gettext("内核") }}：{{ version?.kernelVersion }}</small></span>
                 </div>
 
                 <!-- <div class="item">

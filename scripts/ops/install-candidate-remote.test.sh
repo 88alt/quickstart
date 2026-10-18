@@ -74,4 +74,20 @@ grep -Fqx 'old-index' "$rollback_fixture/root/www/luci-static/quickstart/index.j
 grep -Fq 'local asset_version = "old"' "$rollback_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
 [ "$(cat "$rollback_fixture/service.state")" = running ]
 
-echo 'candidate installer success and rollback ok'
+
+legacy_fixture="$test_root/legacy"
+prepare_fixture "$legacy_fixture"
+cat >"$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm" <<'EOF'
+<%+header%>
+local jsonc = require "luci.jsonc"
+window.vue_lang_data = '/luci-static/quickstart/i18n/<%=lang%>.json?v=0.8.17-r1';
+<script type="module" src="/luci-static/quickstart/index.js?v=0.8.17-r1"></script>
+<link href="/luci-static/quickstart/style.css?v=0.8.17-r1">
+<%+footer%>
+EOF
+run_installer "$legacy_fixture" legacy - 1 >/dev/null
+grep -Fq 'local asset_version = "0.14.0-test"' "$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
+[ "$(grep -c '?v=<%=asset_version%>' "$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm")" = 3 ]
+grep -Fq '<%+header%>' "$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
+grep -Fq '?v=0.8.17-r1' "$legacy_fixture/backups/legacy/main.htm"
+echo 'candidate installer modern/legacy success and rollback ok'

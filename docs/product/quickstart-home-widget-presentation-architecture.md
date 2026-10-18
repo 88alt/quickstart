@@ -1,5 +1,7 @@
 # 首页模块形态与显示设置：架构设计参考
 
+2026-10-18：用户已确认首页产品设计完成，授权进入正式实施。正式配置、保存/刷新/恢复、权限、统一控件分工与既有M69/M70任务树见[正式首页契约](quickstart-home-production.md)。下方隔离原型的待确认/不实施正式入口文字保留当时范围，不构成当前工作的暂停要求。
+
 当前七控件内部构图按[M66.76～M66.81](quickstart-home-widget-composition-m66-76-81.md)及[外观规范VS10](quickstart-home-widget-visual-standard.md)实施，结果见[执行状态](../evidence/m66/widget-composition/status.md)。新增`widgetComposition.ts`只在设计Vite构建中运行：限定模板锚点/解析后的节点重排系统资料与服务选择，保留原业务脚本和全部原绑定；生产配置不导入。原业务SFC未写入，网络卡只增展示类；共享正文CSS负责内部栅格与响应式，读取owner、图表实例、权限及布局事务不动。原型变换不是正式业务重构，正式接入仍须将已验证排布落实为显式内容组件/槽位，不能扩展成运行DOM扫描或长期的通用编译补丁。下段“仅两运行文件改动”属于前轮历史。
 
 七控件正文精修[M66.70～M66.75](quickstart-home-widget-body-m66-70-75.md)沿用本架构：布局只处理稳定ID、形态与用户空间意图，原业务Vue仍拥有字段/条件/动作，`homeWidgetDetails.css`消费原语义类与共同令牌。当前运行变更仅该CSS和网络隐藏遮罩模板，没有新建业务模型、请求所有者、图表观察器或通用字段解析器。正文取值只在[唯一外观规范VS09](quickstart-home-widget-visual-standard.md)维护；技术结果和人工确认见[执行状态](../evidence/m66/widget-body/status.md)。正式接入应逐项改为显式共享正文组件/槽位，不能把原型CSS适配当作业务迁移已完成。

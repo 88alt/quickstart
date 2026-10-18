@@ -2,6 +2,7 @@ package metadata
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/istoreos/quickstart/backend/models"
@@ -26,6 +27,12 @@ func NewService(store Store) *Service {
 }
 
 func (service *Service) List(root string) ([]*models.AppInstalled, error) {
+	return service.list(root, false)
+}
+func (service *Service) ListStrict(root string) ([]*models.AppInstalled, error) {
+	return service.list(root, true)
+}
+func (service *Service) list(root string, strict bool) ([]*models.AppInstalled, error) {
 	globStr := strings.TrimSuffix(root, "/") + "/**.json"
 	apps, err := service.store.Glob(globStr)
 	if err != nil {
@@ -35,15 +42,24 @@ func (service *Service) List(root string) ([]*models.AppInstalled, error) {
 	for _, app := range apps {
 		fi, err := service.store.Stat(app)
 		if err != nil {
+			if strict {
+				return nil, errors.New("application metadata unavailable")
+			}
 			continue
 		}
 		b, err := service.store.ReadFile(app)
 		if err != nil {
+			if strict {
+				return nil, errors.New("application metadata unavailable")
+			}
 			continue
 		}
 		modelApp := &models.AppInstalled{}
 		err = json.Unmarshal(b, modelApp)
 		if err != nil {
+			if strict {
+				return nil, errors.New("application metadata unavailable")
+			}
 			continue
 		}
 		modelApp.Time = fi.ModTimeUnix

@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/istoreos/quickstart/backend/service"
+	"github.com/julienschmidt/httprouter"
 )
 
 func RouterInit(serviceBackend *service.ServiceBackend) http.Handler {
@@ -16,6 +16,7 @@ func RouterInit(serviceBackend *service.ServiceBackend) http.Handler {
 	registerRaidRoutes(router, serviceBackend)
 	registerSmartRoutes(router, serviceBackend)
 	registerQuickstartRoutes(router, serviceBackend)
+	registerHomeConfigRoutes(router)
 	registerNasRoutes(router, serviceBackend)
 	registerGuideCoreRoutes(router, serviceBackend)
 	registerGuideStorageRoutes(router, serviceBackend)

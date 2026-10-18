@@ -1,5 +1,11 @@
 # Device Management
 
+## Current homepage production work
+
+2026-10-18 user decision: the router has only root login; all visitors after login share one router-owned customized homepage, launcher pins and link library. No account-scoped or browser-owned settings. All valid root sessions have the same read/write capability; still handle expired sessions, private configuration and concurrent editors. This resolves the former scope question. The current 5180 product was inspected again; see [implementation work packages](docs/product/quickstart-home-production.md#5180当前产品复核与正式实施细化) and [current product review](docs/evidence/m69/production-plan-20261018/acceptance.md).
+
+2026-10-18: the user confirms the homepage product/visual design is complete and authorizes formal implementation, current-device acceptance and packaging closeout. Historical pending aesthetic signoff is not a new gate. Follow [production contract and existing M69/M70 task tree](docs/product/quickstart-home-production.md), [current execution state](docs/evidence/m69/01-layout-preferences/status.md), the layout specification and VS01–VS12. Initial checkout HEAD is `d1fa2a6`, clean; do not substitute the handoff hash or historical test totals for current evidence.
+
 This context describes how Quickstart identifies LAN devices, presents their state, and applies per-device network policy.
 
 ## Language
@@ -187,3 +193,5 @@ _Avoid_: Network Interface Status, Device online state
 **Network Interface Status**:
 The observed link state, negotiated speed, and details of the router's network ports and their associated logical interfaces; a connected port alone does not establish Internet connectivity.
 _Avoid_: Network Connection, Internet availability
+
+2026-10-18 后续：正式首页、root共享配置、一次迁移、独立域保存/恢复和十一控件接入已编码，本地测试与审图见 docs/evidence/m69/02-business/status.md。版本推进为0.16.0-test20261018。当前B仍为旧安装，下一步完整候选部署和真实认证验收；本地app-hub已登记配置升级保留，尚未推送/发布/SDK打包。

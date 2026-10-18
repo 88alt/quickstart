@@ -84,13 +84,29 @@ actual_en_sha="$(sha256sum "${stage_web}/i18n/en.json" | cut -d ' ' -f1)"
 [ "$actual_en_sha" = "$expected_en_sha" ]
 
 awk -v version="$asset_version" '
-    /^local asset_version = / {
-        print "local asset_version = \"" version "\""
-        replaced = 1
-        next
+    {
+        lines[NR] = $0
+        if ($0 ~ /^local asset_version = /) known = 1
+        if ($0 ~ /local jsonc = require/) anchor = NR
     }
-    { print }
-    END { if (!replaced) exit 42 }
+    END {
+        if (!known && !anchor) exit 42
+        for (i = 1; i <= NR; i++) {
+            line = lines[i]
+            if (line ~ /^local asset_version = /) {
+                print "local asset_version = \"" version "\""
+                continue
+            }
+            # The pre-versioned LuCI template has exactly these three assets.
+            # Keep its system header/footer; only retire their fixed cache keys.
+            if (!known && line ~ /\/luci-static\/quickstart\//)
+                changed += gsub(/\?v=[A-Za-z0-9._-]+/, "?v=<%=asset_version%>", line)
+            print line
+            if (!known && i == anchor)
+                print "local asset_version = \"" version "\""
+        }
+        if (!known && changed != 3) exit 42
+    }
 ' "$remote_template" >"$template_next"
 chmod 0644 "$template_next"
 
