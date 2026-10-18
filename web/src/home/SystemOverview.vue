@@ -1,4 +1,4 @@
-<template><Card home-custom-menu :title="t('系统信息','System information')" class="system-overview" data-system-form="summary"><template #icon><ComputerIcon class="icon"/></template><template #settings><div class="system-overview-actions widget-action-group"><WidgetPrimaryAction icon="chip" class="system-overview-primary" @click="overview" data-system-overview><template #icon><ComputerIcon color="currentColor"/></template>{{t('信息概览','Overview')}}</WidgetPrimaryAction><WidgetMenu :label="t('系统信息更多操作','More system actions')" :items="[{id:'complete',label:t('完整信息','Complete information')}]" @select="$emit('details')"/></div></template><div class="system-overview-metrics"><div v-for="metric in metrics" :key="metric.id" :data-system-metric="metric.id"><span>{{metric.label}}</span><strong>{{metric.value}}<small>{{metric.unit}}</small></strong><i><b :style="{width:metric.percent+'%',background:metric.color}"></b></i></div></div><p class="system-overview-uptime"><span>{{t('已启动','Uptime')}}</span><strong data-system-uptime>{{uptime}}</strong></p></Card></template>
+<template><Card home-custom-menu :title="t('系统信息','System information')" class="system-overview system-read-card" :class="{'system-read-pending':loading}" :aria-busy="loading||undefined" :data-system-loading="loading||undefined" data-system-form="summary"><template #icon><ComputerIcon class="icon"/></template><template #settings><div class="system-overview-actions widget-action-group"><WidgetPrimaryAction icon="chip" class="system-overview-primary" @click="overview" data-system-overview><template #icon><ComputerIcon color="currentColor"/></template>{{t('信息概览','Overview')}}</WidgetPrimaryAction><WidgetMenu :label="t('系统信息更多操作','More system actions')" :items="[{id:'complete',label:t('完整信息','Complete information')}]" @select="$emit('details')"/></div></template><div class="system-overview-metrics" :aria-hidden="loading||undefined" :inert="loading"><div v-for="metric in metrics" :key="metric.id" :data-system-metric="metric.id"><span>{{metric.label}}</span><strong>{{status?metric.value:'—'}}<small>{{status?metric.unit:''}}</small></strong><i><b :style="{width:(status?metric.percent:0)+'%',background:metric.color}"></b></i></div></div><p class="system-overview-uptime" :aria-hidden="loading||undefined"><span>{{t('已启动','Uptime')}}</span><strong data-system-uptime>{{uptime}}</strong></p><SystemReadState :loading="loading" :error="readError" @retry="$emit('retry')"/></Card></template>
 <script setup lang="ts">
 import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import {computed} from 'vue'
@@ -7,12 +7,16 @@ import utils from '../utils'
 import Card from '../pages/index/components/Card.vue'
 import ComputerIcon from '../components/svg/computer.vue'
 import WidgetMenu from './WidgetMenu.vue'
-defineEmits<{(e:'details'):void}>()
+import SystemReadState from './SystemReadState.vue'
+import {useHomeProjection} from './widgetContext'
+defineProps<{loading?:boolean;readError?:string}>()
+defineEmits<{(e:'details'):void;(e:'retry'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,store=useSystemStore()
+const home=useHomeProjection(),status=computed(()=>home?home.data.system:store.systemStatus)
 // Keep the audited original numeric conventions, including its documented
 // zero-available-memory ||100 issue. A visual change is not a silent bug fix.
-const metrics=computed(()=>{const s=store.systemStatus,cpu=s?.cpuUsage||0,temp=s?.cpuTemperature||0,mem=100-(s?.memAvailablePercentage||100);return [{id:'cpu',label:t('CPU使用率','CPU usage'),value:cpu,unit:'%',percent:Math.max(0,Math.min(100,cpu)),color:cpu<76?'#3b82f6':cpu<96?'#f59e0b':'#ef4444'},{id:'temperature',label:t('CPU温度','CPU temp'),value:temp,unit:'℃',percent:Math.max(0,Math.min(100,temp/1.5)),color:temp<=115?'#22c55e':'#f97316'},{id:'memory',label:t('内存使用率','Memory'),value:mem,unit:'%',percent:Math.max(0,Math.min(100,mem)),color:mem<76?'#8b5cf6':mem<96?'#fb923c':'#b91c1c'}]})
-const uptime=computed(()=>utils.stampForm(store.systemStatus?.uptime))
+const metrics=computed(()=>{const s=status.value,cpu=s?.cpuUsage||0,temp=s?.cpuTemperature||0,mem=100-(s?.memAvailablePercentage||100);return [{id:'cpu',label:t('CPU使用率','CPU usage'),value:cpu,unit:'%',percent:Math.max(0,Math.min(100,cpu)),color:cpu<76?'#3b82f6':cpu<96?'#f59e0b':'#ef4444'},{id:'temperature',label:t('CPU温度','CPU temp'),value:temp,unit:'℃',percent:Math.max(0,Math.min(100,temp/1.5)),color:temp<=115?'#22c55e':'#f97316'},{id:'memory',label:t('内存使用率','Memory'),value:mem,unit:'%',percent:Math.max(0,Math.min(100,mem)),color:mem<76?'#8b5cf6':mem<96?'#fb923c':'#b91c1c'}]})
+const uptime=computed(()=>status.value?utils.stampForm(status.value.uptime):'—')
 function overview(){window.location.assign('/cgi-bin/luci/admin/status/overview')}
 </script>
 <style scoped>

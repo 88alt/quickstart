@@ -1,5 +1,5 @@
 <template>
-    <Card :home-menu="[{label:$gettext('系统监控'),action:onClickSystem},{label:$gettext('备份升级'),href:'/cgi-bin/luci/admin/system/flash'},{label:$gettext('插件备份'),href:'/cgi-bin/luci/admin/store/pages/maintance'}]" :title='$gettext("系统信息")' :showFooter="false" style="width: 100%;height: 100%; display: block;">
+    <Card class="system-read-card" :class="{'system-read-pending':loading}" :aria-busy="loading||undefined" :data-system-loading="loading||undefined" :home-menu="[{label:$gettext('系统监控'),action:onClickSystem},{label:$gettext('备份升级'),href:'/cgi-bin/luci/admin/system/flash'},{label:$gettext('插件备份'),href:'/cgi-bin/luci/admin/store/pages/maintance'}]" :title='$gettext("系统信息")' :showFooter="false" style="width: 100%;height: 100%; display: block;">
         <template #icon>
             <computerIcon class="icon computerIcon" />
         </template>
@@ -14,20 +14,20 @@
             <div><a href="/cgi-bin/luci/admin/system/flash">{{ $gettext("备份升级") }}</a></div>
             <div><a href="/cgi-bin/luci/admin/store/pages/maintance">{{ $gettext("插件备份") }}</a></div>
         </template>
-        <div class="content system-composition">
+        <div class="content system-composition" :aria-hidden="loading||undefined" :inert="loading">
             <div class="chart_box">
                 <div class="chart">
-                    <PieChart :value="getCpuUsage" :color="getCpuUsageColor" icon="chip" :label="`${getCpuUsage}%`" width="150px"
+                    <PieChart :value="getCpuUsage" :color="getCpuUsageColor" icon="chip" :label="systemStatus?`${getCpuUsage}%`:'—'" width="150px"
                         height="150px" />
                     <div>{{ $gettext("CPU使用率") }}</div>
                 </div>
                 <div class="chart">
                     <PieChart :value="getTemperature / 1.5" :color="getTemperatureColor" icon="temperature"
-                        :label="`${getTemperature}℃`" width="150px" height="150px" />
+                        :label="systemStatus?`${getTemperature}℃`:'—'" width="150px" height="150px" />
                     <div>{{ $gettext("CPU温度") }}</div>
                 </div>
                 <div class="chart">
-                    <PieChart :value="getMemUsage" :color="getMemUsageColor" icon="lightning" :label="`${getMemUsage}%`"
+                    <PieChart :value="getMemUsage" :color="getMemUsageColor" icon="lightning" :label="systemStatus?`${getMemUsage}%`:'—'"
                         width="150px" height="150px" />
                     <div>{{ $gettext("内存使用率") }}</div>
                 </div>
@@ -38,14 +38,14 @@
                         <chipIcon color="#155dfc" class="icon1" style="margin-bottom: 0;" />
                         <span>{{ $gettext("设备型号") }}</span>
                     </div>
-                    <span style="font-weight: bold;margin-top: 2px;">{{ version?.model }}</span>
+                    <span style="font-weight: bold;margin-top: 2px;">{{ version?.model || '—' }}</span>
                 </div>
                 <div class="item1 bgcolor2">
                     <div>
                         <systemIcon color="#00a63e" class="icon1" style="margin-bottom: 0;" />
                         <span>{{ $gettext("固件版本") }}</span>
                     </div>
-                    <span style="font-weight: bold;margin-top: 2px;">{{ version?.firmwareVersion }}<small class="system-kernel">{{ $gettext("内核") }}：{{ version?.kernelVersion }}</small></span>
+                    <span style="font-weight: bold;margin-top: 2px;">{{ version?.firmwareVersion || '—' }}<small class="system-kernel">{{ $gettext("内核") }}：{{ version?.kernelVersion || '—' }}</small></span>
                 </div>
 
                 <!-- <div class="item">
@@ -54,11 +54,11 @@
                 </div> -->
                 <div class="item">
                     <div>{{ $gettext("系统时间") }}：</div>
-                    <span>{{ systemStatus?.localtime }}</span>
+                    <span>{{ systemStatus?.localtime || '—' }}</span>
                 </div>
                 <div class="item">
                     <div>{{ $gettext("已启动") }}：</div>
-                    <span>{{ stamp(systemStatus?.uptime) }}</span>
+                    <span>{{ systemStatus?stamp(systemStatus.uptime):'—' }}</span>
                 </div>
 
                 <!-- 占位标签 -->
@@ -66,6 +66,7 @@
 
             </div>
         </div>
+        <SystemReadState :loading="loading" :error="readError" @retry="$emit('retry')"/>
     </Card>
 </template>
 
@@ -81,11 +82,17 @@ import { useGettext } from '/@/plugins/i18n'
 import { useSystemStore } from "/@/plugins/store"
 import utils from "/@/utils"
 import appUtils from "/@/utils/app";
+import SystemReadState from '/@/home/SystemReadState.vue'
+import {useHomeProjection} from '/@/home/widgetContext'
+
+defineProps<{loading?:boolean;readError?:string}>()
+defineEmits<{(e:'retry'):void}>()
 
 const { $gettext } = useGettext()
 const systemStore = useSystemStore()
-const version = computed(() => systemStore.version)
-const systemStatus = computed(() => systemStore.systemStatus)
+const home = useHomeProjection()
+const version = computed(() => home ? home.data.version : systemStore.version)
+const systemStatus = computed(() => home ? home.data.system : systemStore.systemStatus)
 const showBlockMenu = ref(false)
 const getCpuUsage = computed(() => {
     return systemStatus.value?.cpuUsage || 0

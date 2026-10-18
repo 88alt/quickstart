@@ -78,7 +78,11 @@ try:
             ubus('grant', {'ubus_rpc_session': sid, 'scope': scope, 'objects': objects})
     env = dict(os.environ, NODE_PATH='/config/playwright-runner/node_modules', QS_ACCEPT_HOST=HOST,
                QS_ACCEPT_SID=sessions[0], QS_ACCEPT_SECOND_SID=sessions[1], QS_ACCEPT_OUT=str(OUT.resolve()))
-    result = subprocess.run(['node', str(Path(__file__).with_name('home-current-acceptance.cjs'))], env=env, timeout=480)
+    test_script = Path(__file__).with_name('home-current-acceptance.cjs')
+    if os.environ.get('QS_ACCEPT_SYSTEM_LOADING') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/system-loading-review.cjs'
+        env['QS_SYSTEM_EVIDENCE'] = str(OUT.resolve() / 'system-loading')
+    result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:
     for sid in sessions:
