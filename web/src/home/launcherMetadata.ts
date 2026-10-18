@@ -1,5 +1,5 @@
 import {homeApplications,systemTools,type HomeApplication} from './homeApplications'
-// Existing backend AppInstalled fields, normalized once at the catalogue seam.
+// Software-center installed metadata, normalized once at the catalogue seam.
 // Runtime state is deliberately absent: an installed package need not be running.
 export type InstalledMetadata={name?:string;title?:string;title_en?:string;description?:string;description_en?:string;entry?:string}
 export function normalizeInstalled(data:unknown):HomeApplication[]{

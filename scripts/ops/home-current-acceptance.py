@@ -82,6 +82,9 @@ try:
     if os.environ.get('QS_ACCEPT_SYSTEM_LOADING') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/system-loading-review.cjs'
         env['QS_SYSTEM_EVIDENCE'] = str(OUT.resolve() / 'system-loading')
+    if os.environ.get('QS_ACCEPT_INSTALLED_APPS') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/installed-apps-review.cjs'
+        env['QS_INSTALLED_EVIDENCE'] = str(OUT.resolve() / 'installed-apps')
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:

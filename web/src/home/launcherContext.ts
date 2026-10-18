@@ -1,7 +1,7 @@
 import {computed,inject,onMounted,onUnmounted,provide,reactive,type InjectionKey} from 'vue'
 import {homeApplications,systemTools,type HomeApplication} from './homeApplications'
 import {mergeLibrary,type LinkDraft} from './launcherLibrary'
-import {normalizeInstalled} from './launcherMetadata'
+import {readInstalledApplications} from './installedAppsClient'
 import {configValue,type LauncherConfig} from './configContract'
 import type {useHomeConfig} from './useHomeConfig'
 import {useSystemStore} from '../plugins/store'
@@ -16,10 +16,7 @@ function createLauncher(config:ReturnType<typeof useHomeConfig>){
   controller?.abort();const current=new AbortController();controller=current;state.status='loading'
   const timer=window.setTimeout(()=>current.abort(),8000)
   try{
-   const response=await fetch('/cgi-bin/luci/istore/app/v1/catalog/',{credentials:'same-origin',cache:'no-store',signal:current.signal})
-   if(!response.ok)throw new Error([401,403].includes(response.status)?'permission':'error')
-   const envelope=await response.json();if(envelope.success!==0||envelope.error)throw new Error('error')
-   const apps=normalizeInstalled(envelope.result)
+   const apps=await readInstalledApplications(current.signal)
    if(alive&&controller===current){for(const app of state.apps)if(homeApplicationSession.favorites.includes(app.id))retained.set(app.id,app);for(const id of retained.keys())if(!homeApplicationSession.favorites.includes(id))retained.delete(id);state.apps=apps;state.status='ready'}
   }catch(error){if(alive&&controller===current)state.status=error instanceof Error&&error.message==='permission'?'permission':'error'}finally{window.clearTimeout(timer)}
  }

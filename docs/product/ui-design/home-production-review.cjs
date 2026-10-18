@@ -52,10 +52,15 @@ let browser,server;
   else {status=404;body={success:-1,error:'unmocked'}}
   await route.fulfill({status,contentType:'application/json',body:JSON.stringify(body)});
  });
+ await context.route('**/cgi-bin/luci/admin/store/installed',async route=>{
+  assert.equal(route.request().method(),'GET');report.requests['software-center-installed']=(report.requests['software-center-installed']||0)+1;
+  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(invalidCatalogue?{broken:{}}:captured.responses['/app/install-list/'].body)});
+ });
  const page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));page.on('console',message=>{if(message.type()==='error'&&!rejectWrites&&!expectedFailures.has(new URL(message.location().url||'http://localhost').pathname.slice(prefix.length)))report.errors.push('console: '+message.text())});
  const finish=async()=>{await page.locator('[data-apply]').click();const confirm=page.locator('[data-confirm-finish]');if(await confirm.count())await confirm.click()};
  const capture=async name=>{await page.screenshot({path:path.join(out,name+'.png'),fullPage:!touch});const input=await page.evaluate(()=>({coarse:matchMedia('(pointer:coarse)').matches,points:navigator.maxTouchPoints}));if(touch){assert.equal(input.coarse,true,'Screenshot lost touch emulation');const bounds=await page.locator('[data-layout-card=traffic]').evaluate(n=>({actionBottom:n.querySelector('.traffic-header-actions').getBoundingClientRect().bottom,speedTop:n.querySelector('.speed').getBoundingClientRect().top}));assert.ok(bounds.speedTop>=bounds.actionBottom+4,'Touch traffic rates overlap speed-test action')}report.views.push({name,input,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),cards:await page.locator('[data-layout-card]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.layoutCard,form:n.dataset.presentation,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height})))})};
  await page.goto('http://127.0.0.1:5181/',{waitUntil:'networkidle'});await page.waitForTimeout(1500);
+ assert.equal(report.requests['software-center-installed'],1);assert.equal(report.requests['/app/v1/catalog/']||0,0);
  if(visualOnly)await page.addStyleTag({content:'body{margin:0}'});
  report.formalMetrics=await inspect(page);
  await capture('formal-1440');assert.equal(await page.locator('[data-layout-card]').count(),11);assert.equal(report.errors.length,0);report.checks.push('Formal entry renders all 11 widgets without page errors');
