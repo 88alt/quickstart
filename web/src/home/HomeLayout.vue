@@ -1,8 +1,10 @@
 <template>
   <main class="canvas-home layout-design-home ordered-home natural-home" :class="{'ordered-editing':editing,'slot-overview-active':overview}" data-ordered-home @pointerdown.capture="sizeClickPending=false" @click.capture="eatSizeClick" @click="blankClick">
-    <header class="lab-header"><a class="lab-brand" href="/cgi-bin/luci/admin/quickstart/"><span class="canvas-logo">Q<i></i></span><span>Quickstart<small>iStoreOS</small></span></a><span class="lab-header-context">{{t('我的网络空间','My network space')}}</span><div class="lab-header-actions"><button @click="$emit('toggle-theme')" :aria-label="t('切换主题','Toggle theme')">{{theme==='dark'?'☼':'◐'}}</button><button ref="editButton" class="lab-edit-button" @click="editing?cancel():begin()" :disabled="!canEdit||externalBusy||saving" :aria-pressed="editing" :aria-label="t('自定义首页','Customize home')"><StudioGlyph name="tune"/><span>{{t('自定义首页','Customize home')}}</span></button></div></header>
+    <div class="home-top" data-home-top>
+      <div class="home-top-actions"><a href="https://www.istoreos.com/" target="_blank" rel="noopener noreferrer">{{t('iStoreOS官网','iStoreOS website')}}</a><button ref="editButton" class="home-module-settings" @click="editing?cancel():begin()" :disabled="!canEdit||externalBusy||saving" :aria-pressed="editing" :aria-label="t('自定义首页','Customize home')" :title="t('模块设置','Module settings')" data-home-settings><ModuleIcon color="currentColor"/></button></div>
+      <HomeQuickActions :disabled="editing||saving||!!externalBusy" @navigate="emit('navigate',$event)"/>
+    </div>
     <slot name="status"/>
-    <div class="lab-intro"><div><span class="lab-eyebrow">{{t('首页概览','HOME OVERVIEW')}}</span><h1>{{t('连接、设备与生活','Your connected home')}}</h1></div><span class="lab-intro-status"><i :class="{ready:connectionState(data.network,errors.network)==='netSuccess'}"></i>{{t('我的网络','My network')}}</span></div>
 
     <section v-if="editing" :inert="saving" class="direct-toolbar" aria-label="首页布局编辑器">
       <span class="direct-edit-label"><i></i>{{t('整理首页','Arrange home')}}</span>
@@ -113,7 +115,7 @@
       <button v-if="moving" class="direct-last-target" data-placement="edge:end" @click="place({kind:'edge',before:null})">＋ {{t('放到最后，独占新行 / 整行移到最后','New row at end / move row to end')}}</button>
       <section v-if="!actualRows.length" class="ordered-empty"><StudioGlyph name="grid"/><h2>{{t('首页，由你安排','A home of your own')}}</h2><p>{{t('添加常看的模块，也可以随时恢复推荐布局。','Add the things you check most, or restore the recommended layout.')}}</p><button @click="editing?openSlot(null):begin()">{{t('添加模块','Add modules')}}</button></section>
     </div></div>
-    <footer class="lab-footer"><span>Quickstart</span><slot name="launcher"/></footer>
+    <slot name="launcher"/>
     <DirectEditPanel v-if="panel==='slot'" :title="pendingSlot?t('选择槽位模块','Choose module'):t('添加一行模块','Add module in a new row')" @close="closePanel">
       <p class="direct-panel-note">{{t('选择后先预览；已有模块会移到这里，原位置留空。','Preview before confirming. Existing modules move here and leave their old slot empty.')}}</p>
       <div class="slot-module-list"><button v-for="item in widgetDefinitions" :key="item.id" @click="choice=item.id;choiceSummary=false" :disabled="!choiceAvailable(item.id)" :aria-pressed="choice===item.id" :data-choice="item.id" :data-fit="choiceStatus(item.id)"><StudioGlyph :name="item.glyph"/><span>{{name(item.id)}}<small>{{choiceStatus(item.id)==='blocked'?issueText(choicePlan(item.id).issue):choiceStatus(item.id)==='needs-confirmation'?t('调整后可放入 · ','Adjust to fit · ')+sourceLabel(item.id):sourceLabel(item.id)}}</small></span><span>{{originOf(draft,item.id)?'↗':'＋'}}</span></button></div>
@@ -134,19 +136,20 @@ import {ROW_SPACE_LIMIT,clamp,splitSpace} from './layout/rowSizing'
 import {useNaturalSizing} from './useNaturalSizing'
 import {onBeforeRouteLeave} from 'vue-router'
 import StudioGlyph from './HomeGlyph.vue'
+import ModuleIcon from '../components/svg/module.vue'
+import HomeQuickActions from './HomeQuickActions.vue'
 import DirectEditPanel from './DirectEditPanel.vue'
 import PresentationSettings from './PresentationSettings.vue'
 import {documentOf,planDocument,applyPlan,validateDisplayRows,fingerprint,summaryAlternative,type HomeDocument,type LayoutContext,type DisplayPlan} from './layout/homeDocument'
 import {defaultPreferences,placementMinimum,resolvePresentation,columnWidths,presentationHeight,type WidgetPreference} from './layout/widgetPresentation'
 import {placement,targets,targetKey,type MoveSource,type MoveTarget} from './layout/overviewPlacement'
-import {connectionState} from './networkBusiness'
 import {assignSlot,at,originOf,reshape,changeSize,moveToNewRow,moveRowTo,validate,normalize,type Normalized,type Slot,type LayoutResult} from './layout/slotLayout'
 import {useRowSorting} from './useRowSorting'
 import {widgetDefinitions,widget,type WidgetId} from './layout/rowLayout'
 import {templates,clone,naturalRows,compactIds,recommended,makeRow,visibleIds,layoutIssue,rowMinimum,changeTemplate,renderRows,type Template,type OrderedRow,type ActualRow,type ActualColumn} from './layout/orderedLayout'
 import type {LayoutConfig} from './configContract'
 const props=defineProps<{config:LayoutConfig;data:Record<string,any>;errors:Record<string,string>;theme:string;favoriteIds:string[];canEdit:boolean;externalBusy?:boolean;persist:(value:LayoutConfig)=>Promise<void>}>()
-const emit=defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'editing',value:boolean):void;(e:'toggle-theme'):void;(e:'visible',ids:WidgetId[]):void}>()
+const emit=defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'editing',value:boolean):void;(e:'visible',ids:WidgetId[]):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,name=(id:WidgetId)=>t(widget(id).zh,widget(id).en)
 const orderedSession=computed(()=>props.config.rows),preferenceSession=computed(()=>props.config.widgetPreferences),theme=computed(()=>props.theme),data=props.data,errors=props.errors,saving=ref(false)
 const homeApplicationSession={get favorites(){return props.favoriteIds}}
@@ -366,3 +369,4 @@ onUnmounted(()=>{observer?.disconnect();interruptMove();window.removeEventListen
 <style src="./homeVisualTokens.css"></style>
 <style src="./homeWidgetDetails.css"></style>
 <style src="./luciHomeBoundary.css"></style>
+<style src="./homeTop.css" scoped></style>

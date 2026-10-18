@@ -1,6 +1,7 @@
 // Formal build UI tests. Reference data is captured from the accepted isolated
 // preview; API emulation exists only here, never in the production bundle.
 const {chromium}=require('playwright');
+const {checkHomeShell,setSystemTheme}=require('../../../scripts/ops/home-shell-checks.cjs');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const project=path.resolve(__dirname,'../../..'),out=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m69/02-business/attempt-1');
 if(fs.existsSync(out))throw new Error('Evidence directory already exists');fs.mkdirSync(out,{recursive:true});
@@ -37,6 +38,7 @@ let browser,server;
   const request=route.request(),key=new URL(request.url()).pathname.slice(prefix.length);report.requests[key]=(report.requests[key]||0)+1;
   const config=key.match(/^\/home\/v1\/(layout|launcher)\/$/);let status=200,body;
   if(config){const item=stored[config[1]];if(request.method()==='POST'){if(rejectWrites){status=503;body={success:-1,error:'unavailable'}}else {const incoming=request.postDataJSON();if(incoming.expectedVersion!==version(item.revision)){status=409;body={success:-1,error:'conflict'}}else {item.value=incoming.value;item.revision++}}}if(!body)body={success:0,result:{state:'saved',version:version(item.revision),value:item.value},canEdit:true};if(request.method()==='GET'&&process.env.QS_HOME_CONFIG_STATE&&(!configDomain||configDomain===config[1])){const state=process.env.QS_HOME_CONFIG_STATE;if(state==='forbidden'||state==='unavailable'){status=state==='forbidden'?403:503;body={success:-1,error:state};expectedFailures.add(key)}else body.result={state,version:state==='backup'?version(item.revision):'',value:state==='backup'?item.value:undefined,recoveryVersion:'b'.repeat(64)}}}
+  else if(key==='/app/check/')body={success:0,result:{name:request.postDataJSON()?.name,status:process.env.QS_HOME_OAF_INSTALLED==='1'?'installed':'uninstalled'}};
   else if(key==='/app/v1/catalog/')body={success:0,result:invalidCatalogue?{broken:{}}:captured.responses['/app/install-list/'].body};
   else if(captured.responses[key]){({status,body}=captured.responses[key]);if(status>=400)expectedFailures.add(key)}
   else {status=404;body={success:-1,error:'unmocked'}}
@@ -49,6 +51,8 @@ let browser,server;
  if(visualOnly)await page.addStyleTag({content:'body{margin:0}'});
  report.formalMetrics=await inspect(page);
  await capture('formal-1440');assert.equal(await page.locator('[data-layout-card]').count(),11);assert.equal(report.errors.length,0);report.checks.push('Formal entry renders all 11 widgets without page errors');
+ await checkHomeShell(page,report,{editable:!process.env.QS_HOME_CONFIG_STATE||configDomain==='launcher',touch});
+ assert.equal(await page.locator('[data-home-quick=baby]').count(),process.env.QS_HOME_OAF_INSTALLED==='1'?1:0,'OAF shortcut must depend on the original package check');
  if(process.env.QS_HOME_CONFIG_STATE){assert.equal(await page.getByRole('button',{name:language==='en'?'Customize home':'自定义首页',exact:true}).isDisabled(),configDomain!=='launcher');report.checks.push('Unavailable/future/recovery config stays visible and affected domain stays read only')}
  if(configDomain){await page.locator('[data-layout-card=applications] [data-all-apps]').click();assert.equal(await page.locator('[data-manage-favorites]').isDisabled(),configDomain==='launcher');await page.keyboard.press('Escape');report.checks.push('Single-domain failure preserves editing capability of the independent domain')}
  if(invalidCatalogue){await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-applications-state]').filter({hasText:'应用清单暂不可用'}).waitFor();assert.equal(await page.getByText('没有已安装的扩展应用，可前往软件中心。',{exact:true}).count(),0);await page.screenshot({path:path.join(out,'invalid-catalogue.png'),fullPage:!touch});await page.keyboard.press('Escape');report.checks.push('Malformed catalogue shows unknown/error rather than an empty installed list')}
@@ -77,7 +81,7 @@ let browser,server;
  stored.layout.value=defaults.layout;stored.layout.revision++;await page.reload({waitUntil:'networkidle'});
  }
  for(const width of [1024,768,600,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(500);await capture('formal-'+width);assert.equal(report.views.at(-1).overflow,false)}
- await page.getByRole('button',{name:language==='en'?'Toggle theme':'切换主题',exact:true}).click();await page.waitForTimeout(300);await capture('formal-320-dark');report.checks.push('1024/768/390/320 and dark theme have no horizontal page overflow');
+ await setSystemTheme(page,'dark');await capture('formal-320-dark');report.checks.push('1024/768/390/320 and system dark theme have no horizontal page overflow');
  if(visualOnly){await page.setViewportSize({width:390,height:900});await page.waitForTimeout(300);await capture('formal-390-dark')}
  const pixels=await page.locator('[data-layout-card=traffic] canvas').first().evaluate(canvas=>{const bytes=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;let count=0;for(let i=0;i<bytes.length;i+=16)if(bytes[i+3]>0&&(bytes[i+2]>bytes[i]+20||bytes[i+2]>bytes[i+1]+20))count++;return count});assert.ok(pixels>100,'traffic curve must be painted');report.checks.push('Traffic curve has colored raster pixels after resize and theme change');
  const statusBefore=report.requests['/u/network/status/'];await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'))});await page.waitForTimeout(5200);assert.equal(report.requests['/u/network/status/'],statusBefore);report.checks.push('Hidden page stops status reads');

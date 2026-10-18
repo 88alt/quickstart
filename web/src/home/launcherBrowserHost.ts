@@ -1,4 +1,4 @@
-// The footer launcher survives responsive row reconstruction. Cards request its
+// The independent launcher host survives responsive row reconstruction. Cards request its
 // editor; drafts are not owned by a disposable layout slot.
 type OpenBrowser=(edit:boolean,network?:Record<string,any>)=>void
 let host:OpenBrowser|undefined

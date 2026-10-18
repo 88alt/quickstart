@@ -1,10 +1,10 @@
 <template>
- <HomeLayout :config="config.layout.value" :data="model.data" :errors="model.errors" :theme="theme" :favorite-ids="config.launcher.value.favorites" :can-edit="config.layoutEditable.value" :external-busy="config.state.launcher.saving" :persist="saveLayout" @editing="layoutEditing" @visible="previewIds=$event" @navigate="navigate" @device="openDevice" @toggle-theme="toggleTheme">
+ <HomeLayout :config="config.layout.value" :data="model.data" :errors="model.errors" :theme="theme" :favorite-ids="config.launcher.value.favorites" :can-edit="config.layoutEditable.value" :external-busy="config.state.launcher.saving" :persist="saveLayout" @editing="layoutEditing" @visible="previewIds=$event" @navigate="navigate" @device="openDevice">
   <template #status><div v-for="domain in domains" :key="domain" class="home-config-state" :data-config-domain="domain" role="status" v-show="config.state[domain].loading||config.state[domain].error||config.state[domain].snapshot?.state!=='saved'">
    <span>{{statusText(domain)}}</span><button v-if="!config.state[domain].loading&&!config.state[domain].saving" @click="config.read(domain)">{{t('重新读取','Reload')}}</button><button v-if="!editing&&['backup','damaged'].includes(config.state[domain].snapshot?.state||'')" :disabled="config.state[domain].saving" @click="recover(domain)">{{config.state[domain].snapshot?.state==='backup'?t('恢复有效备份','Restore valid backup'):t('保留损坏文件并恢复默认','Keep damaged file and restore defaults')}}</button>
   </div></template>
   <template #widget="slot"><HomeWidget v-bind="slot" :data="model.data" :errors="model.errors" :devices="model.devices.value" :theme="theme" contained @navigate="navigate" @device="openDevice" @retry="model.invalidate(slot.id)"/></template>
-  <template #launcher><HomeApplications collapsed :fallback-entries="[]" :network="model.data.network" @navigate="navigate"/></template>
+  <template #launcher><HomeApplications collapsed host-only :fallback-entries="[]" :network="model.data.network" @navigate="navigate"/></template>
  </HomeLayout>
 </template>
 <script setup lang="ts">
@@ -31,7 +31,6 @@ function layoutEditing(value:boolean){editing.value=value;if(value)config.begin(
 const saveLayout=(value:LayoutConfig)=>config.save('layout',value)
 function navigate(path:string){if(editing.value)return;if(path.startsWith('/cgi-bin/'))window.location.assign(path);else void router.push(path)}
 function openDevice(id:string){if(!editing.value)void router.push({path:'/devicemanagement',query:{device:id}})}
-function toggleTheme(){theme.value=theme.value==='dark'?'light':'dark';document.body.setAttribute('theme',theme.value)}
 let observer:MutationObserver|undefined
 onMounted(()=>{observer=new MutationObserver(()=>theme.value=getTheme());observer.observe(document.body,{attributes:true,attributeFilter:['theme']})})
 onUnmounted(()=>observer?.disconnect())

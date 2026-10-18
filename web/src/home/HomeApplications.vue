@@ -8,7 +8,7 @@
       <div v-else class="applications-favorites" :style="{gridTemplateColumns:'repeat('+columns+', minmax(0,1fr))'}" :data-app-columns="columns" :data-app-capacity="capacity"><button v-for="app in favorites.slice(0,capacity)" :key="app.id" @click="activate(app)" :title="t(app.zh,app.en)+(entryAvailability(app)==='available'?'':' · '+availabilityText(app))" :data-favorite-app="app.id" :data-availability="entryAvailability(app)"><span class="application-icon" :class="app.tone"><StudioGlyph :name="app.glyph"/><i v-if="app.tool==='firmware'&&systemStore.checkUpdate?.needUpdate" class="launcher-update-dot" :aria-label="t('有可用更新','Update available')"/></span><span><strong>{{t(app.zh,app.en)}}</strong><small v-if="entryAvailability(app)!=='available'">{{availabilityText(app)}}</small></span></button></div>
     <div v-if="fallbackEntries.length" class="applications-fallback" data-applications-fallback><span>{{t('快捷操作','Quick actions')}}</span><button v-for="entry in fallbackEntries" :key="entry.path" @click="navigate(entry.path)" :data-home-entry="entry.path"><StudioGlyph :name="entry.glyph"/>{{t(entry.zh,entry.en)}}<StudioGlyph name="arrow"/></button></div>
   </section>
-  <button v-else class="applications-collapsed" @click="openBrowser(false)" data-open-applications><StudioGlyph name="grid"/>{{t('应用工具','Apps & tools')}}</button>
+  <button v-else-if="!hostOnly" class="applications-collapsed" @click="openBrowser(false)" data-open-applications><StudioGlyph name="grid"/>{{t('应用工具','Apps & tools')}}</button>
 
   <Teleport v-if="browserOpen" to=".canvas-home">
     <div class="applications-backdrop" @click="closeBrowser"></div>
@@ -56,7 +56,7 @@ import LauncherToolAction from './LauncherToolAction.vue'
 import {useNetworkStore,useSystemStore} from '../plugins/store'
 import NetworkWidgetDialog from './NetworkWidgetDialog.vue'
 import {resolvePresentation,type WidgetPreference} from './layout/widgetPresentation'
-const props=defineProps<{collapsed:boolean;fallbackEntries:QuickEntrance[];contained?:boolean;preference?:WidgetPreference;natural?:boolean;network?:any}>()
+const props=defineProps<{collapsed:boolean;hostOnly?:boolean;fallbackEntries:QuickEntrance[];contained?:boolean;preference?:WidgetPreference;natural?:boolean;network?:any}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'close'):void}>()
 const hub=ref<HTMLElement|null>(null),hubWidth=ref(600),hubHeight=ref(240)
 const resolved=computed(()=>resolvePresentation('applications',props.preference||{mode:'auto',iconRows:0},{width:hubWidth.value,height:props.natural?100000:hubHeight.value,role:'ordinary',favoriteCount:favorites.value.length,mobile:hubWidth.value<650,natural:props.natural}))
