@@ -2,6 +2,7 @@
 // preview; API emulation exists only here, never in the production bundle.
 const {chromium}=require('playwright');
 const {checkHomeShell,setSystemTheme}=require('../../../scripts/ops/home-shell-checks.cjs');
+const {checkDeviceAddresses}=require('./device-address-checks.cjs');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const project=path.resolve(__dirname,'../../..'),out=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m69/02-business/attempt-1');
 if(fs.existsSync(out))throw new Error('Evidence directory already exists');fs.mkdirSync(out,{recursive:true});
@@ -25,6 +26,13 @@ let browser,server;
  await reference.waitForTimeout(1800);
  const inspect=async page=>page.locator('[data-layout-card=connection],[data-layout-card=networkInterface],[data-layout-card=downloads],[data-layout-card=remote]').evaluateAll(cards=>cards.map(card=>({id:card.dataset.layoutCard,nodes:[card,...card.querySelectorAll('section,header,h2,dl,dt,dd,footer,.connection-status,.connection-address-group,.connection-dns-group,.connection-status-text,.connection-status-mark,.interface-summary-ports,.port-summary,.tab,.info,.status,.title_box')].map(n=>{const s=getComputedStyle(n),r=n.getBoundingClientRect();return {tag:n.tagName,cls:n.className,w:r.width,h:r.height,padding:s.padding,margin:s.margin,minHeight:s.minHeight,lineHeight:s.lineHeight,boxSizing:s.boxSizing,font:s.font,alignItems:s.alignItems}})})));
  report.referenceMetrics=await inspect(reference);
+ if(process.env.QS_HOME_DEVICE_EDGE_CASES==='1'){
+  const list=captured.responses['/lanctrl/v2/devices/'].body.result.devices;
+  for(const [i,device] of list.entries()){device.displayName=i===0?'客厅里名字特别长的电视与影音设备':i===1?'离线打印机':'';device.hostname='';device.vendor='';device.classification={brand:'',manufacturer:'',category:'computer',source:'fallback',confidence:'low'};device.online=i!==1;device.presenceState=i===1?'offline':'online'}
+  list[0].addresses={current:[{family:6,address:'2001:0db8:1234:5678:90ab:cdef:1234:5678',primary:true}],historical:[]};
+  list[1].addresses={current:[],historical:[{family:4,address:'192.168.100.203'}]};
+  list[2].addresses={current:[],historical:[]};
+ }
  const referenceWidth=await reference.locator('.canvas-home').evaluate(node=>node.getBoundingClientRect().width);
  fs.writeFileSync(path.join(out,'fixtures.json'),JSON.stringify(captured,null,2));
  await reference.locator('.canvas-home').screenshot({path:path.join(out,'reference-1440.png')});
@@ -52,6 +60,7 @@ let browser,server;
  report.formalMetrics=await inspect(page);
  await capture('formal-1440');assert.equal(await page.locator('[data-layout-card]').count(),11);assert.equal(report.errors.length,0);report.checks.push('Formal entry renders all 11 widgets without page errors');
  await checkHomeShell(page,report,{editable:!process.env.QS_HOME_CONFIG_STATE||configDomain==='launcher',touch});
+ if(process.env.QS_HOME_DEVICE_REVIEW==='1')await checkDeviceAddresses(page,report,captured.responses['/lanctrl/v2/devices/'].body.result.devices);
  assert.equal(report.requests['/app/check/']||0,0,'Removed shortcut strip must not probe the parental-control package on mount');
  if(process.env.QS_HOME_CONFIG_STATE){assert.equal(await page.getByRole('button',{name:language==='en'?'Customize home':'自定义首页',exact:true}).isDisabled(),configDomain!=='launcher');report.checks.push('Unavailable/future/recovery config stays visible and affected domain stays read only')}
  if(configDomain){await page.locator('[data-layout-card=applications] [data-all-apps]').click();assert.equal(await page.locator('[data-manage-favorites]').isDisabled(),configDomain==='launcher');await page.keyboard.press('Escape');report.checks.push('Single-domain failure preserves editing capability of the independent domain')}
@@ -80,7 +89,7 @@ let browser,server;
  await page.reload({waitUntil:'networkidle'});await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-category=links]').click();await page.getByRole('button',{name:'打开家庭 NAS',exact:true}).waitFor();report.checks.push('Custom link persists after reload');await page.keyboard.press('Escape');
  stored.layout.value=defaults.layout;stored.layout.revision++;await page.reload({waitUntil:'networkidle'});
  }
- for(const width of [1024,768,600,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(500);await capture('formal-'+width);assert.equal(report.views.at(-1).overflow,false)}
+ for(const width of [1024,768,600,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(500);await capture('formal-'+width);assert.equal(report.views.at(-1).overflow,false);if(process.env.QS_HOME_DEVICE_REVIEW==='1'){await checkDeviceAddresses(page,report,captured.responses['/lanctrl/v2/devices/'].body.result.devices);await page.locator('[data-layout-card=devices]').screenshot({path:path.join(out,'device-address-'+width+'.png')})}}
  await setSystemTheme(page,'dark');await capture('formal-320-dark');report.checks.push('1024/768/390/320 and system dark theme have no horizontal page overflow');
  if(visualOnly){await page.setViewportSize({width:390,height:900});await page.waitForTimeout(300);await capture('formal-390-dark')}
  const pixels=await page.locator('[data-layout-card=traffic] canvas').first().evaluate(canvas=>{const bytes=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;let count=0;for(let i=0;i<bytes.length;i+=16)if(bytes[i+3]>0&&(bytes[i+2]>bytes[i]+20||bytes[i+2]>bytes[i+1]+20))count++;return count});assert.ok(pixels>100,'traffic curve must be painted');report.checks.push('Traffic curve has colored raster pixels after resize and theme change');

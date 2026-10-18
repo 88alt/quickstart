@@ -3,7 +3,7 @@
       <div v-if="loading" class="module-state"><div class="skeleton" v-for="n in (summary?1:3)" :key="n"></div><span>{{t('正在读取设备清单','Loading devices')}}</span></div>
       <div v-else-if="errors.inventory&&!devices.length" class="module-state"><StudioGlyph v-if="!summary" name="devices"/><strong>{{inventoryError}}</strong><p v-if="!summary">{{t('其他首页模块仍可使用。','Other modules remain available.')}}</p><button @click="$emit('retry')">{{t('重试','Retry')}}</button></div>
       <div v-else-if="!devices.length" class="module-state"><StudioGlyph v-if="!summary" name="devices"/><strong>{{t('暂未发现设备','No devices discovered')}}</strong><p v-if="!summary">{{t('本局域网设备上线后会自动出现。','Devices appear when observed on this LAN.')}}</p><button v-if="!summary" @click="navigate('/devicemanagement')">{{t('添加或查看设备','Add or view devices')}}</button></div>
-      <template v-else><p v-if="errors.inventory" class="module-notice">{{t('上次快照 · 当前状态待确认','Previous snapshot · Current state unconfirmed')}}</p><div v-if="!summary" class="canvas-devices"><button v-for="device in shownDevices" :key="device.deviceId" @click="$emit('device',device.deviceId)" :data-canvas-device="device.deviceId"><DeviceSceneIcon :scene="device.scene" :icon-key="device.iconKey" :label="deviceCategoryLabel(device.scene,translate)"/><span><strong>{{deviceDisplayName(device,translate)}}</strong><small>{{[device.brand,device.classification.source==='fallback'?t('类型待确认','Type unconfirmed'):deviceCategoryLabel(device.scene,translate)].filter(Boolean).join(' · ')}}</small></span><span class="device-online" :class="{offline:!device.online}"><i></i>{{errors.inventory?t('上次记录','Last recorded'):devicePresenceLabel(device,translate)}}</span></button></div></template>
+      <template v-else><p v-if="errors.inventory" class="module-notice">{{t('上次快照 · 当前状态待确认','Previous snapshot · Current state unconfirmed')}}</p><div v-if="!summary" class="canvas-devices"><button v-for="{device,address,description} in deviceRows" :key="device.deviceId" @click="$emit('device',device.deviceId)" :data-canvas-device="device.deviceId" :title="description" :aria-label="description"><DeviceSceneIcon :scene="device.scene" :icon-key="device.iconKey" :label="deviceCategoryLabel(device.scene,translate)"/><span><strong>{{deviceDisplayName(device,translate)}}</strong><small class="device-address" :data-device-address="address.kind" :title="address.description"><bdi dir="ltr">{{address.text}}</bdi></small></span><span class="device-online" :class="{offline:!device.online}"><i></i>{{errors.inventory?t('上次记录','Last recorded'):devicePresenceLabel(device,translate)}}</span></button></div></template>
       <p v-if="capabilityMissing" class="module-notice">{{capabilityText}} {{t('设备清单仍可使用。','Inventory remains available.')}}</p><footer class="inventory-footer"><small>{{t('仅显示本机观察到的设备','Only devices observed by this router')}}</small><details><summary>{{t('地址与路线权限','Address & path permissions')}}</summary><p>{{authorityText}}</p></details></footer>
 
 </article></template>
@@ -13,15 +13,21 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import StudioGlyph from './HomeGlyph.vue'
 import WidgetMenu from './WidgetMenu.vue'
 import DeviceSceneIcon from '../pages/device/components/deviceSceneIcon.vue'
-import { deviceCategoryLabel, deviceDisplayName, devicePresenceLabel } from '../pages/device/devicePresentation'
+import { deviceCategoryLabel, deviceDisplayName, devicePresenceLabel, deviceHomeAddress } from '../pages/device/devicePresentation'
 import type { DeviceListItem } from '../pages/device/deviceInventory'
 const props=defineProps<{data:Record<string,any>;errors:Record<string,string>;devices:DeviceListItem[];contextualActions?:boolean;summaryLimit?:number;diskLimit?:number;summary?:boolean}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'retry'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
-const translate=(text:string)=>english?({'手机':'Phone','电脑':'Computer','平板':'Tablet','电视与影音':'TV & media','网络设备':'Network','智能家居':'Smart home','摄像头':'Camera','游戏设备':'Gaming','存储与服务器':'Storage & server','打印机':'Printer','穿戴设备':'Wearable','未知设备':'Unknown device','未命名设备':'Unnamed device','在线':'Online','离线':'Offline','尚未上线':'Not yet seen','设备':'Device'}[text]||text):text
+const translate=(text:string)=>english?({'手机':'Phone','电脑':'Computer','平板':'Tablet','电视与影音':'TV & media','网络设备':'Network','智能家居':'Smart home','摄像头':'Camera','游戏设备':'Gaming','存储与服务器':'Storage & server','打印机':'Printer','穿戴设备':'Wearable','未知设备':'Unknown device','未命名设备':'Unnamed device','在线':'Online','离线':'Offline','尚未上线':'Not yet seen','设备':'Device','当前IP':'Current IP','历史':'Prev.','历史地址':'Previous address','MAC地址':'MAC address','地址待确认':'Address unconfirmed'}[text]||text):text
 
 import appUtils from '../utils/app'
 const shownDevices=computed(()=>props.devices.slice(0,props.summaryLimit??6))
+const deviceRows=computed(()=>shownDevices.value.map(device=>{
+ const address=deviceHomeAddress(device,translate)
+ const classification=[device.brand,device.classification.source==='fallback'?t('类型待确认','Type unconfirmed'):deviceCategoryLabel(device.scene,translate)].filter(Boolean).join(' · ')
+ return {device,address,description:[deviceDisplayName(device,translate),address.description,classification,errorsLabel(device)].join(' · ')}
+}))
+function errorsLabel(device:DeviceListItem){return props.errors.inventory?t('上次记录','Last recorded'):devicePresenceLabel(device,translate)}
 const loading=computed(()=>!props.data.inventory&&!props.errors.inventory)
 const inventoryError=computed(()=>props.errors.inventory==='permission'?t('登录或读取权限失效','Session or access expired'):t('设备清单暂不可用','Device inventory unavailable'))
 const capabilityMissing=computed(()=>props.data.inventory?.health?.state&&props.data.inventory.health.state!=='ready'),capabilityText=computed(()=>t('部分设备观测信息暂不完整。','Some device observations are incomplete.'))

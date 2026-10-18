@@ -1,5 +1,6 @@
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {checkHomeShell,setSystemTheme,checkHomeHeader}=require('./home-shell-checks.cjs');
+const {checkDeviceAddresses}=require('../../docs/product/ui-design/device-address-checks.cjs');
 const host=process.env.QS_ACCEPT_HOST;if(host!=='192.168.30.244')throw new Error('B-only acceptance');
 const out=process.env.QS_ACCEPT_OUT,base='http://'+host,home=base+'/cgi-bin/luci/admin/quickstart/';
 const english=process.env.QS_ACCEPT_LANGUAGE==='en',touch=process.env.QS_ACCEPT_TOUCH==='1';
@@ -35,6 +36,11 @@ async function write(context,domain,value,expectedVersion){const r=await context
    report.result='diagnostic';return;
   }
   await checkHomeShell(page,report,{touch});
+  if(process.env.QS_ACCEPT_DEVICE_ADDRESSES==='1'){
+   const response=await first.request.get(base+'/cgi-bin/luci/istore/lanctrl/v2/devices/');assert.equal(response.status(),200);const inventory=(await response.json()).result.devices;assert.ok(Array.isArray(inventory));
+   for(const width of [1440,1024,768,390,320]){await page.setViewportSize({width,height:900});await page.waitForTimeout(300);await checkDeviceAddresses(page,report,inventory);await page.locator('[data-layout-card=devices]').screenshot({path:path.join(out,'b-device-address-'+width+'.png')})}
+   const target=page.locator('[data-canvas-device]').first(),id=await target.getAttribute('data-canvas-device');await target.focus();await page.keyboard.press('Enter');await page.waitForURL(url=>url.pathname.endsWith('/devicemanagement')&&url.searchParams.get('device')===id);await page.locator('.drawer-backdrop').waitFor();report.checks.push('Each home device displays its own address without increasing height; keyboard opens the same stable deviceId');assert.equal(report.errors.length,0);report.result='passed';return;
+  }
   if(process.env.QS_ACCEPT_SHELL==='1'){
    await other.close();let installs=0;page.on('request',r=>{if(new URL(r.url()).pathname==='/cgi-bin/luci/istore/app/install/')installs++});
    const check=await first.request.post(base+'/cgi-bin/luci/istore/app/check/',{data:{name:'app-meta-fastnet'}});assert.equal(check.status(),200);const fastnet=await check.json();assert.ok(fastnet.result&&!fastnet.error);
