@@ -33,7 +33,7 @@ report = {'checkedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(),
           'scope': 'homepage-config-only', 'board': json.loads(remote('ubus call system board')),
           'version': remote('/usr/sbin/quickstart version --more').strip(),
           'fingerprints': remote('sha256sum /usr/sbin/quickstart /www/luci-static/quickstart/index.js /www/luci-static/quickstart/style.css /www/luci-static/quickstart/vendor.js /www/luci-static/quickstart/i18n/en.json').strip().splitlines(),
-          'processFingerprints': remote('for pid in $(pidof quickstart); do sha256sum /proc/$pid/exe; done').strip().splitlines(),
+          'processFingerprints': remote('for pid in $({ pidof quickstart; pidof startdhns; } 2>/dev/null | tr " " "\\n" | sort -u); do sha256sum /proc/$pid/exe; done').strip().splitlines(),
           'packages': remote("opkg list-installed | awk '$1 ~ /^(quickstart|luci-app-quickstart|quickstart-netpolicy)$/ {print}'").strip().splitlines()}
 if os.environ.get('QS_EXPECT_MANIFEST'):
     manifest = dict(line.split('=', 1) for line in Path(os.environ['QS_EXPECT_MANIFEST']).read_text().splitlines())

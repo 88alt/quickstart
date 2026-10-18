@@ -1,5 +1,7 @@
 # 0.16.2 未发布测试输入
 
+这是历史0.16.2输入。当前0.16.3及六个IPK结果见[新冻结输入](netpolicy-preparation/release-inputs-0163.md)与[M70状态](status.md)，不要将此版本当当前发布候选。
+
 当前 runtime 来源是干净提交 `eda99c4f5fcb03395024e09b8540a8da5464c6c9`；后续提交只记录测试工具、证据和文档，不改变此 runtime。当前设备业务验证见 M69.3，匹配包安装结果以本目录 status 为准。
 
 | 归档 | SHA256 |

@@ -2,15 +2,17 @@
 
 ## 当前结论（覆盖下方历史候选状态）
 
-安装后补充审查发现原有限速准备入口向已安装NetPolicy重复提供安装动作（旧selected=eqos，状态与固定安装目标不一致）。新增独立子任务[netpolicy-preparation](netpolicy-preparation/status.md)，0.16.3源码修正正在冻结/打包；不把0.16.2的局部能力降级通过扩展为全部限速准备正确，也不覆盖原失败。下面是0.16.2已完成事实，0.16.3须重新验收。
+安装后补充审查发现原有限速准备入口向已安装NetPolicy重复提供安装动作。该项已在[netpolicy-preparation](netpolicy-preparation/status.md)修正并以新版本重新完成构建、B安装和实机复验；原失败保留，不覆盖0.16.2证据。
 
-业务冻结提交 `eda99c4`，正式版本 `0.16.2-test20261018`。B `192.168.30.244` 已通过普通opkg安装 Quickstart `0.16.2-test20261018-2`、LuCI `0.16.2-test20261018-r2`、NetPolicy `0.2.0-test20260928-2`。包元数据、实际ELF/Web、运行进程、API和LuCI资源key一致；不是仅candidate覆盖。NetPolicy保持enabled=0、无进程，不由首页测试开启数据面。
+业务冻结提交 `c78f62c`，版本 `0.16.3-test20261018`。B `192.168.30.244` 当前普通opkg元数据为 Quickstart `0.16.3-test20261018-2`、LuCI `0.16.3-test20261018-r2`、NetPolicy `0.2.0-test20260928-2`。包、实际ELF/Web、serve与startdhns两种进程、API和资源key一致。NetPolicy保持enabled=0、无进程，原eQoS选择及规则不改；新的准备提示不再重复安装已经存在的包。
 
-当前通过六个IPK（x64/ARM64各三包），两个独立构建status成功、fetch及包内字节校验通过。APK在DNSTAP宿主生成器依赖处失败，已按三轮优化边界暂停；ARM64未实装，24小时观察仍延期。因此M70仅IPK+B安装支线收口，完整多格式交付尚未完成。详见[精确输入](release-inputs.md)及下方失败证据。
+当前六个0.16.3 IPK（x64/ARM64各三包）通过：独立build.status成功，fetch、SDK/架构/feed锁/patch和包内原始字节一致。详见[当前精确输入](netpolicy-preparation/release-inputs-0163.md)。APK仍在DNSTAP宿主生成器依赖处按三轮边界暂停；ARM64未实装，24小时观察仍延期。因此仅IPK+B首页安装支线收口，完整多格式发布尚未完成。
 
-B实际root登录态验收见 `b-installed-0162-full-1/`：九项断言通过，包括独立root会话并发冲突/保留草稿、保存刷新、合法空首页、HTTP来源自定义链接持久化、设备ID真实导航和深色标题。英文五宽度/主题、触屏五宽度/44px点击区域分别见english-1、touch-1；控制台、pageerror和HTTP错误均为空，测试内容恢复，短期会话销毁。系统圆环早期截图异常单独补查，停稳后的两主题数值/图标断言及审图通过，见[审查记录](system-meters/status.md)，未为此更改生产代码。
+B当前七组匹配版本root UI验收通过：完整业务九项断言、准备提示与DHCP权六项、触屏、英文、两主题圆环、20次SPA导航、服务重启后新会话加载。证据在netpolicy-preparation下的b-installed-0163-*与b-after-restart-0163。控制台、pageerror、HTTP错误均为空，原配置内容恢复，各组两个短期会话销毁。20次往返无残留图表/轮询；最后5500ms仅一次周期读取。当前构建另有九组本地兼容场景通过，明确区分模拟异常与实机结果；代表原始截图已打开审查。
 
-升级保留：首页主/备文件和旧业务资料在安装后、UI写入前的指纹保持；UI验收合法更新revision后恢复原配置内容。既有DHNS安装初始化仅增加network中dheth0桥端口行并reload B，不能称所有网络原文字节不变；其余原文、.244/24及默认路由经精确校验保持。四个现有首页主/备文件进入实际sysupgrade归档且逐项字节一致（`b-sysupgrade-archive-0162.log`）；未执行系统恢复。
+0.16.3安装及辅助进程替换后，首页、network/DHCP/firewall/Quickstart、设备资料、provider等严格指纹保持，无归一化例外；.244/24及默认路由经.1保持。此前0.16.2首次安装曾触发既有DHNS初始化，仅加dheth0桥端口并reload B，历史差异仍记录在下文。UI保存合法推进revision后恢复原内容；再重启B Quickstart服务，四份首页主/备及网络配置原文不变，新会话正确加载。实际0.16.3 sysupgrade归档四份首页文件逐项字节一致，八条keep路径齐全；未执行系统恢复。
+
+进程检查补入startdhns别名，先拒绝旧驻留helper，再只替换已验证PID/旧hash/原dhns命名空间中的该进程；无网络配置或接口操作。serve与helper均匹配当前runtime。额外DHNS恢复代理HTTP探测没有通过：127.0.0.1在该命名空间不可达，现有192.168.100.1地址探测超时，根因未定；临时wget已清理，没有开启loopback或添加路由强行通过。该独立恢复链路不在首页通过结论中，后续需隔离复现。
 
 所有公开发布操作均未执行。A/C/D未操作；原共享构建器与其他仓库任务保留。下方按执行顺序保存历史候选/失败，不把早期“尚未安装”视作当前状态。
 
