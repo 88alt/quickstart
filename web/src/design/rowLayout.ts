@@ -8,10 +8,10 @@ export const layoutVariants:Array<{id:LayoutVariant;key:string;zh:string;en:stri
 ]
 export const widgetDefinitions:Array<{id:WidgetId;zh:string;en:string;glyph:string;minWidth:number;minHeight:number;singleHeight:number;extra?:boolean}>=[
   {id:'traffic',zh:'网络流量',en:'Network traffic',glyph:'activity',minWidth:440,minHeight:280,singleHeight:300},
-  {id:'connection',zh:'网络连接和IP地址',en:'Connection & IP',glyph:'network',minWidth:300,minHeight:260,singleHeight:280},
-  {id:'networkInterface',zh:'网络接口状态',en:'Network interfaces',glyph:'network',minWidth:280,minHeight:260,singleHeight:280,extra:true},
-  {id:'applications',zh:'应用与工具',en:'Apps & tools',glyph:'grid',minWidth:240,minHeight:176,singleHeight:240},
-  {id:'devices',zh:'局域网设备',en:'LAN devices',glyph:'devices',minWidth:400,minHeight:300,singleHeight:340},
+  {id:'connection',zh:'网络连接',en:'Connection & IP',glyph:'network',minWidth:300,minHeight:220,singleHeight:240},
+  {id:'networkInterface',zh:'网络接口',en:'Network interfaces',glyph:'network',minWidth:280,minHeight:260,singleHeight:280,extra:true},
+  {id:'applications',zh:'应用工具',en:'Apps & tools',glyph:'grid',minWidth:240,minHeight:176,singleHeight:240},
+  {id:'devices',zh:'设备列表',en:'LAN devices',glyph:'devices',minWidth:400,minHeight:300,singleHeight:340},
   {id:'system',zh:'系统信息',en:'System information',glyph:'chip',minWidth:260,minHeight:260,singleHeight:280},
   {id:'storage',zh:'磁盘信息',en:'Disks',glyph:'disk',minWidth:380,minHeight:280,singleHeight:330},
   {id:'sharing',zh:'存储服务',en:'Storage services',glyph:'folder',minWidth:280,minHeight:280,singleHeight:300},

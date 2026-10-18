@@ -1,10 +1,26 @@
 # Quickstart Vue 首页设计原型
 
-## 待实施：M66.76～M66.81 七控件内部布局重排
+## 当前：网络连接与紧凑网络接口降高
 
-用户已认可逐控件重新组织内容的方向，当前完成[六阶段目标、任务树与可测试标准](../quickstart-home-widget-composition-m66-76-81.md)规划，尚未开始新布局实现。顺序为基线与七份构图、系统双区、存储服务样张、Docker/下载/远程、网络/磁盘、整页验收。使用 `/config/playwright-runner` 为每阶段生成同条件前后截图，并实际打开逐卡/整行/整页审查；自动化通过不能代替审美复核。上一轮代码已归档 `d109c96`，下方M66.70～75仍是当前预览候选；新阶段不得套用旧380组结果。
+连接改为三个完整信息行，紧凑端口由三层收成两层；字体、状态来源、隐私、原表单和详情保持。约463px桌面卡宽下实测连接334→238px、接口161→136px；长值/异常/触屏可自然增高，手机完整接口形态保留原总数与字段。[目标及任务树](../quickstart-home-network-density.md)、[当前100组检查、截图与资源指纹](../../evidence/m66/network-density/acceptance.md)。下述按钮/命名规范继续有效，旧候选结果作为历史保留。
 
-## 当前：M66.70～M66.75 七控件正文精修
+## 设备“查看全部”按钮统一
+
+设备主按钮移除旧蓝色链接类及其悬停覆盖，复用现有标题分段按钮样式；字体、图标尺寸、边框与其他控件一致。导航、菜单、业务和布局保持。[当前截图、27组检查与资源指纹](../../evidence/m66/device-action-consistency/acceptance.md)。下述命名与图表例外继续有效，前轮验证作为历史保留。
+
+## 主按钮四字命名，图表保留“测速”例外
+
+用户明确要求网络流量按钮恢复“测速”及原图例间距，以保持图表简洁；其他按钮仍为设备管理、接口配置、查看全部、文件管理、存储配置、数据迁移、下载管理、域名配置、信息概览（设备/应用同为查看全部）。图标、更多、向导和目标保持；菜单图标不加文字，摘要不新增主按钮。规则见[VS12](../quickstart-home-widget-visual-standard.md)，当前资源及截图见[恢复验收](../../evidence/m66/widget-action-labels/traffic-restore/acceptance.md)。前轮四字按钮、标题与构图报告保留为历史，不能替代本次核验。
+
+## 当前小幅更新：中文卡片标题统一四字
+
+除Docker外，当前首页标题为网络流量、网络连接、网络接口、设备列表、应用工具、磁盘信息、存储服务、下载服务、远程域名、系统信息；标准/紧凑与布局编辑中的模块名称保持一致。仅缩短标题，不更改业务、模块ID、尺寸或布局算法。取值见[外观规范VS11](../quickstart-home-widget-visual-standard.md)，结果见[本轮标题验收](../../evidence/m66/widget-titles/acceptance.md)。下方M66.76～81为内部构图基线，当前预览资源以标题验收为准。
+
+## 当前：M66.76～M66.81 七控件内部布局重排
+
+用户授权的[六阶段目标、任务树与可测试标准](../quickstart-home-widget-composition-m66-76-81.md)已全部完成，当前七控件内部构图已进入5180：系统指标/资料双区、紧凑服务选择与全宽地址/目录、Docker状态区、网络地址分组、磁盘名称操作同排。[当前执行状态](../../evidence/m66/widget-composition/status.md)与[28套291组核心回归、额外41组可读性/状态及交付核验](../../evidence/m66/widget-composition/81-review/acceptance.md)通过。已用 `/config/playwright-runner` 截图并实际打开审查，[14张前后对照与体验卡](../../evidence/m66/widget-composition/81-review/optimization-1/review-guide.md)可查看。人工最终审美独立待完成，本轮未提交；合成数据/内存偏好的隔离原型边界保持。下方为前轮归档记录，不能用旧380组代替当前验收。
+
+## 历史：M66.70～M66.75 七控件正文精修
 
 [体验当前首页](http://192.168.9.19:5180/?layout=ordered) · [全部服务示例](http://192.168.9.19:5180/?layout=ordered&scenario=business-all) · [六阶段目标、任务树与验收标准](../quickstart-home-widget-body-m66-70-75.md) · [执行状态](../../evidence/m66/widget-body/status.md) · [人工体验卡与前后对照](../../evidence/m66/widget-body/75-review/review-guide.md)。M66.70～M66.75已连续完成，[当前31套380组及资源/源码/TypeScript核验](../../evidence/m66/widget-body/75-review/acceptance.md)通过。统一七控件正文阅读轴、服务选项、只读路径、磁盘动作、网络隐私外观和系统指标层级；布局结构、字段、动作与原字体保持，系统指标使用已有指标字阶。仍为合成数据/内存偏好的隔离Vue原型，人工审美确认待用户完成；用户已要求[提交归档](../../evidence/m66/widget-body/commit-note.md)。
 

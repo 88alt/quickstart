@@ -1,5 +1,7 @@
 # 首页模块形态与显示设置：架构设计参考
 
+当前七控件内部构图按[M66.76～M66.81](quickstart-home-widget-composition-m66-76-81.md)及[外观规范VS10](quickstart-home-widget-visual-standard.md)实施，结果见[执行状态](../evidence/m66/widget-composition/status.md)。新增`widgetComposition.ts`只在设计Vite构建中运行：限定模板锚点/解析后的节点重排系统资料与服务选择，保留原业务脚本和全部原绑定；生产配置不导入。原业务SFC未写入，网络卡只增展示类；共享正文CSS负责内部栅格与响应式，读取owner、图表实例、权限及布局事务不动。原型变换不是正式业务重构，正式接入仍须将已验证排布落实为显式内容组件/槽位，不能扩展成运行DOM扫描或长期的通用编译补丁。下段“仅两运行文件改动”属于前轮历史。
+
 七控件正文精修[M66.70～M66.75](quickstart-home-widget-body-m66-70-75.md)沿用本架构：布局只处理稳定ID、形态与用户空间意图，原业务Vue仍拥有字段/条件/动作，`homeWidgetDetails.css`消费原语义类与共同令牌。当前运行变更仅该CSS和网络隐藏遮罩模板，没有新建业务模型、请求所有者、图表观察器或通用字段解析器。正文取值只在[唯一外观规范VS09](quickstart-home-widget-visual-standard.md)维护；技术结果和人工确认见[执行状态](../evidence/m66/widget-body/status.md)。正式接入应逐项改为显式共享正文组件/槽位，不能把原型CSS适配当作业务迁移已完成。
 
 标题主操作[M66.69](quickstart-home-header-actions-m66-69.md)采用`WidgetPrimaryAction`统一原生button、前置装饰图标槽、文字槽和属性／点击透传；不持有请求、定时器、状态或权限判断。新设计卡传入原业务回调与语义图标；原业务卡保留原模板，通过共同标题CSS兼容图标尺寸／间距／主题。更多菜单仍为旁边独立交互目标，摘要仅菜单时不制造主操作。正式组件迁移可在保持原动作和条件前提下逐项接入该组件，当前只在隔离原型落地。结果见[本轮状态](../evidence/m66/header-actions/status.md)。
@@ -36,6 +38,8 @@
 共享视觉基础：按用户要求，当前有序原型各模块统一采用[原字体与共同字阶](quickstart-home-typography.md)。相同信息角色共享字体规则，标准／摘要保留信息密度差异；字体适配不改变布局偏好、容量、业务状态或读取所有权。当前字体技术证据见[本轮检查](../evidence/m66/home-typography/acceptance.md)。
 
 业务对齐前置：统一展示架构已经实现，不表示原首页各控件的功能均已迁移等价。按用户2026-10-16要求，先核对原业务再升级内部交互；网络连接与网络接口状态各自独立。核对时的原型合并呈现已按M66.32～34拆分，并复用原DNS／软件源表单；实际检查见[执行状态](../evidence/m66/network-widgets/status.md)。字段／动作清单、现存疑点与验收定义见[业务对齐设计](quickstart-home-network-widget-business-alignment.md)。
+
+后续紧凑排版：当前连接标准形态声明最小220px（单卡参考240px），当前接口紧凑形态136px；数值为能力下限，不是强制高度。长值、异常、触屏与标题换行仍参与原自然测量；原完整接口形态、旧版摘要尺寸、布局文档及用户手动空间分配保持。只校准这两种形态的高度声明，不改变自然测量、分配、形态选择与历史算法。[产品规范及当前验收](quickstart-home-network-density.md)。
 
 | 概念 | 负责什么 | 示例 |
 |---|---|---|

@@ -257,3 +257,107 @@
  .ordered-home .layout-widget .native-storage .content .disk_icon>:is(.disk_infoicon,.tooltip-trigger){width:44px;min-height:44px}
  .ordered-home .layout-widget .native-storage .content .disk-item.load .value-data>button{min-height:44px}
 }
+
+/* M66.77: original gauges together, device facts in a separate reading area.
+ * Only the design build adds system-composition; no new charts or readers. */
+.ordered-home .layout-widget .native-system .system-composition{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:center}
+.ordered-home .layout-widget .native-system .system-composition .chart_box{display:flex;justify-content:center;gap:12px;margin:0;padding:0;border:0}
+.ordered-home .layout-widget .native-system .system-composition .chart_box>.chart{flex:0 0 150px!important}
+.ordered-home .layout-widget .native-system .system-composition .info{grid-template-columns:minmax(0,1fr)!important;gap:16px}
+.ordered-home .layout-widget .native-system .system-composition .info .item1{border:0;background:none;border-radius:0;padding:0!important;gap:0}
+.ordered-home .layout-widget .native-system .system-composition .info .item1>div{margin-bottom:4px;gap:6px}
+.ordered-home .layout-widget .native-system .system-composition .info .item1>div>svg{width:16px;height:16px}
+.ordered-home .layout-widget .native-system .system-composition .info .item{padding:0;gap:8px}
+.ordered-home .layout-widget .native-system .system-kernel{display:block;margin-top:4px;font-size:var(--home-caption-size);font-weight:400;color:var(--c-muted);line-height:1.5}
+@container(min-width:840px){
+ .ordered-home .layout-widget .native-system .system-composition{grid-template-columns:minmax(480px,1.35fr) minmax(0,1fr);gap:24px}
+ .ordered-home .layout-widget .native-system .system-composition .info{border-left:1px solid var(--c-line);padding-left:24px}
+}
+
+/* M66.78: compact service selection and one coherent active-service body. */
+.ordered-home .layout-widget .native-business-surface .content .tab{gap:8px;margin-bottom:20px}
+.ordered-home .layout-widget .native-business-surface .content .tab>button.item{
+ appearance:none;font:inherit;color:inherit;cursor:pointer;min-height:56px;
+ display:grid;grid-template-columns:20px minmax(0,1fr);grid-template-rows:minmax(1.4em,1fr) auto;
+ gap:2px 8px;justify-items:start;text-align:left;padding:8px;border-radius:6px;
+}
+.ordered-home .layout-widget .native-business-surface .content .tab>button.item>svg{grid-row:1/3;grid-column:1;width:20px;height:20px;align-self:center}
+.ordered-home .layout-widget .native-business-surface .content .tab>button.item>.title{grid-column:2;grid-row:1;text-align:left}
+.ordered-home .layout-widget .native-business-surface .content .tab>button.item>span{grid-column:2;grid-row:2}
+.ordered-home .layout-widget .native-business-surface .content .tab>button.item:focus-visible{outline:2px solid var(--c-accent);outline-offset:2px}
+.ordered-home .layout-widget .native-sharing .content li:is(.linkease-item,.webdav-item){grid-template-columns:minmax(0,1fr);gap:6px;padding:12px 0}
+.ordered-home .layout-widget .native-sharing .content li:is(.linkease-item,.webdav-item):first-child,
+.ordered-home .layout-widget .native-sharing .content>.webdav-item:first-of-type{grid-template-columns:minmax(0,1fr) auto;padding-top:0;padding-bottom:12px;margin-bottom:4px}
+.ordered-home .layout-widget .native-sharing .content li:is(.linkease-item,.webdav-item):not(:first-child)>[class*="-item_value"]{line-height:1.65}
+.ordered-home .layout-widget .native-sharing .app-container_linkease>div{margin-top:8px}
+.ordered-home .layout-widget .native-sharing .samba-item>[data-label]::before{display:none;content:attr(data-label);color:var(--c-muted);font-size:var(--home-caption-size);line-height:1.5;margin-bottom:4px}
+.ordered-home .layout-widget .native-sharing .content .app-container_samba>.sambas-item:first-child{grid-template-columns:minmax(0,1fr) auto}
+@container(max-width:440px){
+ .ordered-home .layout-widget .native-business-surface .content .tab>button.item{grid-template-columns:minmax(0,1fr);grid-template-rows:18px minmax(1.4em,1fr) auto;gap:2px;justify-items:center;text-align:center;padding:8px 4px!important}
+ .ordered-home .layout-widget .native-business-surface .content .tab>button.item>svg{grid-column:1;grid-row:1;width:18px;height:18px}
+ .ordered-home .layout-widget .native-business-surface .content .tab>button.item>.title{grid-column:1;grid-row:2;text-align:center}
+ .ordered-home .layout-widget .native-business-surface .content .tab>button.item>span{grid-column:1;grid-row:3}
+ .ordered-home .layout-widget .native-sharing .content .sambas-item:has(.tit){display:none}
+ .ordered-home .layout-widget .native-sharing .content .app-container_samba .samba-item{grid-template-columns:minmax(0,1fr);gap:10px;padding:12px 0}
+ .ordered-home .layout-widget .native-sharing .samba-item>[data-label]::before{display:block}
+}
+
+/* M66.79: status-led Docker, full-width download fields, domain-led remote. */
+.ordered-home .layout-widget .native-docker .content li.docker-item:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;margin:0 0 20px;background:var(--home-surface-inset);border:0;border-radius:6px}
+.ordered-home .layout-widget .native-docker .content li.docker-item:first-child>.docker-item_name{flex:1;max-width:none;padding:0}
+.ordered-home .layout-widget .native-docker .content li.docker-item:first-child>.docker-item_value{flex:0 1 auto;max-width:none;padding:0;justify-content:flex-end}
+.ordered-home .layout-widget .native-docker .content .app-container_docker>li.content{margin:0}
+.ordered-home .layout-widget .native-docker .docker_box{margin-top:8px!important}
+.ordered-home .layout-widget .native-downloads .content li:is(.aria2-item,.qbittorrent-item,.transmission-item){grid-template-columns:minmax(0,1fr);gap:6px;padding:10px 0}
+.ordered-home .layout-widget .native-downloads .content li:is(.aria2-item,.qbittorrent-item,.transmission-item):first-child{grid-template-columns:minmax(0,1fr) auto;margin-bottom:4px;padding-bottom:12px}
+.ordered-home .layout-widget .native-downloads .content li:is(.aria2-item,.qbittorrent-item,.transmission-item):not(:first-child)>[class*="-item_value"]{line-height:1.65}
+.ordered-home .layout-widget .native-downloads .content .aria2-item:has(.right){display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:4px}
+.ordered-home .layout-widget .native-downloads .content .aria2-item:has(.right)>.right{flex:none}
+.ordered-home .layout-widget .native-downloads .content .aria2-item:has(.right)>.aria2-item_value{flex:0 1 auto;min-width:0}
+.ordered-home .layout-widget .native-downloads .content .use-url_app{padding:12px 0 0}
+.ordered-home .layout-widget .native-remote .info .title_box{margin-top:16px}
+.ordered-home .layout-widget .native-remote .info .title_box>.title{margin:0 0 8px}
+.ordered-home .layout-widget .native-remote .info .title_box>.path{padding:12px;line-height:1.65}
+.ordered-home .layout-widget .native-remote .info .path>.configure{font-weight:500}
+
+/* Compact complete connection rows. Preserve the shared type scale and let
+ * long addresses / errors grow naturally rather than clipping or scrolling. */
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-status{padding-bottom:8px;margin-bottom:0}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses{gap:0;margin-top:0}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses>div{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:8px;min-height:40px;padding:7px 0;box-sizing:border-box}
+.ordered-home .layout-widget .connection-business .connection-address-group{border-bottom:1px solid var(--c-line)}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses dt{display:block;min-width:0;overflow-wrap:anywhere}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses dd{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:6px;margin:0;padding:0;min-width:0}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses .connection-address-meta{font-size:var(--home-caption-size);line-height:1.4;color:var(--c-muted);justify-self:end;max-width:110px;overflow-wrap:anywhere;grid-column:3}
+.ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses .connection-reveal{display:grid;place-items:center;min-width:24px;min-height:24px;margin:0;padding:2px;color:var(--c-muted);border:0;border-radius:4px;grid-column:2}
+.ordered-home .layout-widget .connection-business .connection-reveal>svg{width:16px;height:16px}
+.ordered-home .layout-widget .connection-business .connection-reveal:hover{background:var(--c-soft);color:var(--c-accent)}
+@container(max-width:340px){
+ .ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses>div{grid-template-columns:76px minmax(0,1fr);gap:6px}
+ .ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses dd{column-gap:4px}
+ .ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses .connection-address-meta{max-width:82px}
+}
+@media(pointer:coarse){
+ .ordered-home .layout-widget .connection-business:not(.summary) .connection-addresses .connection-reveal{min-width:44px;min-height:44px;padding:6px}
+}
+/* M66.80: complete disk records; display:contents only lets existing actions
+ * share the title. Data remains owned by its original business component. */
+.ordered-home .layout-widget .native-storage .content>.item{grid-template-columns:24px minmax(0,1fr);gap:8px 10px}
+.ordered-home .layout-widget .native-storage .content>.item>.info{display:contents}
+.ordered-home .layout-widget .native-storage .content>.item>.icon_box{grid-column:1;grid-row:1;align-self:center}
+.ordered-home .layout-widget .native-storage .content>.item>.info>.name{grid-column:2;grid-row:1;align-self:center;min-height:24px}
+.ordered-home .layout-widget .native-storage .content>.item>.info>.schedule{grid-column:1/-1;margin-top:4px}
+.ordered-home .layout-widget .native-storage .content .disk-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;margin-bottom:16px}
+.ordered-home .layout-widget .native-storage .content .disk-item>.disk-item_name{grid-column:1;grid-row:1;padding:0;align-self:center}
+.ordered-home .layout-widget .native-storage .content .disk-item .disk_value{display:contents}
+.ordered-home .layout-widget .native-storage .content .disk-item .disk-item_value{grid-column:1/-1;grid-row:2;min-width:0}
+.ordered-home .layout-widget .native-storage .content .disk-item .disk_icon{grid-column:2;grid-row:1;align-self:center}
+.ordered-home .layout-widget .native-storage .content .disk-item .disk-item_value>.value-data{gap:8px}
+.ordered-home .layout-widget .native-storage .content .disk-item.error>.disk-item_value{grid-column:1/-1;grid-row:2}
+.ordered-home .layout-widget .native-storage .content .disk-item.load .disk-item_value{grid-column:1/-1}
+@media(pointer:coarse){
+ .ordered-home .layout-widget .native-storage .content .disk-item:has(.disk_icon>:nth-child(2)){grid-template-columns:minmax(0,1fr)}
+ .ordered-home .layout-widget .native-storage .content .disk-item:has(.disk_icon>:nth-child(2)) .disk_icon{grid-column:1;grid-row:3;justify-content:flex-start}
+ .ordered-home .layout-widget .native-storage .content .disk-item:has(.disk_icon>:nth-child(2)) .disk_icon .tooltip-text.tooltip-top{left:0;right:auto}
+ .ordered-home .layout-widget .native-storage .content .disk-item:has(.disk_icon>:nth-child(2)) .disk_icon .tooltip-top::after{left:8px;right:auto}
+}

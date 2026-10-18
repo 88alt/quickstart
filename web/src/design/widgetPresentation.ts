@@ -26,6 +26,8 @@ export function resolvePresentation(id:WidgetId,p:WidgetPreference,ctx:Presentat
  const form:PresentationId=p.mode==='auto'?automaticForm(id,p,ctx):p.mode
  let issue=preferenceIssue(id,p)||(role==='stacked'&&!formCapability(id,form).stacked?'compact':!d.forms.includes(form)?'form':'')
  let minWidth=ctx.mobile?240:form==='summary'&&id==='devices'?240:w.minWidth,minHeight=role==='stacked'&&form==='summary'?148:form==='summary'?(id==='devices'?(ctx.width<450?280:260):176):w.minHeight
+ // Current compact port tiles have two text rows. Keep legacy summary sizing.
+ if(id==='networkInterface'&&form==='summary'&&(p.ruleVersion??2)>=2)minHeight=136
  let columns=1,rows=1,capacity=1,preferredHeight=minHeight
  if(id==='applications'){
   // 36px icon, two 16px name lines, 82px tile, 12px gap; 94px chrome

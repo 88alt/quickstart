@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { composeWidgetTemplate } from './src/design/widgetComposition'
 const owner=path.resolve(__dirname, '../docs/product/ui-design')
 const nativeActions=['action-nas','action-nas/linkease','action-nas/unishare','action-docker','action-download','action-domain','action-ddnsto','action-disk','action-disk-part','action-disk-format','action-disk-mount','action-confirm']
 const actionBridge={
@@ -14,6 +15,8 @@ const actionBridge={
   },
   load(id:string){if(!id.startsWith('\0design-native-action:'))return;const kind=id.slice('\0design-native-action:'.length);return `import {dispatchNativeAction} from ${JSON.stringify(path.resolve(__dirname,'src/design/nativeActionBridge.ts'))};import original from ${JSON.stringify(path.resolve(__dirname,'src/components',kind,'index.ts')+'?native-original')};export default (props={})=>dispatchNativeAction(${JSON.stringify(kind)},props,original);`},
   transform(code:string,id:string){
+    code=composeWidgetTemplate(code,id)
+    if(['src/pages/index/info/SystemInfo.vue','src/pages/index/Storage/samba.vue','src/pages/index/service/RemoteDomain.vue'].some(file=>id===path.resolve(__dirname,file)))return code
     if(id===path.resolve(__dirname,'src/components/action-netip/index.vue'))return code.replace('<script setup lang="ts">','<script setup lang="ts">\nimport {useLauncherTimers} from "/@/design/useLauncherTimers"\nconst launcherTimeout=useLauncherTimers()').replace(/window\.setTimeout\(/g,'launcherTimeout(')
     if(id===path.resolve(__dirname,'src/pages/index/components/Card.vue'))return code.replace('<script setup>','<script setup>\nimport NativeCardMenu from "/@/design/NativeCardMenu.vue"').replace('<!-- 下拉菜单 -->','<NativeCardMenu/><!-- 下拉菜单 -->')
     const disk=id===path.resolve(__dirname,'src/pages/index/info/DiskInfo.vue'),sharing=id===path.resolve(__dirname,'src/pages/index/Storage/index.vue')
