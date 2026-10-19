@@ -103,6 +103,9 @@ try:
     if os.environ.get('QS_ACCEPT_REFRESH') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-refresh-review.cjs'
         env['QS_REFRESH_EVIDENCE'] = str(OUT.resolve() / 'refresh')
+    if os.environ.get('QS_ACCEPT_APP_HEADER') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/app-header-review.cjs'
+        env['QS_APP_HEADER_EVIDENCE'] = str(OUT.resolve() / 'app-header')
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:
