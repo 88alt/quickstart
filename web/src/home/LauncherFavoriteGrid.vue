@@ -6,7 +6,7 @@
    <div v-for="id in displayed" :key="id" class="launcher-edit-tile" :class="{picked:gesture?.id===id,target:gesture&&displayed.indexOf(id)===gesture.target}" :data-editor-shortcut="id">
     <button type="button" class="launcher-drag-handle" :aria-label="t('移动','Move ')+name(id)" aria-describedby="launcher-sort-help" :aria-pressed="gesture?.id===id" :data-shortcut-handle="id" @pointerdown="startPointer($event,id)" @keydown="key($event,id)"><span aria-hidden="true">⠿</span></button>
     <button type="button" class="launcher-remove" :data-remove-shortcut="id" :aria-label="t('移除','Remove ')+name(id)" :disabled="!!gesture" @click="$emit('remove',id)">×</button>
-    <span class="application-icon" :class="resolve(id).tone"><StudioGlyph :name="resolve(id).glyph"/></span><strong>{{name(id)}}</strong>
+    <span class="application-icon" :class="resolve(id).tone"><ApplicationArtwork :app="resolve(id)"/></span><strong>{{name(id)}}</strong>
    </div>
   </TransitionGroup>
   <p v-else class="launcher-empty-preview">{{t('从下方添加一个入口，首页就从这里开始。','Add a shortcut below to make this space yours.')}}</p>
@@ -15,7 +15,7 @@
 </template>
 <script setup lang="ts">
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
-import StudioGlyph from './HomeGlyph.vue'
+import ApplicationArtwork from './ApplicationArtwork.vue'
 import {useLauncherCatalog} from './launcherContext'
 const {resolveEntry}=useLauncherCatalog()
 const props=defineProps<{ids:string[];columns:number;limit:number}>(),emit=defineEmits<{(e:'reorder',ids:string[]):void;(e:'remove',id:string):void}>()
