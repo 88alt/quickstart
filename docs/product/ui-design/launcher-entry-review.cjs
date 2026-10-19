@@ -7,7 +7,12 @@ const out=process.env.QS_ENTRY_EVIDENCE;fs.mkdirSync(out,{recursive:true});const
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.consoleErrors.push({url:m.location().url,text:m.text()})});
  page.on('request',r=>{const u=new URL(r.url());if(u.origin===base&&(/\/admin\/store\//.test(u.pathname)||/\/home\/v1\//.test(u.pathname)||/\/istore\/app\//.test(u.pathname))){const row={method:r.method(),path:u.pathname};if(u.href===entry){const p=new URLSearchParams(r.postData());row.package=p.get('package');row.hostname=p.get('hostname');row.update=p.get('update');row.hasToken=!!p.get('token')}report.requests.push(row)}});
  await page.route('**/luci-static/resources/app-icons/navigation-*.png',route=>route.fulfill({status:404,body:''}));
- await page.goto(home,{waitUntil:'networkidle'});await require('./launcher-navigation-checks.cjs')(page,report,out);assert.equal(report.requests.filter(r=>r.path.endsWith('/entrysh')).length,0,'Browsing, filtering and restoring must not execute status scripts');
+ page.on('response',async r=>{if(r.url()===entry){let b;try{b=await r.json()}catch{};(report.entryResponses??=[]).push({http:r.status(),code:b?.code,status:b?.status,errors:b?.errors})}});
+ await page.goto(home,{waitUntil:'networkidle'});
+ if(process.env.QS_ENTRY_DIAGNOSTIC==='1'){
+  await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-category=apps]').click();await page.locator('.application-search input').fill('KSpeeder');await page.locator('[data-open-app=istoreenhance]').click();await page.waitForTimeout(6000);report.finalURL=page.url();report.result='diagnostic';return;
+ }
+ await require('./launcher-navigation-checks.cjs')(page,report,out);assert.equal(report.requests.filter(r=>r.path.endsWith('/entrysh')).length,0,'Browsing, filtering and restoring must not execute status scripts');
  const open=async()=>{if(!await page.locator('[data-applications-browser]').count())await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-category=apps]').click();await page.locator('.application-search input').fill('KSpeeder');await page.locator('[data-open-app=istoreenhance]').waitFor()};
  const count=()=>report.requests.filter(r=>r.path.endsWith('/entrysh')).length;
  const assertWeb=async()=>{await page.waitForURL(u=>u.origin===new URL(web).origin);await page.waitForLoadState('domcontentloaded');await page.waitForFunction(()=>/KSpeeder|iStoreEnhance|登录|Sign in/i.test(document.title+' '+document.body.innerText),null,{timeout:10000});report.actualWeb={origin:new URL(page.url()).origin,title:await page.title()};await page.screenshot({path:path.join(out,'actual-web.png')})};

@@ -20,7 +20,10 @@ export function appWebTarget(status:Record<string,unknown>,currentURL:string){
 }
 export function entryTarget(app:HomeApplication,data:unknown,currentURL:string){
  const envelope=record(data)
- if(envelope.code!==200||!Array.isArray(envelope.status)||!Array.isArray(envelope.errors)||envelope.errors.length||envelope.status.length!==1)throw new Error('error')
+ // LuCI's empty Lua table is serialized as [] or {} across JSON implementations.
+ const errors=envelope.errors
+ const noErrors=!!errors&&typeof errors==='object'&&Object.keys(errors).length===0
+ if(envelope.code!==200||!Array.isArray(envelope.status)||!noErrors||envelope.status.length!==1)throw new Error('error')
  const status=record(envelope.status[0]);if(status.app!==app.id||typeof status.running!=='boolean')throw new Error('error')
  if(status.running===true&&status.deployed!==false&&status.web)return appWebTarget(status,currentURL)
  const fallback=localPath(app.path)||localPath(status.href);if(!fallback)throw new Error('no-entry');return fallback

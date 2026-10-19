@@ -18,6 +18,11 @@ test('untrusted targets and mismatched/failed status cannot navigate',()=>{
  for(const data of [{code:500,status:[],errors:[]},envelope({app:'other',running:true}),envelope({running:'true'}),{code:200,status:[],errors:[]}])assert.throws(()=>entryTarget(app,data,'http://router/'))
  assert.throws(()=>appWebTarget({web:':5003',protocol:'http',port:'5004'},'http://router/'))
 })
+test('LuCI empty errors table accepts both JSON encodings without ignoring actual errors',()=>{
+ const good=envelope({running:true,web:':5003',protocol:'http'})
+ for(const errors of [[],{}])assert.equal(entryTarget(app,{...good,errors},'http://router/'),'http://router:5003/')
+ for(const errors of [undefined,null,'',0,[{code:500}],{app:'failed'}])assert.throws(()=>entryTarget(app,{...good,errors},'http://router/'))
+})
 test('one explicit entry resolve uses token GET then one app-scoped fresh status POST',async()=>{
  const calls=[],signal=new AbortController().signal
  const target=await resolveAppEntry(app,'http://192.0.2.1/cgi-bin/luci/admin/quickstart/?panel=applications',signal,async(url,options)=>{
