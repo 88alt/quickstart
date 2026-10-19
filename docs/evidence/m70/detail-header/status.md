@@ -11,3 +11,5 @@
 首个单变量浏览器样式探针72组几何通过，末尾总门禁因把LuCI只读POST也误报写入而失败。第二个最小探针记录实际RPC（list / luci.getFeatures / file.list / uci.changes），严格只读白名单修正后复查；两次失败报告保留，不伪报成产品通过或额外产品轮次。最终实际资源验收不注入样式。
 
 当前类型与正式Web构建通过；依赖在SSD，正式输出仍为项目显式web/dist。已采集本轮B私有配置保护基线/root/quickstart-package-candidates/home-0166-detail-header-r1；待冻结更新和实际资源72组复验。
+
+已完成：第一份产品候选0e7786e快速更新B，最终无样式注入的真实登录态72组全部通过；截图实际打开审查。配置20路径和LAN/defaultvia.1保持，无例外；所有10个临时认证会话销毁。参见[完整收口](acceptance.md)。上文“待”记录保留为过程状态，最终以此结果为准。
