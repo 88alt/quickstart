@@ -3,12 +3,20 @@ assert.equal(process.env.QS_ACCEPT_HOST,'192.168.30.244');
 const base='http://192.168.30.244',home=base+'/cgi-bin/luci/admin/quickstart/',entry=base+'/cgi-bin/luci/admin/store/entrysh',config=base+'/cgi-bin/luci/admin/services/istoreenhance',web='http://192.168.30.244:5003/';
 const out=process.env.QS_ENTRY_EVIDENCE;fs.mkdirSync(out,{recursive:true});const report={checks:[],requests:[],errors:[],consoleErrors:[],result:'running'};let browser,page;
 (async()=>{try{
- browser=await chromium.launch();const context=await browser.newContext({viewport:{width:process.env.QS_ACCEPT_TOUCH==='1'?390:1440,height:1000},locale:process.env.QS_ACCEPT_LANGUAGE==='en'?'en-US':'zh-CN',hasTouch:process.env.QS_ACCEPT_TOUCH==='1'});await context.addCookies([{name:'sysauth_http',value:process.env.QS_ACCEPT_SID,domain:'192.168.30.244',path:'/'}]);page=await context.newPage();
+ browser=await chromium.launch();const context=await browser.newContext({viewport:{width:process.env.QS_ACCEPT_TOUCH==='1'?390:1440,height:1000},locale:process.env.QS_ACCEPT_LANGUAGE==='en'?'en-US':'zh-CN',hasTouch:process.env.QS_ACCEPT_TOUCH==='1'});await context.addCookies([{name:'sysauth_http',value:process.env.QS_ACCEPT_SID,domain:'192.168.30.244',path:'/'}]);await context.addInitScript(()=>window.addEventListener('pageshow',event=>{window.__qsPageShowPersisted=event.persisted}));page=await context.newPage();
  page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.consoleErrors.push({url:m.location().url,text:m.text()})});
  page.on('request',r=>{const u=new URL(r.url());if(u.origin===base&&(/\/admin\/store\//.test(u.pathname)||/\/home\/v1\//.test(u.pathname)||/\/istore\/app\//.test(u.pathname))){const row={method:r.method(),path:u.pathname};if(u.href===entry){const p=new URLSearchParams(r.postData());row.package=p.get('package');row.hostname=p.get('hostname');row.update=p.get('update');row.hasToken=!!p.get('token')}report.requests.push(row)}});
  await page.route('**/luci-static/resources/app-icons/navigation-*.png',route=>route.fulfill({status:404,body:''}));
  page.on('response',async r=>{if(r.url()===entry){let b;try{b=await r.json()}catch{};(report.entryResponses??=[]).push({http:r.status(),code:b?.code,status:b?.status,errors:b?.errors})}});
  await page.goto(home,{waitUntil:'networkidle'});
+ if(process.env.QS_ENTRY_VISUAL_ONLY==='1'){
+  await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-category=apps]').click();
+  await page.waitForFunction(()=>{const images=[...document.querySelectorAll('[data-open-app] img[data-app-artwork]')];return images.length===6&&images.every(i=>i.complete&&i.naturalWidth>0)});
+  await page.screenshot({path:path.join(out,'apps-mobile-ready.png')});
+  await require('../../../scripts/ops/home-shell-checks.cjs').setSystemTheme(page,'dark');
+  await page.route(entry,route=>route.fulfill({status:503,json:{code:503}}));await page.locator('[data-open-app=istoreenhance]').click();await page.locator('[data-entry-state][aria-busy=false]').waitFor();
+  await page.screenshot({path:path.join(out,'entry-mobile-dark.png')});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(report.errors.length,0);assert.ok(report.consoleErrors.every(e=>e.url===entry&&/503/.test(e.text)));report.checks.push('Six real icons fully decode before mobile capture; English dynamic error and controls remain readable in system dark theme');report.result='passed';return;
+ }
  if(process.env.QS_ENTRY_DIAGNOSTIC==='1'){
   await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-category=apps]').click();await page.locator('.application-search input').fill('KSpeeder');await page.locator('[data-open-app=istoreenhance]').click();await page.waitForTimeout(6000);report.finalURL=page.url();report.result='diagnostic';return;
  }
@@ -17,6 +25,8 @@ const out=process.env.QS_ENTRY_EVIDENCE;fs.mkdirSync(out,{recursive:true});const
  const count=()=>report.requests.filter(r=>r.path.endsWith('/entrysh')).length;
  const assertWeb=async()=>{await page.waitForURL(u=>u.origin===new URL(web).origin);await page.waitForLoadState('domcontentloaded');await page.waitForFunction(()=>/KSpeeder|iStoreEnhance|登录|Sign in/i.test(document.title+' '+document.body.innerText),null,{timeout:10000});report.actualWeb={origin:new URL(page.url()).origin,title:await page.title()};await page.screenshot({path:path.join(out,'actual-web.png')})};
  await open();const before=count();await page.locator('[data-open-app=istoreenhance]').click();await assertWeb();assert.equal(count(),before+1);await page.goBack({waitUntil:'domcontentloaded'});await page.locator('[data-open-app=istoreenhance]').waitFor();await page.waitForFunction(()=>document.activeElement?.getAttribute('data-open-app')==='istoreenhance');assert.equal(await page.locator('.application-search input').inputValue(),'KSpeeder');assert.equal(new URL(page.url()).searchParams.get('tab'),'apps');assert.equal(count(),before+1);await page.screenshot({path:path.join(out,'actual-web-return.png')});report.checks.push('Real updated B script opens KSpeeder Web in same tab, then Back restores launcher/search/focus without another status request');
+ report.actualReturnPersisted=await page.evaluate(()=>window.__qsPageShowPersisted);
+ await page.locator('.application-search input').focus();await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));await page.waitForFunction(()=>document.activeElement?.getAttribute('data-open-app')==='istoreenhance');report.checks.push('Persisted pageshow lifecycle restores saved focus without a new status request (explicit lifecycle event; native BFCache eligibility recorded separately)');
  await page.route(config,route=>route.fulfill({contentType:'text/html',body:'<p>Configuration navigation intercepted; no configuration writes</p>'}));
  for(const scenario of ['stopped','no-web','error','permission','invalid','timeout']){
   await page.goto(home,{waitUntil:'networkidle'});await open();const n=count();

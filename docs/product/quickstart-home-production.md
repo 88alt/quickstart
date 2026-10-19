@@ -159,7 +159,7 @@ backend/modules/homeconfig/         已有契约/存储/HTTP基础及待接的�
 
 已安装应用图标：复用app-meta随包安装的同源PNG`/luci-static/resources/app-icons/<稳定应用ID>.png`，这是软件中心已安装卡片自身使用的规则，opkg/APK路径一致；当前installed数组不另带icon字段。`ApplicationArtwork`统一启动台、首页固定项、编辑排序及候选列表，保持原图标框和布局，以contain显示、不拉伸、不重复朗读装饰图。仅kind=app且ID通过受限校验才尝试本地路径；工具、内置动作、自定义链接保持既有glyph，不接收任意元数据图标URL或访问外网图标服务。图片缺失/损坏/网络失败回退原glyph，单个图片不阻塞目录/导航、不当成应用卸载、不触发目录重读，当前渲染不自动循环重试。无需新API或持久化字段，见[图标任务及当前证据](../evidence/m70/installed-apps/icons/status.md)。
 
-应用导航（2026-10-19用户已授权实施）：URL保存浏览面板/分类/页码，历史项临时保存搜索/滚动/焦点；打开窗口push、分类replace，应用同窗assign前保留启动台历史，关闭/Back释放状态，书签直接关闭留在首页，未保存编辑受保护。所有已安装入口共用稳定宿主激活逻辑。动态应用仅点击时以单应用token/status解析，5秒截止、去重/取消及手动重试，可靠运行且有效HTTP(S) Web才直达，否则原配置/明确失败；列表与图标仍无脚本扫描。KSpeeder脚本已在应用仓库修正并更新B，前端候选的最终运行验收见[导航契约与执行证据](quickstart-home-launcher-navigation.md)，不把本地编码代替B验证。
+应用导航（2026-10-19已实现，B真实登录态验收通过）：URL保存浏览面板/分类/页码，历史项临时保存搜索/滚动/焦点；打开窗口push、分类replace，应用同窗assign前保留启动台历史，关闭/Back释放状态，书签直接关闭留在首页，未保存编辑受保护。所有已安装入口共用稳定宿主激活逻辑。动态应用仅点击时以单应用token/status解析，5秒截止、去重/取消及手动重试，可靠运行且有效HTTP(S) Web才直达，否则原配置/明确失败；列表与图标仍无脚本扫描。KSpeeder脚本已在应用仓库修正并更新B，前端f56f47d真实Web/返回、错误/超时/晚回调及英文触屏均通过；LuCI空错误表允许[]或{}，非空错误仍拒绝。详见[导航契约](quickstart-home-launcher-navigation.md)及[当前证据](../evidence/m70/installed-apps/entry-resolution/acceptance.md)，原生BFCache命中及新包安装不在本轮通过结论内。
 
 初始化仅在本域文件与有效备份均不存在且旧设置完整读取成功时执行；GET首次读取会完成一次初始化写入，后续读取不写。迁移 receipt 与独立版本一起持久化，旧 UCI 原文保持。坏文件恢复分别提供“恢复有效备份”和“保留坏文件并恢复本域默认”；未来版本两种恢复均禁止。备份恢复后切换 generation，使旧编辑令牌失效。
 
