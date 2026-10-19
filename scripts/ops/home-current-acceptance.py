@@ -100,6 +100,9 @@ try:
     if os.environ.get('QS_ACCEPT_SCROLL_TRACE') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-scroll-trace.cjs'
         env['QS_SCROLL_TRACE_EVIDENCE'] = str(OUT.resolve() / 'scroll-trace')
+    if os.environ.get('QS_ACCEPT_REFRESH') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-refresh-review.cjs'
+        env['QS_REFRESH_EVIDENCE'] = str(OUT.resolve() / 'refresh')
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:

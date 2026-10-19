@@ -1,7 +1,7 @@
 <template>
   <main class="canvas-home layout-design-home ordered-home natural-home" :class="{'ordered-editing':editing,'slot-overview-active':overview}" data-ordered-home @pointerdown.capture="sizeClickPending=false" @click.capture="eatSizeClick" @click="blankClick">
     <div class="home-top" data-home-top>
-      <div class="home-top-actions"><a href="https://www.istoreos.com/" target="_blank" rel="noopener noreferrer">{{t('iStoreOS官网','iStoreOS website')}}</a><button ref="editButton" class="home-module-settings" @click="editing?cancel():begin()" :disabled="!canEdit||externalBusy||saving" :aria-pressed="editing" :aria-label="t('自定义首页','Customize home')" :title="t('模块设置','Module settings')" data-home-settings><ModuleIcon color="#fff"/></button></div>
+      <div class="home-top-actions"><a href="https://www.istoreos.com/" target="_blank" rel="noopener noreferrer">{{t('iStoreOS官网','iStoreOS website')}}</a><button ref="editButton" class="home-module-settings" @click="editing?cancel():begin()" :disabled="startupLoading||!canEdit||externalBusy||saving" :aria-pressed="editing" :aria-label="t('自定义首页','Customize home')" :title="t('模块设置','Module settings')" data-home-settings><ModuleIcon color="#fff"/></button></div>
     </div>
     <slot name="status"/>
 
@@ -93,6 +93,7 @@
       <button v-if="!draft.length" class="slot-overview-end" @click="addRow()">＋ {{t('添加空行','Add empty row')}}</button>
     </section>
     <div class="lab-available" :class="{'slot-parked':overview}" ref="availableElement"><div class="lab-content ordered-content" ref="contentElement" :style="{maxWidth:previewWidth?previewWidth+'px':undefined}">
+      <HomeBootstrap v-if="startupLoading"/>
       <section v-for="row in actualRows" :key="row.id" class="ordered-row" :class="{selected:editing&&row.source===selected}" :style="rowStyle(row)" :data-ordered-row="row.id" :data-row-source="row.source">
         <button v-if="moving&&isFirstFragment(row)" class="direct-gap-target" :data-placement="'edge:'+row.source" @click="place({kind:'edge',before:row.source})">＋ {{t('独占新行 / 整行移到这里','New row / move row here')}}</button>
         <div v-if="editing" class="direct-row-tools"><button @click="selected=row.source;openPanel('row')" :aria-label="t('第','Row ')+(draft.findIndex(r=>r.id===row.source)+1)+t('行布局',' layout')" :data-select-row="row.source">{{t('布局','Layout')}} ▦</button></div>
@@ -112,7 +113,7 @@
         <span v-if="sizeControls(row)&&sizeHint" class="row-size-hint" role="status" data-size-hint>{{sizeHint}}</span>
       </section>
       <button v-if="moving" class="direct-last-target" data-placement="edge:end" @click="place({kind:'edge',before:null})">＋ {{t('放到最后，独占新行 / 整行移到最后','New row at end / move row to end')}}</button>
-      <section v-if="!actualRows.length" class="ordered-empty"><StudioGlyph name="grid"/><h2>{{t('首页，由你安排','A home of your own')}}</h2><p>{{t('添加常看的模块，也可以随时恢复推荐布局。','Add the things you check most, or restore the recommended layout.')}}</p><button @click="editing?openSlot(null):begin()">{{t('添加模块','Add modules')}}</button></section>
+      <section v-if="!startupLoading&&!actualRows.length" class="ordered-empty"><StudioGlyph name="grid"/><h2>{{t('首页，由你安排','A home of your own')}}</h2><p>{{t('添加常看的模块，也可以随时恢复推荐布局。','Add the things you check most, or restore the recommended layout.')}}</p><button @click="editing?openSlot(null):begin()">{{t('添加模块','Add modules')}}</button></section>
     </div></div>
     <slot name="launcher"/>
     <DirectEditPanel v-if="panel==='slot'" :title="pendingSlot?t('选择槽位模块','Choose module'):t('添加一行模块','Add module in a new row')" @close="closePanel">
@@ -131,6 +132,7 @@
 </template>
 <script setup lang="ts">
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
+import HomeBootstrap from './HomeBootstrap.vue'
 import {ROW_SPACE_LIMIT,clamp,splitSpace} from './layout/rowSizing'
 import {useNaturalSizing} from './useNaturalSizing'
 import {onBeforeRouteLeave} from 'vue-router'
@@ -146,7 +148,7 @@ import {useRowSorting} from './useRowSorting'
 import {widgetDefinitions,widget,type WidgetId} from './layout/rowLayout'
 import {templates,clone,naturalRows,compactIds,recommended,makeRow,visibleIds,layoutIssue,rowMinimum,changeTemplate,renderRows,type Template,type OrderedRow,type ActualRow,type ActualColumn} from './layout/orderedLayout'
 import type {LayoutConfig} from './configContract'
-const props=defineProps<{config:LayoutConfig;data:Record<string,any>;errors:Record<string,string>;theme:string;favoriteIds:string[];canEdit:boolean;externalBusy?:boolean;persist:(value:LayoutConfig)=>Promise<void>}>()
+const props=defineProps<{config:LayoutConfig;data:Record<string,any>;errors:Record<string,string>;theme:string;favoriteIds:string[];canEdit:boolean;externalBusy?:boolean;bootstrapping?:boolean;persist:(value:LayoutConfig)=>Promise<void>}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):void;(e:'editing',value:boolean):void;(e:'visible',ids:WidgetId[]):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,name=(id:WidgetId)=>t(widget(id).zh,widget(id).en)
 const orderedSession=computed(()=>props.config.rows),preferenceSession=computed(()=>props.config.widgetPreferences),theme=computed(()=>props.theme),data=props.data,errors=props.errors,saving=ref(false)
@@ -156,8 +158,9 @@ const layout=computed(()=>editing.value?draft.value:orderedSession.value),visibl
 watch(visible,ids=>emit('visible',ids),{immediate:true})
 const selectedIndex=computed(()=>draft.value.findIndex(r=>r.id===selected.value)),selectedRow=computed(()=>draft.value[selectedIndex.value])
 const widthPresets=computed(()=>{const values=selectedRow.value?.columns.length===3?[[34,33,33],[50,25,25],[25,50,25]]:[[50,50],[60,40],[65,35],[40,60]],current=selectedRow.value?.columns.map(c=>c.weight)||[];return values.some(v=>v.join('/')===current.join('/'))?values:[current,...values]})
-const availableElement=ref<HTMLElement|null>(null),contentElement=ref<HTMLElement|null>(null),overviewElement=ref<HTMLElement|null>(null),availableWidth=ref(1160),contentWidth=ref(1160)
-const actualRows=computed(()=>renderRows(previewRows.value,contentWidth.value,homeApplicationSession.favorites.length,editing.value,renderPreferences.value))
+const availableElement=ref<HTMLElement|null>(null),contentElement=ref<HTMLElement|null>(null),overviewElement=ref<HTMLElement|null>(null),availableWidth=ref(1160),contentWidth=ref(0)
+const startupLoading=computed(()=>props.bootstrapping||!contentWidth.value)
+const actualRows=computed(()=>startupLoading.value?[]:renderRows(previewRows.value,contentWidth.value,homeApplicationSession.favorites.length,editing.value,renderPreferences.value))
 const editButton=ref<HTMLButtonElement|null>(null),library=ref(false),libraryElement=ref<HTMLElement|null>(null)
 const panel=ref(''),selectedCard=ref<WidgetId|null>(null)
 const pendingSlot=ref<Extract<MoveTarget,{kind:'slot'}>|null>(null),resizingRow=ref('')
@@ -169,7 +172,7 @@ const menuModule=ref<WidgetId|null>(null),settingsId=ref<WidgetId>('applications
 const settingsPlan=computed(()=>{if(!settingsBase.value||!settingsContext.value)return null;const prefs=clone(settingsBase.value.widgetPreferences);prefs[settingsId.value]=clone(settingsValue.value);return planDocument(settingsBase.value,{rows:settingsBase.value.rows,issue:'',hidden:[],changed:false},settingsContext.value,prefs)})
 const previewRows=computed(()=>editing.value&&panel.value==='display'&&settingsPlan.value?.status!=='blocked'&&settingsPlan.value?settingsPlan.value.next.rows:layout.value)
 const renderPreferences=computed(()=>editing.value&&panel.value==='display'&&settingsPlan.value?.status!=='blocked'&&settingsPlan.value?settingsPlan.value.next.widgetPreferences:editing.value?preferences.value:preferenceSession.value)
-const naturalSizing=useNaturalSizing(contentElement,actualRows,()=>[actualRows.value,renderPreferences.value,data,errors,overview.value],()=>overview.value)
+const naturalSizing=useNaturalSizing(contentElement,actualRows,()=>[actualRows.value,renderPreferences.value,data,errors,overview.value],()=>overview.value||!!startupLoading.value)
 const sizeHint=ref('')
 function cardRole(compact:boolean|undefined):'stacked'|'ordinary'{return compact?'stacked':'ordinary'}
 function logicalRow(row:ActualRow){return previewRows.value.find(r=>r.id===row.source)!}
