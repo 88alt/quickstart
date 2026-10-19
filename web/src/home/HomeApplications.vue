@@ -85,7 +85,7 @@ let entryController:AbortController|undefined,activationGeneration=0,activationA
 const homeReturn=useHomeEntryReturn(!!props.hostOnly,()=>!provider.preferencesLoading()&&provider.state.status!=='loading')
 const entryMessage=computed(()=>launchStatus.value==='timeout'?t('打开应用超时，请重试。','Opening timed out. Please retry.'):launchStatus.value==='permission'?t('没有解析入口的权限，请重新登录后重试。','No permission to resolve this entry. Sign in and retry.'):t('暂时无法打开，请重试或打开配置。','Unable to open now. Retry or open settings.'))
 function cancelLaunch(){if(!ownsActivation)return;activationGeneration++;entryController?.abort();entryController=undefined;launchStatus.value='idle';launchApp.value=null;ownsActivation=false}
-function dismissLaunch(){cancelLauncherApp();cancelLaunch()}
+async function dismissLaunch(){const id=launchSource.value==='home'?launchApp.value?.id:undefined;cancelLauncherApp();cancelLaunch();await nextTick();if(id)document.querySelector<HTMLElement>('[data-favorite-app="'+CSS.escape(id)+'"]')?.focus({preventScroll:true})}
 function retryLaunch(){if(launchApp.value)void activate(launchApp.value)}
 function configureLaunch(){if(!launchApp.value)return;const app={...launchApp.value,entryScript:false};if(launchSource.value==='home'&&!props.collapsed&&requestLauncherApp(app))return;void launchInstalled(app,launchSource.value)}
 async function launchInstalled(app:HomeApplication,source:ActivationSource='browser'){
@@ -96,9 +96,9 @@ async function launchInstalled(app:HomeApplication,source:ActivationSource='brow
  if(app.entryScript)launchStatus.value='loading'
  try{
   const target=await resolveAppEntry(app,window.location.href,current.signal)
-  if(!valid())return
+  if(!valid()){if(generation===activationGeneration)cancelLaunch();return}
   if(source==='browser')await navigation.remember(app.id);else homeReturn.remember(app.id)
-  if(valid())window.location.assign(target)
+  if(valid())window.location.assign(target);else if(generation===activationGeneration)cancelLaunch()
  }catch(error){if(activationAlive&&generation===activationGeneration)launchStatus.value=timedOut?'timeout':error instanceof Error&&error.message==='permission'?'permission':'error'}finally{window.clearTimeout(timer)}
 }
 const favorites=computed(()=>homeApplicationSession.favorites.map(provider.resolve))
