@@ -47,7 +47,7 @@ function createLauncher(config:ReturnType<typeof useHomeConfig>){
  const system=useSystemStore();let updateTimer:number|undefined
  onMounted(()=>{void read();void readSandbox();if(!window.quickstart_configs?.update?.disable&&window.quickstart_features?.includes('ota'))updateTimer=window.setTimeout(()=>{if(!document.hidden)system.requestCheckUpdate()},1100)})
  onUnmounted(()=>{alive=false;controller?.abort();window.clearTimeout(updateTimer)})
- return {state,catalogue,resolve:resolveEntry,resolveEntry,entryAvailability,homeApplicationSession,linkSession,saveLink,deleteLink,saveFavorites,retry:read,begin:()=>config.begin('launcher'),editable:()=>config.editable('launcher'),saving:()=>config.state.launcher.saving}
+ return {state,catalogue,resolve:resolveEntry,resolveEntry,entryAvailability,homeApplicationSession,linkSession,saveLink,deleteLink,saveFavorites,retry:read,begin:()=>config.begin('launcher'),editable:()=>config.editable('launcher'),saving:()=>config.state.launcher.saving,preferencesLoading:()=>config.state.launcher.loading}
 }
 type Launcher=ReturnType<typeof createLauncher>
 const key:InjectionKey<Launcher>=Symbol('quickstart-home-launcher')

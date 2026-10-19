@@ -56,6 +56,7 @@ let browser,server;
   assert.equal(route.request().method(),'GET');report.requests['software-center-installed']=(report.requests['software-center-installed']||0)+1;
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(invalidCatalogue?{broken:{}}:captured.responses['/app/install-list/'].body)});
  });
+ await context.route('**/luci-static/resources/app-icons/*.png',async route=>{expectedFailures.add(new URL(route.request().url()).pathname.slice(prefix.length));await route.fulfill({status:404,contentType:'image/png',body:''})});
  const page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));page.on('console',message=>{if(message.type()==='error'&&!rejectWrites&&!expectedFailures.has(new URL(message.location().url||'http://localhost').pathname.slice(prefix.length)))report.errors.push('console: '+message.text())});
  const finish=async()=>{await page.locator('[data-apply]').click();const confirm=page.locator('[data-confirm-finish]');if(await confirm.count())await confirm.click()};
  const capture=async name=>{await page.screenshot({path:path.join(out,name+'.png'),fullPage:!touch});const input=await page.evaluate(()=>({coarse:matchMedia('(pointer:coarse)').matches,points:navigator.maxTouchPoints}));if(touch){assert.equal(input.coarse,true,'Screenshot lost touch emulation');const bounds=await page.locator('[data-layout-card=traffic]').evaluate(n=>({actionBottom:n.querySelector('.traffic-header-actions').getBoundingClientRect().bottom,speedTop:n.querySelector('.speed').getBoundingClientRect().top}));assert.ok(bounds.speedTop>=bounds.actionBottom+4,'Touch traffic rates overlap speed-test action')}report.views.push({name,input,overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),cards:await page.locator('[data-layout-card]').evaluateAll(nodes=>nodes.map(n=>({id:n.dataset.layoutCard,form:n.dataset.presentation,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height})))})};
@@ -65,6 +66,7 @@ let browser,server;
  report.formalMetrics=await inspect(page);
  await capture('formal-1440');assert.equal(await page.locator('[data-layout-card]').count(),11);assert.equal(report.errors.length,0);report.checks.push('Formal entry renders all 11 widgets without page errors');
  await checkHomeShell(page,report,{editable:!process.env.QS_HOME_CONFIG_STATE||configDomain==='launcher',touch});
+ if(process.env.QS_HOME_NAVIGATION_REVIEW==='1')await require('./launcher-navigation-checks.cjs')(page,report,out);
  if(process.env.QS_HOME_DEVICE_REVIEW==='1')await checkDeviceAddresses(page,report,captured.responses['/lanctrl/v2/devices/'].body.result.devices);
  assert.equal(report.requests['/app/check/']||0,0,'Removed shortcut strip must not probe the parental-control package on mount');
  if(process.env.QS_HOME_CONFIG_STATE){assert.equal(await page.getByRole('button',{name:language==='en'?'Customize home':'自定义首页',exact:true}).isDisabled(),configDomain!=='launcher');report.checks.push('Unavailable/future/recovery config stays visible and affected domain stays read only')}

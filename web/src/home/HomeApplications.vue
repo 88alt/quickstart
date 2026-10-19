@@ -38,7 +38,8 @@
   <NetworkWidgetDialog v-if="unavailableApp" :title="t('入口暂不可用','Shortcut unavailable')" @close="unavailableApp=null"><div data-shortcut-unavailable><p>{{t(unavailableApp.zh,unavailableApp.en)}} · {{availabilityText(unavailableApp)}}</p><p>{{t('入口保留在原位置，你可以在编辑快捷入口中移除。','The shortcut stays in place. You can remove it in Edit shortcuts.')}}</p></div></NetworkWidgetDialog>
 </template>
 <script setup lang="ts">
-import {onBeforeRouteLeave} from 'vue-router'
+import {useLauncherRoute} from './useLauncherRoute'
+import type {LauncherMemory,LauncherView} from './launcherRouteState'
 import appUtils from '../utils/app'
 import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
@@ -48,7 +49,7 @@ import WidgetMenu from './WidgetMenu.vue'
 type QuickEntrance={path:string;zh:string;en:string;glyph:string}
 import {applicationDefaults,type HomeApplication} from './homeApplications'
 import LauncherFavoriteGrid from './LauncherFavoriteGrid.vue'
-import {registerLauncherBrowser,requestLauncherBrowser} from './launcherBrowserHost'
+import {registerLauncherBrowser,requestLauncherBrowser,requestLauncherApp} from './launcherBrowserHost'
 import {useLauncherCatalog} from './launcherContext'
 const {entryAvailability,homeApplicationSession,linkSession,saving}=useLauncherCatalog()
 import {PAGE_SIZE,queryLibrary} from './launcherLibrary'
@@ -77,29 +78,47 @@ const stateText=computed(()=>catalogueState.value==='permission'?t('没有读取
 function availabilityText(app:HomeApplication){const status=entryAvailability(app);return status==='uninstalled'?t('应用已卸载','App uninstalled'):status==='permission'?t('无访问权限','No access'):status==='unsupported'?t('固件不支持','Unsupported'):status==='no-entry'?t('暂无可用入口','No verified entry'):t('状态待确认','Status unknown')}
 const query=computed(()=>queryLibrary(catalogue.value.map(a=>provider.resolve(a.id)),search.value,browserTab.value,libraryPage.value))
 const filteredApps=computed(()=>query.value.entries)
-watch([search,browserTab],()=>{libraryPage.value=1})
+watch([search,browserTab],()=>{if(!navigation?.applying.value)libraryPage.value=1})
 function changePage(page:number){libraryPage.value=page;document.querySelector('.applications-browser-body')?.scrollTo({top:0})}
 async function openLink(app?:HomeApplication){if(editing.value||!provider.begin())return;linkInitial.value=app;linkFormOpen.value=true;notice.value='';await nextTick();document.querySelector('.applications-browser-body')?.scrollTo({top:0})}
 async function cancelLink(){if(saving())return;linkFormOpen.value=false;linkInitial.value=undefined;await nextTick();document.querySelector<HTMLButtonElement>('[data-add-link]')?.focus()}
 async function linkSaved(message:string,id?:string){await cancelLink();notice.value=message;search.value='';browserTab.value='links';await nextTick();const index=id?catalogue.value.filter(app=>app.kind==='link').findIndex(app=>app.id===id):-1;libraryPage.value=index>=0?Math.floor(index/PAGE_SIZE)+1:query.value.current;await nextTick();if(id)document.querySelector<HTMLButtonElement>('[data-open-app="'+id+'"]')?.focus()}
 const networkStore=useNetworkStore()
-function activate(app:HomeApplication){if(app.id==='files'){if(browserOpen.value)closeBrowser();void appUtils.installAndGo('luci-app-linkease',t('易有云','LinkEase'),'/cgi-bin/luci/admin/services/linkease/file/','app-meta-linkease');return}const snapshot=props.network||browserNetwork;if(browserOpen.value)closeBrowser();if(app.kind==='tool'){if(snapshot)networkStore.updateNetworkStatus({...snapshot});activeTool.value=app;return}if(entryAvailability(app)!=='available'){unavailableApp.value=app;return}if(app.kind==='link'){window.open(app.path,'_blank','noopener,noreferrer');return}if(app.kind==='app'){window.location.assign(app.path);return}emit('navigate',app.path)}
+async function activate(app:HomeApplication){
+ if(app.kind==='app'&&!props.collapsed&&requestLauncherApp(app))return
+ if(app.kind==='app'&&entryAvailability(app)==='available'){await navigation?.remember(app.id);window.location.assign(app.path);return}
+ if(app.id==='files'){if(browserOpen.value&&!await closeBrowser())return;void appUtils.installAndGo('luci-app-linkease',t('易有云','LinkEase'),'/cgi-bin/luci/admin/services/linkease/file/','app-meta-linkease');return}
+ const snapshot=props.network||browserNetwork
+ if(app.kind==='builtin'){await navigation?.remember(app.id);emit('navigate',app.path);return}
+ if(browserOpen.value&&!await closeBrowser())return
+ if(app.kind==='tool'){if(snapshot)networkStore.updateNetworkStatus({...snapshot});activeTool.value=app;return}
+ if(entryAvailability(app)!=='available'){unavailableApp.value=app;return}
+ if(app.kind==='link'){window.open(app.path,'_blank','noopener,noreferrer');return}
+}
+async function launchPinned(app:HomeApplication){await openBrowser(false);browserTab.value='apps';await nextTick();await navigation?.persist();await activate(app)}
 let opener:HTMLElement|null=null,bodyOverflow='',inerted:HTMLElement[]=[],browserNetwork:Record<string,any>|undefined,unregisterBrowser:(()=>void)|undefined
 function startEditing(){if(!provider.begin())return;editing.value=true;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[]}
-async function openBrowser(edit:boolean){if(edit&&!provider.editable())return;if(!props.collapsed&&requestLauncherBrowser(edit,props.network))return;if(document.querySelector('.ordered-editing')||document.querySelector('[data-applications-browser]'))return;opener=document.activeElement as HTMLElement;if(edit)provider.begin();editing.value=edit;search.value='';browserTab.value='all';libraryPage.value=1;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[];bodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';browserOpen.value=true;await nextTick();const root=document.querySelector('.canvas-home');inerted=Array.from(root?.children||[]).filter((node):node is HTMLElement=>node instanceof HTMLElement&&!node.matches('.applications-browser,.applications-backdrop')&&!node.hasAttribute('inert'));inerted.forEach(node=>node.setAttribute('inert',''));document.querySelector<HTMLButtonElement>('.applications-close')?.focus()}
+async function openBrowser(edit:boolean){if(edit&&!provider.editable())return;if(!props.collapsed&&requestLauncherBrowser(edit,props.network))return;if(document.querySelector('.ordered-editing'))return;if(props.hostOnly)await navigation?.open(edit);else await showBrowser(edit,{tab:'all',page:1},{v:1,search:'',scroll:0,focus:''})}
+async function showBrowser(edit:boolean,view:LauncherView,memory:LauncherMemory){
+ if(browserOpen.value){browserTab.value=view.tab;search.value=memory.search;libraryPage.value=view.page;if(edit)startEditing();return}
+ if(document.querySelector('[data-applications-browser]'))return
+ opener=document.activeElement as HTMLElement;if(edit)provider.begin();editing.value=edit;search.value=memory.search;browserTab.value=view.tab;libraryPage.value=view.page;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[];bodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';browserOpen.value=true
+ await nextTick();const root=document.querySelector('.canvas-home');inerted=Array.from(root?.children||[]).filter((node):node is HTMLElement=>node instanceof HTMLElement&&!node.matches('.applications-browser,.applications-backdrop')&&!node.hasAttribute('inert'));inerted.forEach(node=>node.setAttribute('inert',''));document.querySelector<HTMLButtonElement>('.applications-close')?.focus()
+}
 function releaseModal(){inerted.forEach(node=>node.removeAttribute('inert'));inerted=[];document.body.style.overflow=bodyOverflow}
-function closeBrowser(){if(saving())return;if(unsaved.value&&!window.confirm(t('尚有未保存的入口修改，确定放弃？','Discard unsaved shortcut changes?')))return;browserOpen.value=false;linkFormOpen.value=false;releaseModal();draft.value=[];history.value=[];browserNetwork=undefined;const target=opener?.isConnected?opener:document.querySelector<HTMLElement>('[data-applications-hub] [data-all-apps]');target?.focus({preventScroll:true});opener=null;emit('close')}
+function hideBrowser(){browserOpen.value=false;linkFormOpen.value=false;releaseModal();draft.value=[];history.value=[];browserNetwork=undefined;const target=opener?.isConnected?opener:document.querySelector<HTMLElement>('[data-applications-hub] [data-all-apps]');target?.focus({preventScroll:true});opener=null;emit('close')}
+async function closeBrowser(){if(saving())return false;if(props.hostOnly)return navigation?.close()??false;if(unsaved.value&&!window.confirm(t('尚有未保存的入口修改，确定放弃？','Discard unsaved shortcut changes?')))return false;hideBrowser();return true}
 async function saveFavorites(){if(saving())return;try{await provider.saveFavorites([...draft.value]);closeBrowser()}catch(error){notice.value=error instanceof Error?error.message:t('保存失败，草稿保留','Save failed; draft retained')}}
 function commit(ids:string[]){const next=[...new Set(ids)].slice(0,24);if(next.join('|')===draft.value.join('|'))return;history.value=[...history.value.slice(-29),[...draft.value]];draft.value=next}
 function undoFavorite(){if(history.value.length)draft.value=history.value.pop()!}
 function toggleFavorite(id:string){if(draft.value.includes(id))commit(draft.value.filter(v=>v!==id));else if(draft.value.length<24)commit([...draft.value,id])}
-function navigate(path:string){if(browserOpen.value)closeBrowser();emit('navigate',path)}
+async function navigate(path:string){if(unsaved.value||saving())return;await navigation?.remember();emit('navigate',path)}
 const unsaved=computed(()=>browserOpen.value&&(linkFormOpen.value||editing.value&&draft.value.join('|')!==homeApplicationSession.favorites.join('|')))
 function beforeUnload(event:BeforeUnloadEvent){if(unsaved.value||saving()){event.preventDefault();event.returnValue=''}}
-onBeforeRouteLeave(()=>!unsaved.value&&!saving()||window.confirm(t('尚有未保存的入口修改，确定离开？','Leave without saving shortcut changes?')))
+const navigation=useLauncherRoute({enabled:!!props.hostOnly,opened:browserOpen,tab:browserTab,page:libraryPage,search,dirty:unsaved,saving,show:showBrowser,hide:hideBrowser,confirm:()=>window.confirm(t('尚有未保存的入口修改，确定离开？','Leave without saving shortcut changes?')),settled:()=>provider.state.status!=='loading'&&!provider.preferencesLoading(),currentPage:()=>query.value.current})
 function keyboard(event:KeyboardEvent){if(!browserOpen.value)return;if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();if(linkFormOpen.value)void cancelLink();else closeBrowser();return}if(event.key==='Tab'){const controls=Array.from(document.querySelectorAll<HTMLElement>('.applications-browser button:not(:disabled),.applications-browser input:not(:disabled)')).filter(node=>node.getClientRects().length);const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}}}
 function resizeEditor(){editorColumns.value=window.innerWidth<650?2:4}
 function visibility(){if(document.hidden){activeTool.value=null;unavailableApp.value=null;linkTarget.value=null}}
-onMounted(()=>{window.addEventListener('beforeunload',beforeUnload);if(props.collapsed)unregisterBrowser=registerLauncherBrowser((edit,network)=>{browserNetwork=network;void openBrowser(edit)});document.addEventListener('keydown',keyboard,true);document.addEventListener('visibilitychange',visibility);window.addEventListener('resize',resizeEditor);if(hub.value){hubObserver=new ResizeObserver(()=>{const box=hub.value!.getBoundingClientRect();hubWidth.value=box.width;hubHeight.value=box.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{window.removeEventListener('beforeunload',beforeUnload);unregisterBrowser?.();hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resizeEditor);if(browserOpen.value)releaseModal()})
+onMounted(()=>{window.addEventListener('beforeunload',beforeUnload);if(props.collapsed)unregisterBrowser=registerLauncherBrowser((edit,network)=>{browserNetwork=network;void openBrowser(edit)},app=>{void launchPinned(app)});document.addEventListener('keydown',keyboard,true);document.addEventListener('visibilitychange',visibility);window.addEventListener('resize',resizeEditor);if(hub.value){hubObserver=new ResizeObserver(()=>{const box=hub.value!.getBoundingClientRect();hubWidth.value=box.width;hubHeight.value=box.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{window.removeEventListener('beforeunload',beforeUnload);unregisterBrowser?.();hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resizeEditor);if(browserOpen.value)releaseModal()})
 </script>
 <style src="./homeApplications.css" scoped></style>
