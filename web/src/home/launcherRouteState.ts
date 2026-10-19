@@ -1,6 +1,12 @@
 export type LauncherTab='all'|'apps'|'tools'|'links'
 export type LauncherView={tab:LauncherTab;page:number}
 export type LauncherMemory={v:1;search:string;scroll:number;focus:string;from?:string}
+export function homeEntryMemory(value:unknown){
+ if(!value||typeof value!=='object')return null
+ const m=value as Record<string,unknown>
+ if(m.v!==1||typeof m.id!=='string'||!/^[a-zA-Z0-9][a-zA-Z0-9_.+-]{0,127}$/.test(m.id)||typeof m.scroll!=='number'||!Number.isFinite(m.scroll))return null
+ return {v:1,id:m.id,scroll:Math.max(0,Math.min(1000000,m.scroll))}
+}
 export function launcherView(query:Record<string,unknown>):LauncherView|null{
  if(query.panel!=='applications')return null
  const tab=(['all','apps','tools','links'].includes(String(query.tab))&&typeof query.tab==='string'?query.tab:'all') as LauncherTab

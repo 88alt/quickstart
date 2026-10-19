@@ -68,6 +68,7 @@ let browser,server;
  await checkHomeShell(page,report,{editable:!process.env.QS_HOME_CONFIG_STATE||configDomain==='launcher',touch});
  if(process.env.QS_HOME_NAVIGATION_REVIEW==='1')await require('./launcher-navigation-checks.cjs')(page,report,out);
  if(process.env.QS_HOME_ENTRY_REVIEW==='1'){expectedFailures.add('/cgi-bin/luci/admin/store/entrysh'.slice(prefix.length));await require('./entry-resolution-checks.cjs')(page,report,out)}
+ if(process.env.QS_HOME_PINNED_REVIEW==='1'){expectedFailures.add('/cgi-bin/luci/admin/store/entrysh'.slice(prefix.length));await require('./pinned-entry-checks.cjs')(page,report,out,{fixture:true})}
  if(process.env.QS_HOME_DEVICE_REVIEW==='1')await checkDeviceAddresses(page,report,captured.responses['/lanctrl/v2/devices/'].body.result.devices);
  assert.equal(report.requests['/app/check/']||0,0,'Removed shortcut strip must not probe the parental-control package on mount');
  if(process.env.QS_HOME_CONFIG_STATE){assert.equal(await page.getByRole('button',{name:language==='en'?'Customize home':'自定义首页',exact:true}).isDisabled(),configDomain!=='launcher');report.checks.push('Unavailable/future/recovery config stays visible and affected domain stays read only')}

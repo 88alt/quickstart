@@ -5,7 +5,11 @@
       <div class="applications-actions widget-action-group"><WidgetPrimaryAction icon="grid" @click="openBrowser(false)" data-all-apps>{{t('查看全部','All')}}<small v-if="favorites.length>capacity" class="applications-overflow" data-app-overflow>{{t('还有','More: ')}}{{favorites.length-capacity}}{{t('个','')}}</small></WidgetPrimaryAction><WidgetMenu :label="t('应用与工具更多操作','More app and tool actions')" :items="[{id:'favorites',label:t('编辑快捷入口','Edit shortcuts')}]" @select="openBrowser(true)"/></div>
     </header>
       <div v-if="!favorites.length" class="applications-state"><StudioGlyph name="grid"/><span>{{t('把常用应用放在这里','Keep your favorite apps here')}}</span><button @click="openBrowser(true)">{{t('选择应用','Choose apps')}}</button></div>
-      <div v-else class="applications-favorites" :style="{gridTemplateColumns:'repeat('+columns+', minmax(0,1fr))'}" :data-app-columns="columns" :data-app-capacity="capacity"><button v-for="app in favorites.slice(0,capacity)" :key="app.id" @click="activate(app)" :title="t(app.zh,app.en)+(entryAvailability(app)==='available'?'':' · '+availabilityText(app))" :data-favorite-app="app.id" :data-availability="entryAvailability(app)"><span class="application-icon" :class="app.tone"><ApplicationArtwork :app="app"/><i v-if="app.tool==='firmware'&&systemStore.checkUpdate?.needUpdate" class="launcher-update-dot" :aria-label="t('有可用更新','Update available')"/></span><span><strong>{{t(app.zh,app.en)}}</strong><small v-if="entryAvailability(app)!=='available'">{{availabilityText(app)}}</small></span></button></div>
+      <div v-else class="applications-favorites" :style="{gridTemplateColumns:'repeat('+columns+', minmax(0,1fr))'}" :data-app-columns="columns" :data-app-capacity="capacity"><button v-for="app in favorites.slice(0,capacity)" :key="app.id" @click="activate(app)" :title="t(app.zh,app.en)+(entryAvailability(app)==='available'?'':' · '+availabilityText(app))" :data-favorite-app="app.id" :data-availability="entryAvailability(app)" :aria-busy="launchSource==='home'&&launchApp?.id===app.id&&launchStatus==='loading'"><span class="application-icon" :class="app.tone"><ApplicationArtwork :app="app"/><i v-if="launchSource==='home'&&launchApp?.id===app.id&&launchStatus==='loading'" class="home-entry-spinner" aria-hidden="true"/><i v-if="app.tool==='firmware'&&systemStore.checkUpdate?.needUpdate" class="launcher-update-dot" :aria-label="t('有可用更新','Update available')"/></span><span><strong>{{t(app.zh,app.en)}}</strong><small v-if="entryAvailability(app)!=='available'">{{availabilityText(app)}}</small></span></button></div>
+    <template v-if="launchSource==='home'&&launchApp&&favorites.some(app=>app.id===launchApp?.id)&&launchStatus!=='idle'">
+      <span v-if="launchStatus==='loading'" class="home-entry-announcement" role="status">{{t('正在打开：','Opening: ')+t(launchApp.zh,launchApp.en)}}</span>
+      <div v-else class="home-entry-error" role="status" data-home-entry-state><span>{{t(launchApp.zh,launchApp.en)}} · {{entryMessage}}</span><div><button @click="retryLaunch" data-home-entry-retry>{{t('重试','Retry')}}</button><button v-if="launchApp.path" @click="configureLaunch" data-home-entry-config>{{t('打开配置','Open settings')}}</button><button @click="dismissLaunch" :aria-label="t('关闭提示','Dismiss')" data-home-entry-dismiss>×</button></div></div>
+    </template>
     <div v-if="fallbackEntries.length" class="applications-fallback" data-applications-fallback><span>{{t('快捷操作','Quick actions')}}</span><button v-for="entry in fallbackEntries" :key="entry.path" @click="navigate(entry.path)" :data-home-entry="entry.path"><StudioGlyph :name="entry.glyph"/>{{t(entry.zh,entry.en)}}<StudioGlyph name="arrow"/></button></div>
   </section>
   <button v-else-if="!hostOnly" class="applications-collapsed" @click="openBrowser(false)" data-open-applications><StudioGlyph name="grid"/>{{t('应用工具','Apps & tools')}}</button>
@@ -44,14 +48,15 @@ import type {LauncherMemory,LauncherView} from './launcherRouteState'
 import {resolveAppEntry} from './appEntryClient'
 import appUtils from '../utils/app'
 import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
-import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
+import {computed,nextTick,onMounted,onUnmounted,ref,toRef,watch} from 'vue'
 import StudioGlyph from './HomeGlyph.vue'
 import ApplicationArtwork from './ApplicationArtwork.vue'
 import WidgetMenu from './WidgetMenu.vue'
 type QuickEntrance={path:string;zh:string;en:string;glyph:string}
 import {applicationDefaults,type HomeApplication} from './homeApplications'
 import LauncherFavoriteGrid from './LauncherFavoriteGrid.vue'
-import {registerLauncherBrowser,requestLauncherBrowser,requestLauncherApp} from './launcherBrowserHost'
+import {registerLauncherBrowser,requestLauncherBrowser,requestLauncherApp,cancelLauncherApp,launcherActivation,type ActivationSource} from './launcherBrowserHost'
+import {useHomeEntryReturn} from './useHomeEntryReturn'
 import {useLauncherCatalog} from './launcherContext'
 const {entryAvailability,homeApplicationSession,linkSession,saving}=useLauncherCatalog()
 import {PAGE_SIZE,queryLibrary} from './launcherLibrary'
@@ -75,22 +80,25 @@ const linkCount=computed(()=>linkSession.entries.length)
 const editorColumns=ref(window.innerWidth<650?2:4)
 const provider=useLauncherCatalog(),catalogueState=computed(()=>provider.state.status),catalogue=provider.catalogue
 const activeTool=ref<HomeApplication|null>(null),unavailableApp=ref<HomeApplication|null>(null),systemStore=useSystemStore()
-const launchApp=ref<HomeApplication|null>(null),launchStatus=ref('idle')
-let entryController:AbortController|undefined,activationGeneration=0,activationAlive=true
+const launchApp=toRef(launcherActivation,'app'),launchStatus=toRef(launcherActivation,'status'),launchSource=toRef(launcherActivation,'source')
+let entryController:AbortController|undefined,activationGeneration=0,activationAlive=true,ownsActivation=false
+const homeReturn=useHomeEntryReturn(!!props.hostOnly,()=>!provider.preferencesLoading()&&provider.state.status!=='loading')
 const entryMessage=computed(()=>launchStatus.value==='timeout'?t('打开应用超时，请重试。','Opening timed out. Please retry.'):launchStatus.value==='permission'?t('没有解析入口的权限，请重新登录后重试。','No permission to resolve this entry. Sign in and retry.'):t('暂时无法打开，请重试或打开配置。','Unable to open now. Retry or open settings.'))
-function cancelLaunch(){activationGeneration++;entryController?.abort();entryController=undefined;launchStatus.value='idle';launchApp.value=null}
+function cancelLaunch(){if(!ownsActivation)return;activationGeneration++;entryController?.abort();entryController=undefined;launchStatus.value='idle';launchApp.value=null;ownsActivation=false}
+function dismissLaunch(){cancelLauncherApp();cancelLaunch()}
 function retryLaunch(){if(launchApp.value)void activate(launchApp.value)}
-function configureLaunch(){if(launchApp.value)void launchInstalled({...launchApp.value,entryScript:false})}
-async function launchInstalled(app:HomeApplication){
+function configureLaunch(){if(!launchApp.value)return;const app={...launchApp.value,entryScript:false};if(launchSource.value==='home'&&!props.collapsed&&requestLauncherApp(app))return;void launchInstalled(app,launchSource.value)}
+async function launchInstalled(app:HomeApplication,source:ActivationSource='browser'){
  if(launchStatus.value==='loading'&&launchApp.value?.id===app.id)return
- cancelLaunch();const generation=activationGeneration,current=new AbortController();entryController=current;launchApp.value=app
+ cancelLaunch();ownsActivation=true;const generation=activationGeneration,current=new AbortController();entryController=current;launchApp.value=app;launchSource.value=source
+ const valid=()=>activationAlive&&generation===activationGeneration&&!current.signal.aborted&&(source==='browser'?browserOpen.value:!browserOpen.value&&!document.querySelector('.ordered-editing')&&homeApplicationSession.favorites.includes(app.id)&&!!document.querySelector('[data-favorite-app="'+CSS.escape(app.id)+'"]'))
  let timedOut=false;const timer=window.setTimeout(()=>{timedOut=true;current.abort()},5000)
  if(app.entryScript)launchStatus.value='loading'
  try{
   const target=await resolveAppEntry(app,window.location.href,current.signal)
-  if(!activationAlive||generation!==activationGeneration||current.signal.aborted||!browserOpen.value)return
-  await navigation.remember(app.id)
-  if(activationAlive&&generation===activationGeneration&&!current.signal.aborted&&browserOpen.value)window.location.assign(target)
+  if(!valid())return
+  if(source==='browser')await navigation.remember(app.id);else homeReturn.remember(app.id)
+  if(valid())window.location.assign(target)
  }catch(error){if(activationAlive&&generation===activationGeneration)launchStatus.value=timedOut?'timeout':error instanceof Error&&error.message==='permission'?'permission':'error'}finally{window.clearTimeout(timer)}
 }
 const favorites=computed(()=>homeApplicationSession.favorites.map(provider.resolve))
@@ -115,13 +123,14 @@ async function activate(app:HomeApplication){
  if(entryAvailability(app)!=='available'){unavailableApp.value=app;return}
  if(app.kind==='link'){window.open(app.path,'_blank','noopener,noreferrer');return}
 }
-async function launchPinned(app:HomeApplication){await openBrowser(false);browserTab.value='apps';await nextTick();await navigation?.persist();await activate(app)}
+async function launchPinned(app:HomeApplication){if(entryAvailability(app)!=='available'){unavailableApp.value=app;return}await launchInstalled(app,'home')}
 let opener:HTMLElement|null=null,bodyOverflow='',inerted:HTMLElement[]=[],browserNetwork:Record<string,any>|undefined,unregisterBrowser:(()=>void)|undefined
 function startEditing(){if(!provider.begin())return;cancelLaunch();editing.value=true;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[]}
 async function openBrowser(edit:boolean){if(edit&&!provider.editable())return;if(!props.collapsed&&requestLauncherBrowser(edit,props.network))return;if(document.querySelector('.ordered-editing'))return;if(props.hostOnly)await navigation?.open(edit);else await showBrowser(edit,{tab:'all',page:1},{v:1,search:'',scroll:0,focus:''})}
 async function showBrowser(edit:boolean,view:LauncherView,memory:LauncherMemory){
  if(browserOpen.value){browserTab.value=view.tab;search.value=memory.search;libraryPage.value=view.page;if(edit)startEditing();return}
  if(document.querySelector('[data-applications-browser]'))return
+ cancelLaunch()
  opener=document.activeElement as HTMLElement;if(edit)provider.begin();editing.value=edit;search.value=memory.search;browserTab.value=view.tab;libraryPage.value=view.page;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[];bodyOverflow=document.body.style.overflow;document.body.style.overflow='hidden';browserOpen.value=true
  await nextTick();const root=document.querySelector('.canvas-home');inerted=Array.from(root?.children||[]).filter((node):node is HTMLElement=>node instanceof HTMLElement&&!node.matches('.applications-browser,.applications-backdrop')&&!node.hasAttribute('inert'));inerted.forEach(node=>node.setAttribute('inert',''));document.querySelector<HTMLButtonElement>('.applications-close')?.focus()
 }
@@ -136,11 +145,11 @@ async function navigate(path:string){if(unsaved.value||saving())return;await nav
 const unsaved=computed(()=>browserOpen.value&&(linkFormOpen.value||editing.value&&draft.value.join('|')!==homeApplicationSession.favorites.join('|')))
 function beforeUnload(event:BeforeUnloadEvent){if(unsaved.value||saving()){event.preventDefault();event.returnValue=''}}
 const navigation=useLauncherRoute({enabled:!!props.hostOnly,opened:browserOpen,tab:browserTab,page:libraryPage,search,dirty:unsaved,saving,show:showBrowser,hide:hideBrowser,confirm:()=>window.confirm(t('尚有未保存的入口修改，确定离开？','Leave without saving shortcut changes?')),settled:()=>provider.state.status!=='loading'&&!provider.preferencesLoading(),currentPage:()=>query.value.current})
-function keyboard(event:KeyboardEvent){if(!browserOpen.value)return;if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();if(linkFormOpen.value)void cancelLink();else closeBrowser();return}if(event.key==='Tab'){const controls=Array.from(document.querySelectorAll<HTMLElement>('.applications-browser button:not(:disabled),.applications-browser input:not(:disabled)')).filter(node=>node.getClientRects().length);const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}}}
+function keyboard(event:KeyboardEvent){if(!browserOpen.value){if(event.key==='Escape'&&launchSource.value==='home'&&launchStatus.value!=='idle'){event.preventDefault();event.stopImmediatePropagation();dismissLaunch()}return}if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();if(linkFormOpen.value)void cancelLink();else closeBrowser();return}if(event.key==='Tab'){const controls=Array.from(document.querySelectorAll<HTMLElement>('.applications-browser button:not(:disabled),.applications-browser input:not(:disabled)')).filter(node=>node.getClientRects().length);const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}}}
 function resizeEditor(){editorColumns.value=window.innerWidth<650?2:4}
 function visibility(){if(document.hidden){cancelLaunch();activeTool.value=null;unavailableApp.value=null;linkTarget.value=null}}
 onMounted(()=>window.addEventListener('pagehide',cancelLaunch))
 onUnmounted(()=>{activationAlive=false;cancelLaunch();window.removeEventListener('pagehide',cancelLaunch)})
-onMounted(()=>{window.addEventListener('beforeunload',beforeUnload);if(props.collapsed)unregisterBrowser=registerLauncherBrowser((edit,network)=>{browserNetwork=network;void openBrowser(edit)},app=>{void launchPinned(app)});document.addEventListener('keydown',keyboard,true);document.addEventListener('visibilitychange',visibility);window.addEventListener('resize',resizeEditor);if(hub.value){hubObserver=new ResizeObserver(()=>{const box=hub.value!.getBoundingClientRect();hubWidth.value=box.width;hubHeight.value=box.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{window.removeEventListener('beforeunload',beforeUnload);unregisterBrowser?.();hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resizeEditor);if(browserOpen.value)releaseModal()})
+onMounted(()=>{window.addEventListener('beforeunload',beforeUnload);if(props.collapsed)unregisterBrowser=registerLauncherBrowser((edit,network)=>{browserNetwork=network;void openBrowser(edit)},app=>{void launchPinned(app)},cancelLaunch);document.addEventListener('keydown',keyboard,true);document.addEventListener('visibilitychange',visibility);window.addEventListener('resize',resizeEditor);if(hub.value){hubObserver=new ResizeObserver(()=>{const box=hub.value!.getBoundingClientRect();hubWidth.value=box.width;hubHeight.value=box.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{window.removeEventListener('beforeunload',beforeUnload);unregisterBrowser?.();hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resizeEditor);if(browserOpen.value)releaseModal()})
 </script>
 <style src="./homeApplications.css" scoped></style>
