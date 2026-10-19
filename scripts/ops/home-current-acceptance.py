@@ -94,6 +94,9 @@ try:
     if os.environ.get('QS_ACCEPT_LAUNCHER_ENTRY') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/launcher-entry-review.cjs'
         env['QS_ENTRY_EVIDENCE'] = str(OUT.resolve() / 'launcher-entry')
+    if os.environ.get('QS_ACCEPT_PINNED_ENTRY') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/pinned-entry-review.cjs'
+        env['QS_PINNED_EVIDENCE'] = str(OUT.resolve() / 'pinned-entry')
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:
