@@ -5,10 +5,23 @@ assert.equal(process.env.QS_ACCEPT_HOST,'192.168.30.244');
 const out=process.env.QS_REFRESH_EVIDENCE;fs.mkdirSync(out,{recursive:true});const report={result:'running',checks:[],errors:[],runs:[]};let browser,page;
 const base='http://192.168.30.244',home=base+'/cgi-bin/luci/admin/quickstart/',mode=process.env.QS_REFRESH_MODE||'saved';report.mode=mode;
 (async()=>{try{
- browser=await chromium.launch();const context=await browser.newContext({viewport:{width:process.env.QS_ACCEPT_TOUCH==='1'?390:1440,height:900},hasTouch:process.env.QS_ACCEPT_TOUCH==='1',locale:process.env.QS_ACCEPT_LANGUAGE==='en'?'en-US':'zh-CN'});
+ const width=Number(process.env.QS_ACCEPT_WIDTH||(process.env.QS_ACCEPT_TOUCH==='1'?390:1440));assert.ok([320,390,1440].includes(width));
+ browser=await chromium.launch();const context=await browser.newContext({viewport:{width,height:900},hasTouch:process.env.QS_ACCEPT_TOUCH==='1',locale:process.env.QS_ACCEPT_LANGUAGE==='en'?'en-US':'zh-CN'});
+ if(process.env.QS_ACCEPT_THEME==='dark')await context.addInitScript(()=>{const observer=new MutationObserver(()=>{if(document.body){document.body.setAttribute('theme','dark');observer.disconnect()}});observer.observe(document,{childList:true,subtree:true})});
  await context.addCookies([{name:'sysauth_http',value:process.env.QS_ACCEPT_SID,domain:'192.168.30.244',path:'/'}]);
  if(process.env.QS_REFRESH_HIDE_BANNERS==='1'){report.probe='hide-config-banners';await context.addInitScript(()=>{const observer=new MutationObserver(()=>{if(document.head){const style=document.createElement('style');style.textContent='.home-config-state{display:none!important}';document.head.append(style);observer.disconnect()}});observer.observe(document,{childList:true,subtree:true})})}
- await context.addInitScript(()=>{if(!location.pathname.includes('/admin/quickstart'))return;window.__refreshFrames=[];let n=0,last='';function frame(){const shown=node=>!!node&&node.getClientRects().length>0&&getComputedStyle(node).visibility!=='hidden';const cards=Array.from(document.querySelectorAll('[data-layout-card]')).filter(shown),bar=document.querySelector('.home-utility-bar'),first=cards[0];const row={time:Math.round(performance.now()),banners:Array.from(document.querySelectorAll('[data-config-domain]')).filter(shown).map(node=>({domain:node.getAttribute('data-config-domain'),text:node.innerText})),cards:cards.map(node=>({id:node.getAttribute('data-layout-card'),top:node.getBoundingClientRect().top+scrollY,height:node.getBoundingClientRect().height})),firstTop:first?.getBoundingClientRect().top,bootstrap:!!document.querySelector('[data-home-bootstrap]')};const key=JSON.stringify({...row,time:0});if(key!==last){last=key;window.__refreshFrames.push(row)}if(++n<240)requestAnimationFrame(frame)}requestAnimationFrame(frame)});
+ await context.addInitScript(()=>{
+  if(!location.pathname.includes('/admin/quickstart'))return;window.__refreshFrames=[];let n=0,last='';
+  function frame(){
+   const shown=node=>!!node&&node.getClientRects().length>0&&getComputedStyle(node).visibility!=='hidden';
+   const cards=Array.from(document.querySelectorAll('[data-layout-card]')).filter(shown),first=cards[0];
+   const row={time:Math.round(performance.now()),banners:Array.from(document.querySelectorAll('[data-config-domain]')).filter(shown).map(node=>({domain:node.getAttribute('data-config-domain'),text:node.innerText})),cards:cards.map(node=>({id:node.getAttribute('data-layout-card'),top:node.getBoundingClientRect().top+scrollY,height:node.getBoundingClientRect().height})),firstTop:first?.getBoundingClientRect().top,bootstrap:!!document.querySelector('[data-home-bootstrap]'),empty:shown(document.querySelector('.ordered-empty'))};
+   const key=JSON.stringify({...row,time:0});if(key!==last){last=key;window.__refreshFrames.push(row)}
+   // Include the actual 8-second request deadline, while remaining bounded.
+   if(++n<720)requestAnimationFrame(frame)
+  }
+  requestAnimationFrame(frame)
+ });
  page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));
  const mutations=[];page.on('request',r=>{if(r.url().includes('/home/v1/')&&r.method()!=='GET')mutations.push(r.method())});
  if(process.env.QS_REFRESH_DELAY==='1')await page.route('**/cgi-bin/luci/istore/home/v1/*/',async route=>{if(route.request().method()==='GET')await new Promise(resolve=>setTimeout(resolve,1200));await route.continue()});
