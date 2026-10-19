@@ -4,7 +4,7 @@
    <span>{{statusText(domain)}}</span><button v-if="!config.state[domain].loading&&!config.state[domain].saving" @click="config.read(domain)">{{t('重新读取','Reload')}}</button><button v-if="!editing&&['backup','damaged'].includes(config.state[domain].snapshot?.state||'')" :disabled="config.state[domain].saving" @click="recover(domain)">{{config.state[domain].snapshot?.state==='backup'?t('恢复有效备份','Restore valid backup'):t('保留损坏文件并恢复默认','Keep damaged file and restore defaults')}}</button>
   </div></template>
   <template #widget="slot"><HomeWidget v-bind="slot" :data="model.data" :errors="model.errors" :devices="model.devices.value" :theme="theme" contained @navigate="navigate" @device="openDevice" @retry="model.invalidate(slot.id)"/></template>
-  <template #launcher><HomeApplications collapsed host-only :fallback-entries="[]" :network="model.data.network" @navigate="navigate"/></template>
+  <template #launcher><HomeApplications collapsed host-only :fallback-entries="[]" :network="model.data.network" :return-ready="returnReady" @navigate="navigate"/></template>
  </HomeLayout>
 </template>
 <script setup lang="ts">
@@ -29,6 +29,7 @@ function statusText(domain:ConfigDomain){const s=config.state[domain];return (do
 function recover(domain:ConfigDomain){if(window.confirm(t('将保留损坏文件，恢复此项配置；其他设置不变。确定继续？','Keep the damaged file and restore this setting? Other settings are unchanged.')))void config.recover(domain)}
 function layoutEditing(value:boolean){editing.value=value;if(value)config.begin('layout')}
 const saveLayout=(value:LayoutConfig)=>config.save('layout',value)
+function returnReady(widgets:readonly string[]){return !config.state.layout.loading&&model.initialSettled(widgets)}
 function navigate(path:string){if(editing.value)return;if(path.startsWith('/cgi-bin/'))window.location.assign(path);else void router.push(path)}
 function openDevice(id:string){if(!editing.value)void router.push({path:'/devicemanagement',query:{device:id}})}
 let observer:MutationObserver|undefined

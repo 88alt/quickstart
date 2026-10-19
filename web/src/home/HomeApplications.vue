@@ -65,7 +65,7 @@ import LauncherToolAction from './LauncherToolAction.vue'
 import {useNetworkStore,useSystemStore} from '../plugins/store'
 import NetworkWidgetDialog from './NetworkWidgetDialog.vue'
 import {resolvePresentation,type WidgetPreference} from './layout/widgetPresentation'
-const props=defineProps<{collapsed:boolean;hostOnly?:boolean;fallbackEntries:QuickEntrance[];contained?:boolean;preference?:WidgetPreference;natural?:boolean;network?:any}>()
+const props=defineProps<{collapsed:boolean;hostOnly?:boolean;fallbackEntries:QuickEntrance[];contained?:boolean;preference?:WidgetPreference;natural?:boolean;network?:any;returnReady?:(widgets:readonly string[])=>boolean}>()
 const emit=defineEmits<{(e:'navigate',path:string):void;(e:'close'):void}>()
 const hub=ref<HTMLElement|null>(null),hubWidth=ref(600),hubHeight=ref(240)
 const resolved=computed(()=>resolvePresentation('applications',props.preference||{mode:'auto',iconRows:0},{width:hubWidth.value,height:props.natural?100000:hubHeight.value,role:'ordinary',favoriteCount:favorites.value.length,mobile:hubWidth.value<650,natural:props.natural}))
@@ -82,7 +82,7 @@ const provider=useLauncherCatalog(),catalogueState=computed(()=>provider.state.s
 const activeTool=ref<HomeApplication|null>(null),unavailableApp=ref<HomeApplication|null>(null),systemStore=useSystemStore()
 const launchApp=toRef(launcherActivation,'app'),launchStatus=toRef(launcherActivation,'status'),launchSource=toRef(launcherActivation,'source')
 let entryController:AbortController|undefined,activationGeneration=0,activationAlive=true,ownsActivation=false
-const homeReturn=useHomeEntryReturn(!!props.hostOnly,()=>!provider.preferencesLoading()&&provider.state.status!=='loading')
+const homeReturn=useHomeEntryReturn(!!props.hostOnly,()=>!provider.preferencesLoading()&&provider.state.status!=='loading',widgets=>props.returnReady?.(widgets)??true)
 const entryMessage=computed(()=>launchStatus.value==='timeout'?t('打开应用超时，请重试。','Opening timed out. Please retry.'):launchStatus.value==='permission'?t('没有解析入口的权限，请重新登录后重试。','No permission to resolve this entry. Sign in and retry.'):t('暂时无法打开，请重试或打开配置。','Unable to open now. Retry or open settings.'))
 function cancelLaunch(){if(!ownsActivation)return;activationGeneration++;entryController?.abort();entryController=undefined;launchStatus.value='idle';launchApp.value=null;ownsActivation=false}
 async function dismissLaunch(){const id=launchSource.value==='home'?launchApp.value?.id:undefined;cancelLauncherApp();cancelLaunch();await nextTick();if(id)document.querySelector<HTMLElement>('[data-favorite-app="'+CSS.escape(id)+'"]')?.focus({preventScroll:true})}

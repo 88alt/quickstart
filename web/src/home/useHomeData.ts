@@ -51,8 +51,14 @@ export function useHomeData(visible:Ref<WidgetId[]>){
  function refresh(force=false){for(const c of channels){if(!wanted(c))clear(c.id);else if(force||!timers.has(c.id)&&!pending.has(c.id)&&(c.seconds>0||!updated[c.id]&&!errors[c.id]))void load(c)}}
  function visibility(){for(const c of channels)clear(c.id);if(!document.hidden)refresh(true)}
  function invalidate(id?:WidgetId){for(const c of channels)if(!id||c.widgets.includes(id))void load(c)}
+ // A return anchor needs only the first outcome of the widgets above/in its
+ // row. This does not gate rendering or wait for unrelated cards below it.
+ function initialSettled(widgets:readonly string[]){return channels.every(c=>{
+  const consumers=c.id==='network'?['traffic','connection','devices']:c.widgets
+  return !consumers.some(id=>widgets.includes(id))||data[c.id]!==undefined||!!errors[c.id]
+ })}
  watch(()=>[...visible.value].sort().join(','),()=>refresh())
  onMounted(()=>{active=true;refresh();document.addEventListener('visibilitychange',visibility)})
  onUnmounted(()=>{active=false;for(const c of channels)clear(c.id);document.removeEventListener('visibilitychange',visibility)})
- return {data,errors,updated,devices:computed(()=>buildDeviceListItems(data.inventory?.devices||[])),invalidate}
+ return {data,errors,updated,devices:computed(()=>buildDeviceListItems(data.inventory?.devices||[])),invalidate,initialSettled}
 }

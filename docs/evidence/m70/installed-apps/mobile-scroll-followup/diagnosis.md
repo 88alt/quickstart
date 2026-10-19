@@ -17,3 +17,7 @@ probe-anchor唯一改变是在测试浏览器中禁用CSS锚定，旧恢复逻�
 单变量probe-measure-guard只在每行设置/移除data-size-measuring之间临时设置html overflow-anchor:none!important，并精确还原原值/priority；不增加几何读取、不改恢复逻辑。B同一完整pinned脚本全部11组通过，首次模拟及真实KSpeeder返回均保持原scroll（原始report.json留在round-1/probe-measure-guard）。这定位了临时测量引起的锚定副作用。
 
 第二候选将该保护放入正式useNaturalSizing.measure的同步try/finally，覆盖后续业务数据更新。保留原先有界返回owner和用户中断清理，避免常驻禁用锚定、固定补偿8px、滚动轮询。正式验收移除浏览器测量补丁，不使用任何放宽scroll断言的选项。
+
+第二候选d246cfd本地21组、B390英文/320英文/1440中文各11组均通过，但重新运行原minimized仍失败1020→1028，因此不算收口。trace-rows增加读数后通过，属于观察改变时序；读数显示connection从240.96875增到249.59375（8.625px），应用上方行随之移动。仅延迟既有network/status响应1200ms的delayed-network再次稳定复现1028，其他请求/恢复代码不变。几帧稳定不能代表尚未完成的首轮读取已结束。
+
+第三候选：数据owner提供initialSettled，只读判断各控件依赖通道是否有成功或失败结果；返回owner根据目标所在行及上方控件订阅该就绪状态（包含网络数据与布局配置首读），再检查几何稳定。没有新请求、Promise.all首屏阻塞或常驻RAF；等待结果时不轮询，依赖变化由Vue watch唤醒。下方无关磁盘/服务不阻塞返回，10秒总截止、用户输入取消、目标消失与样式/历史清理仍保留。以延迟network和下方disk的严格用例验证，不能用上轮完整路径偶然通过替代。
