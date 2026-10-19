@@ -31,7 +31,7 @@ export async function mount() {
   app.use(installComponents).use(createPinia())
   const router=createRouter({ history:createWebHistory('/'),routes:[{path:'/',component:HomePreview},{path:'/devicemanagement',component:DevicePreview},{path:'/:pathMatch(.*)*',component:DestinationPreview}] })
   router.beforeEach((to,from)=>{
-    const keys=['layout','variant','scenario','authority','theme','lang','tools']
+    const keys=['layout','variant','scenario','authority','theme','lang','tools','palette']
     const query={...to.query};let changed=false
     for(const key of keys)if(query[key]===undefined&&from.query[key]!==undefined){query[key]=from.query[key];changed=true}
     if(changed)return {path:to.path,query,replace:true}
