@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import {computed,onMounted,onUnmounted,provide,ref} from 'vue'
 import {nativePreviewScope} from './nativePreviewScope'
+import {widgetContext} from '../home/widgetContext'
 import Disk from '../pages/index/info/DiskInfo.vue'
 import Sharing from '../pages/index/Storage/index.vue'
 import Docker from '../pages/index/info/Docker.vue'
@@ -19,6 +20,7 @@ import type {WidgetId} from './rowLayout'
 const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>;unbounded?:boolean;compact?:boolean}>()
 const emit=defineEmits<{(e:'retry'):void;(e:'details'):void}>()
 const surface=ref<HTMLElement|null>(null)
+provide(widgetContext,{data:props.data,bounded:()=>!props.unbounded,details:()=>emit('details'),invalidate:()=>emit('retry')})
 provide(nativePreviewScope,{id:props.id,get preview(){return !props.unbounded},get compact(){return !!props.compact},surface:()=>surface.value,data:()=>props.data,errors:()=>props.errors,details:()=>emit('details')})
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,visible=ref(!document.hidden),visibility=()=>visible.value=!document.hidden
 const components:Record<string,any>={storage:Disk,sharing:Sharing,docker:Docker,downloads:Download,remote:Remote,system:System},component=computed(()=>components[props.id])

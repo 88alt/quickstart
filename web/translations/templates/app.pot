@@ -1,5 +1,12 @@
 msgid ""
 msgstr ""
+
+msgid "已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。"
+msgstr ""
+
+msgid "已安装限速服务，但当前执行方式不可用；请在下方高级设置中查看服务状态，选择后预览。"
+msgstr ""
+
 "Content-Type: text/plain; charset=UTF-8\n"
 
 #: src/components/action-docker/index.vue:23

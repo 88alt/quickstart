@@ -23,6 +23,13 @@ test('policy capabilities gate only their own controls', () => {
     assert.equal(policyUnavailableReason(policy, 'access'), '请先在全局设置中启用该能力')
 })
 
+test('installed alternative does not present the selected missing provider as an install task', () => {
+    const current = { ...policy, capabilities: { ...policy.capabilities, speed: { state: 'error', reason: 'selected_provider_unavailable' } } }
+    assert.equal(policyAvailable(current, 'speed'), false)
+    assert.equal(policyUnavailableReason(current, 'speed'), '已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。')
+    assert.equal(policyAvailable(current, 'static'), true)
+})
+
 test('policy summaries and dangerous confirmation suffix are deterministic', () => {
     assert.deepEqual(policyLabelsFromPolicy(policy), ['static', 'blocked'])
     assert.equal(policyMacSuffix(policy.mac), 'EEFF')

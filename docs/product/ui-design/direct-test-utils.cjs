@@ -1,6 +1,6 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const capture=require('./ordered-capture.cjs');
-const base='http://192.168.9.19:5180';
+const base=process.env.QS_DESIGN_BASE_URL||'http://192.168.9.19:5180';
 async function run(stage,work){
  const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||`docs/evidence/m66/direct-edit/${stage}`);fs.mkdirSync(root,{recursive:true});
  const attempt=1+fs.readdirSync(root).filter(f=>/^attempt-\d+\.json$/.test(f)).length;

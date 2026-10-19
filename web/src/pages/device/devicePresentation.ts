@@ -1,4 +1,4 @@
-import type { DeviceListItem, InventoryDevice } from './deviceInventory'
+import type { DeviceListItem, InventoryAddress, InventoryDevice } from './deviceInventory'
 import type { DeviceScene } from './deviceScene'
 type Translate = (text: string) => string
 
@@ -16,3 +16,17 @@ export const deviceDisplayName = (device: DeviceListItem, t: Translate): string 
 }
 export const devicePresenceLabel = (device: Pick<InventoryDevice,'presenceState'|'online'>, t: Translate): string =>
     device.presenceState === 'never_seen' ? t('尚未上线') : device.online ? t('在线') : t('离线')
+
+// A compact home projection must not mistake primaryAddress's historical
+// fallback for a current IP. Stable identity/navigation still uses deviceId.
+export const deviceHomeAddress = (device: Pick<InventoryDevice,'addresses'|'mac'|'deviceId'>, t: Translate) => {
+    const choose = (items: InventoryAddress[]) => items.find(a=>a.family===4&&a.primary)
+        || items.find(a=>a.family===4) || items.find(a=>a.primary) || items[0]
+    const compact = (value: string) => value.length>20 ? `${value.slice(0,6)}…${value.slice(-9)}` : value
+    const current = choose(device.addresses.current)
+    if(current) return {kind:'current' as const,text:compact(current.address),description:`${t('当前IP')}：${current.address}`}
+    const historical = choose(device.addresses.historical)
+    if(historical) return {kind:'historical' as const,text:`${t('历史')} ${compact(historical.address)}`,description:`${t('历史地址')}：${historical.address}`}
+    if(device.mac) return {kind:'mac' as const,text:device.mac,description:`${t('MAC地址')}：${device.mac}`}
+    return {kind:'identity' as const,text:`ID · ${device.deviceId.slice(-8)}`,description:`${t('地址待确认')} · ID：${device.deviceId}`}
+}

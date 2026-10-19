@@ -158,10 +158,10 @@ const selectedSpeedProvider = computed(() => speedProviders.value.find((provider
 const bandixProvider = computed(() => speedProviders.value.find((provider:any) => provider.id === 'bandix'))
 const currentSpeedProvider = computed(() => globalData.value?.speedLimit?.provider || '')
 const speedProviderReady = computed(() => Boolean(selectedSpeedProvider.value?.available))
-const canInstallSpeedProvider = computed(() => selectedSpeedProvider.value?.reason === 'dependency_not_installed')
+const canInstallSpeedProvider = computed(() => selectedSpeedProvider.value?.reason === 'dependency_not_installed' && !speedProviders.value.some((provider:any) => provider.id === 'quickstart-native' && provider.installed))
 const providerLabel = (id:string) => ({'quickstart-native':$gettext('智能设备限速（推荐）'),bandix:$gettext('现有 Bandix（仅用于迁移）'),eqos:$gettext('兼容模式（按 IPv4）')} as Record<string,string>)[id] || id
 const providerReason = (reason:string) => ({dependency_not_installed:$gettext('未安装'),kernel_not_supported:$gettext('系统内核不支持'),engine_unavailable:$gettext('服务未运行'),interface_not_supported:$gettext('版本不兼容')} as Record<string,string>)[reason] || $gettext('当前不可用')
-const speedProviderGuidance = computed(() => speed.provider === 'quickstart-native' ? $gettext('Quickstart 限速服务未就绪。请安装或启动服务后重新检查；系统不会自动改用其他方式。') : $gettext('当前执行方式不可用，请先安装或启用对应服务。'))
+const speedProviderGuidance = computed(() => speedCapability.value.reason === 'selected_provider_unavailable' ? $gettext('已安装限速服务，但当前执行方式不可用；请在下方高级设置中查看服务状态，选择后预览。') : speed.provider === 'quickstart-native' ? $gettext('Quickstart 限速服务未就绪。请安装或启动服务后重新检查；系统不会自动改用其他方式。') : $gettext('当前执行方式不可用，请先安装或启用对应服务。'))
 const providerDescription = computed(() => speed.provider === 'quickstart-native' ? $gettext('按设备身份同时覆盖 IPv4 与 IPv6，并验证规则是否真正生效。') : speed.provider === 'bandix' ? $gettext('仅用于查看和迁移现有规则，不再作为新规则的默认执行方式。') : $gettext('资源占用较低，按固定 IPv4 执行。'))
 const routeEditable = computed(() => Boolean(routerContext.value?.routeEditability?.editable))
 const replacementRequired = computed(() => pendingRoutePlan.value?.error?.code === 'replacement_required')

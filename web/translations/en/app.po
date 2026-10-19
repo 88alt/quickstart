@@ -7168,3 +7168,9 @@ msgstr "Default path"
 
 #~ msgid "配置"
 #~ msgstr "Configure"
+
+msgid "已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。"
+msgstr "The speed limit service is installed, but the selected enforcement mode is unavailable. Choose and preview a mode in LAN settings."
+
+msgid "已安装限速服务，但当前执行方式不可用；请在下方高级设置中查看服务状态，选择后预览。"
+msgstr "The speed limit service is installed, but the selected mode is unavailable. Review service status in the advanced settings below, then choose and preview a mode."

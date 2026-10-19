@@ -198,6 +198,8 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useGettext } from '/@/plugins/i18n'
 import request from '/@/request'
+import {useRoute} from 'vue-router'
+const route=useRoute()
 import LoadError from './components/loadError.vue'
 import PageState from './components/pageState.vue'
 import DeviceProfileEditor from './components/deviceProfileEditor.vue'
@@ -440,6 +442,8 @@ const handleVisibility = () => {
 
 onMounted(async () => {
     await load()
+    const requested=typeof route.query.device==='string'?route.query.device:''
+    if(requested){const target=devices.value.find(device=>device.deviceId===requested);if(target){filter.value='all';await openDetails(target)}}
     document.addEventListener('visibilitychange', handleVisibility)
     loadTelemetry()
 })

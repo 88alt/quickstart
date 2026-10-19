@@ -98,6 +98,7 @@ const emit = defineEmits<{ (event: 'saved', labels: string[]): void }>()
 const { $gettext } = useGettext()
 
 const translatePolicyMessage = (message: string): string => ({
+    '已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。': $gettext('已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。'),
     '所需组件尚未安装': $gettext('所需组件尚未安装'),
     '请先在全局设置中启用该能力': $gettext('请先在全局设置中启用该能力'),
     '当前暂不可用': $gettext('当前暂不可用'),

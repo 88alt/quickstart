@@ -3,7 +3,7 @@ set -eu
 
 # This script runs on the OpenWrt target. Keep it dependency-light and pass
 # every deployment-specific value as a positional argument.
-[ "$#" -eq 16 ] || {
+[ "$#" -eq 16 ] || [ "$#" -eq 18 ] || {
     echo "usage: $0 RELEASE_ID BINARY_TMP WEB_ZIP_TMP BINARY WEB_DIR TEMPLATE BACKUP_ROOT SERVICE BINARY_SHA INDEX_SHA EN_SHA ASSET_VERSION HEALTH_URL STAGE_ROOT HEALTH_ATTEMPTS CONFIG_ROOT" >&2
     exit 2
 }
@@ -25,6 +25,8 @@ health_url="$4"
 stage_root="$5"
 health_attempts="$6"
 config_root="$7"
+expected_style_sha="${8:-}"
+expected_vendor_sha="${9:-}"
 
 case "$release_id:$asset_version" in
     *[!A-Za-z0-9._:-]*) echo "invalid release or asset version" >&2; exit 2 ;;
@@ -82,15 +84,34 @@ actual_en_sha="$(sha256sum "${stage_web}/i18n/en.json" | cut -d ' ' -f1)"
 [ "$actual_binary_sha" = "$expected_binary_sha" ]
 [ "$actual_index_sha" = "$expected_index_sha" ]
 [ "$actual_en_sha" = "$expected_en_sha" ]
+[ -z "$expected_style_sha" ] || [ "$(sha256sum "${stage_web}/style.css" | cut -d ' ' -f1)" = "$expected_style_sha" ]
+[ -z "$expected_vendor_sha" ] || [ "$(sha256sum "${stage_web}/vendor.js" | cut -d ' ' -f1)" = "$expected_vendor_sha" ]
 
 awk -v version="$asset_version" '
-    /^local asset_version = / {
-        print "local asset_version = \"" version "\""
-        replaced = 1
-        next
+    {
+        lines[NR] = $0
+        if ($0 ~ /^[[:space:]]*local asset_version = /) known = 1
+        if ($0 ~ /local jsonc = require/) anchor = NR
     }
-    { print }
-    END { if (!replaced) exit 42 }
+    END {
+        if (!known && !anchor) exit 42
+        for (i = 1; i <= NR; i++) {
+            line = lines[i]
+            if (line ~ /^[[:space:]]*local asset_version = /) {
+                sub(/local asset_version = .*/, "local asset_version = \"" version "\"", line)
+                print line
+                continue
+            }
+            # The pre-versioned LuCI template has exactly these three assets.
+            # Keep its system header/footer; only retire their fixed cache keys.
+            if (!known && line ~ /\/luci-static\/quickstart\//)
+                changed += gsub(/\?v=[A-Za-z0-9._-]+/, "?v=<%=asset_version%>", line)
+            print line
+            if (!known && i == anchor)
+                print "local asset_version = \"" version "\""
+        }
+        if (!known && changed != 3) exit 42
+    }
 ' "$remote_template" >"$template_next"
 chmod 0644 "$template_next"
 

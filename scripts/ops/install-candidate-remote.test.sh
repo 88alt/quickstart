@@ -20,6 +20,8 @@ prepare_fixture() {
     done
     printf 'new-binary\n' >"$fixture/new-binary"
     printf 'new-index\n' >"$fixture/input/luci-static/quickstart/index.js"
+    printf 'new-css\n' >"$fixture/input/luci-static/quickstart/style.css"
+    printf 'new-vendor\n' >"$fixture/input/luci-static/quickstart/vendor.js"
     printf '{"en":{"new":"New"}}\n' >"$fixture/input/luci-static/quickstart/i18n/en.json"
     (cd "$fixture/input" && zip -qr "$fixture/web.zip" luci-static)
     cat >"$fixture/service" <<'EOF'
@@ -44,13 +46,15 @@ run_installer() {
     binary_sha="$(sha256sum "$fixture/new-binary" | cut -d ' ' -f1)"
     index_sha="$(sha256sum "$fixture/input/luci-static/quickstart/index.js" | cut -d ' ' -f1)"
     en_sha="$(sha256sum "$fixture/input/luci-static/quickstart/i18n/en.json" | cut -d ' ' -f1)"
+    style_sha="${QUICKSTART_TEST_STYLE_SHA:-$(sha256sum "$fixture/input/luci-static/quickstart/style.css" | cut -d ' ' -f1)}"
+    vendor_sha="$(sha256sum "$fixture/input/luci-static/quickstart/vendor.js" | cut -d ' ' -f1)"
     QUICKSTART_TEST_SERVICE_STATE="$fixture/service.state" \
         "$SCRIPT_DIR/install-candidate-remote.sh" \
         "$release" "$fixture/new-binary" "$fixture/web.zip" \
         "$fixture/root/usr/sbin/quickstart" "$fixture/root/www/luci-static/quickstart" \
         "$fixture/root/usr/lib/lua/luci/view/quickstart/main.htm" "$fixture/backups" \
         "$fixture/service" "$binary_sha" "$index_sha" "$en_sha" "0.14.0-test" \
-        "$health" "$fixture/stage" "$attempts" "$fixture/root"
+        "$health" "$fixture/stage" "$attempts" "$fixture/root" "$style_sha" "$vendor_sha"
 }
 
 success_fixture="$test_root/success"
@@ -74,4 +78,41 @@ grep -Fqx 'old-index' "$rollback_fixture/root/www/luci-static/quickstart/index.j
 grep -Fq 'local asset_version = "old"' "$rollback_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
 [ "$(cat "$rollback_fixture/service.state")" = running ]
 
-echo 'candidate installer success and rollback ok'
+
+legacy_fixture="$test_root/legacy"
+prepare_fixture "$legacy_fixture"
+cat >"$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm" <<'EOF'
+<%+header%>
+local jsonc = require "luci.jsonc"
+window.vue_lang_data = '/luci-static/quickstart/i18n/<%=lang%>.json?v=0.8.17-r1';
+<script type="module" src="/luci-static/quickstart/index.js?v=0.8.17-r1"></script>
+<link href="/luci-static/quickstart/style.css?v=0.8.17-r1">
+<%+footer%>
+EOF
+run_installer "$legacy_fixture" legacy - 1 >/dev/null
+grep -Fq 'local asset_version = "0.14.0-test"' "$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
+[ "$(grep -c '?v=<%=asset_version%>' "$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm")" = 3 ]
+grep -Fq '<%+header%>' "$legacy_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
+grep -Fq '?v=0.8.17-r1' "$legacy_fixture/backups/legacy/main.htm"
+echo 'candidate installer modern/legacy success and rollback ok'
+
+css_fixture="$test_root/css-mismatch"
+prepare_fixture "$css_fixture"
+if QUICKSTART_TEST_STYLE_SHA=incorrect run_installer "$css_fixture" css-mismatch - 1 >/dev/null 2>&1; then
+    echo 'installer accepted mismatched CSS' >&2; exit 1
+fi
+grep -Fqx 'old-binary' "$css_fixture/root/usr/sbin/quickstart"
+echo 'CSS mismatch rejected before changing installed candidate'
+
+indented_fixture="$test_root/indented"
+prepare_fixture "$indented_fixture"
+cat >"$indented_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm" <<'EOF'
+<%+header%>
+    local jsonc = require "luci.jsonc"
+    local asset_version = "old"
+<%+footer%>
+EOF
+run_installer "$indented_fixture" indented - 1 >/dev/null
+[ "$(grep -c 'local asset_version =' "$indented_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm")" = 1 ]
+grep -Fqx '    local asset_version = "0.14.0-test"' "$indented_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
+echo 'Indented cache key updated without a shadowing declaration'

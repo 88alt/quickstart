@@ -20,10 +20,12 @@ done
 local_sha="$(sha256sum "$LOCAL_BINARY" | awk '{print $1}')"
 index_sha="$(unzip -p "$LOCAL_WEB_ZIP" luci-static/quickstart/index.js | sha256sum | awk '{print $1}')"
 en_sha="$(unzip -p "$LOCAL_WEB_ZIP" luci-static/quickstart/i18n/en.json | sha256sum | awk '{print $1}')"
+style_sha="$(unzip -p "$LOCAL_WEB_ZIP" luci-static/quickstart/style.css | sha256sum | awk '{print $1}')"
+vendor_sha="$(unzip -p "$LOCAL_WEB_ZIP" luci-static/quickstart/vendor.js | sha256sum | awk '{print $1}')"
 local_version="$("$LOCAL_BINARY" version --more 2>/dev/null || true)"
 project_version="$(project_version)"
 release_stamp="${DEPLOY_RELEASE:-${project_version}-$(git -C "$PROJECT_ROOT" rev-parse --short=12 HEAD)-$(date -u +%Y%m%d%H%M%S)}"
-asset_version="${ASSET_VERSION:-${project_version}-candidate-$(printf '%s%s' "$index_sha" "$en_sha" | sha256sum | cut -c1-12)}"
+asset_version="${ASSET_VERSION:-${project_version}-candidate-$(printf '%s%s%s%s' "$index_sha" "$en_sha" "$style_sha" "$vendor_sha" | sha256sum | cut -c1-12)}"
 
 case "$release_stamp:$asset_version" in
     *[!A-Za-z0-9._:-]*) die "release and asset versions must use only letters, digits, dot, underscore, colon, or dash" ;;
@@ -45,9 +47,10 @@ remote_shell "chmod 0755 '${REMOTE_INSTALLER}' && '${REMOTE_INSTALLER}' \
     '${release_stamp}' '${REMOTE_TMP}' '${REMOTE_WEB_ZIP}' '${REMOTE_BINARY}' \
     '${REMOTE_WEB_DIR}' '${REMOTE_TEMPLATE}' '${REMOTE_BACKUP_DIR}' '${REMOTE_SERVICE}' \
     '${local_sha}' '${index_sha}' '${en_sha}' '${asset_version}' '${REMOTE_HEALTH_URL}' \
-    '${REMOTE_STAGE_ROOT}' '5' '/'"
+    '${REMOTE_STAGE_ROOT}' '5' '/' '${style_sha}' '${vendor_sha}'"
 
 remote_shell "rm -f '${REMOTE_INSTALLER}'"
 
 EXPECTED_BINARY_SHA="$local_sha" EXPECTED_INDEX_SHA="$index_sha" EXPECTED_EN_SHA="$en_sha" \
+    EXPECTED_STYLE_SHA="$style_sha" EXPECTED_VENDOR_SHA="$vendor_sha" \
     EXPECTED_ASSET_VERSION="$asset_version" "${SCRIPT_DIR}/verify.sh"

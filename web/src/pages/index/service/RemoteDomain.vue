@@ -4,31 +4,31 @@
             <earthIcon color="#00a63e" class="icon" />
         </template>
         <template #settings>
-            <div class="btn_settings" @click="onSetting">
+            <button type="button" class="btn_settings" @click="onSetting">
                 <earthIcon color="#0a0a0a" class="icon1 earthIcon" style="margin-right: 6px;" />
                 {{ $gettext("域名配置") }}
-            </div>
+            </button>
         </template>
         <div class="content">
             <div class="tab">
-                <div class="item cloud" :class="{ active: activeIndex == 0 }" @click="tabChange(0)">
+                <button type="button" :aria-pressed="activeIndex == 0" class="item cloud" :class="{ active: activeIndex == 0 }" @click="tabChange(0)">
                     <earthIcon color="#155dfc" class="icon2" />
                     <div class="title">DDNSTO</div>
                     <span v-if="DdnsStatus?.ddnstoDomain">{{ $gettext("正常") }}</span>
                     <span v-else>{{ $gettext("未启动") }}</span>
-                </div>
-                <div class="item memory" v-if="ipv4Domain" :class="{ active: activeIndex == 1 }" @click="tabChange(1)">
+                </button>
+                <button type="button" :aria-pressed="activeIndex == 1" class="item memory" v-if="ipv4Domain" :class="{ active: activeIndex == 1 }" @click="tabChange(1)">
                     <topologyIcon color="#00a63e" class="icon2" />
                     <div class="title">IPv4</div>
                     <span v-if="ipv4Domain == 'Stopped' || ipv4Domain == 'Disabled'">{{ $gettext("离线") }}</span>
                     <span v-else>{{ $gettext("正常") }}</span>
-                </div>
-                <div class="item network" v-if="ipv6Domain" :class="{ active: activeIndex == 2 }" @click="tabChange(2)">
+                </button>
+                <button type="button" :aria-pressed="activeIndex == 2" class="item network" v-if="ipv6Domain" :class="{ active: activeIndex == 2 }" @click="tabChange(2)">
                     <routerIcon class="icon2" />
                     <div class="title">IPv6</div>
                     <span v-if="ipv6Domain == 'Stopped' || ipv6Domain == 'Disabled'">{{ $gettext("离线") }}</span>
                     <span v-else>{{ $gettext("正常") }}</span>
-                </div>
+                </button>
             </div>
             <div class="info" v-if="activeIndex == 0">
                 <div class="status">
@@ -99,6 +99,9 @@
 </template>
 
 <script lang="ts" setup>
+import {useOwnedBusinessActions} from "/@/home/useOwnedBusinessActions"
+const openAction=useOwnedBusinessActions()
+import {useHomeSnapshot} from "/@/home/widgetContext"
 import Card from "../components/Card.vue"
 import earthIcon from "/@/components/svg/earth.vue"
 import topologyIcon from "/@/components/svg/topology.vue"
@@ -155,7 +158,9 @@ const getDdns = function () {
         timerId = window.setTimeout(getDdns, 3000)
     })
 }
+const homeOwned=useHomeSnapshot('remote', value=>{DdnsStatus.value=value;setActiveByStatus()})
 onMounted(() => {
+    if(homeOwned)return
     mounted = true
     timerId = window.setTimeout(getDdns, 1100)
 })
@@ -165,7 +170,7 @@ onUnmounted(() => {
     mounted = false
 })
 const onSetting = () => {
-    ActionDomain({
+    openAction(ActionDomain,{
         url: DdnsStatus.value.ddnstoDomain
     })
 }

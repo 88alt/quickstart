@@ -38,7 +38,9 @@ binary_arm64_sha="$(sha256sum "${release_dir}/quickstart.aarch64" | awk '{print 
 binary_arm_sha="$(sha256sum "${release_dir}/quickstart.arm" | awk '{print $1}')"
 index_sha="$(sha256sum "${release_dir}/web/luci-static/quickstart/index.js" | awk '{print $1}')"
 en_sha="$(sha256sum "${release_dir}/web/luci-static/quickstart/i18n/en.json" | awk '{print $1}')"
-asset_version="${version}-release-$(printf '%s%s' "$index_sha" "$en_sha" | sha256sum | cut -c1-12)"
+style_sha="$(sha256sum "${release_dir}/web/luci-static/quickstart/style.css" | awk '{print $1}')"
+vendor_sha="$(sha256sum "${release_dir}/web/luci-static/quickstart/vendor.js" | awk '{print $1}')"
+asset_version="${version}-release-$(printf '%s%s%s%s' "$index_sha" "$en_sha" "$style_sha" "$vendor_sha" | sha256sum | cut -c1-12)"
 printf '%s\n' \
     "version=${version}" \
     "git_sha=$(git -C "$PROJECT_ROOT" rev-parse HEAD)" \
@@ -48,6 +50,8 @@ printf '%s\n' \
     "quickstart.arm=${binary_arm_sha}" \
     "web.index.js=${index_sha}" \
     "web.i18n.en.json=${en_sha}" \
+    "web.style.css=${style_sha}" \
+    "web.vendor.js=${vendor_sha}" \
     >"${release_dir}/MANIFEST"
 
 tar --sort=name --mtime="@${source_date_epoch}" --owner=0 --group=0 --numeric-owner \
