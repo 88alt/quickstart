@@ -10,7 +10,8 @@ export function normalizeInstalled(data:unknown):HomeApplication[]{
   if(reserved.has(row.name)||seen.has(row.name))continue
   seen.add(row.name);const known=homeApplications.find(a=>a.id===row.name),text=(value:unknown,fallback:string)=>typeof value==='string'&&value.trim()?value.slice(0,256):fallback
   const entry=typeof row.entry==='string'&&/^\/(?!\/)/.test(row.entry)&&!/[\u0000-\u001f\\]/.test(row.entry)?row.entry:''
-  result.push({id:row.name,zh:text(row.title,row.name),en:text(row.title_en,row.name),detail:text(row.description,''),detailEn:text(row.description_en,''),path:entry,kind:'app',glyph:known?.glyph||'grid',tone:known?.tone||'blue'})
+  const entryScript=Array.isArray(row.flags)&&row.flags.includes('entrysh')&&typeof row.uci==='string'&&/^[a-zA-Z0-9_-]+$/.test(row.uci)
+  result.push({id:row.name,zh:text(row.title,row.name),en:text(row.title_en,row.name),detail:text(row.description,''),detailEn:text(row.description_en,''),path:entry,kind:'app',entryScript,glyph:known?.glyph||'grid',tone:known?.tone||'blue'})
  }
  return result
 }

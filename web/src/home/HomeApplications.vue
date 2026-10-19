@@ -21,6 +21,7 @@
         <label class="application-search"><StudioGlyph name="grid"/><input v-model="search" :placeholder="t('搜索应用或系统工具','Search apps or system tools')" :aria-label="t('搜索应用或系统工具','Search apps or system tools')"/></label>
         <div class="launchpad-controls"><div class="browser-category-tabs" role="group" :aria-label="t('入口分类','Shortcut categories')"><button v-for="tab in categories" :key="tab.id" :aria-pressed="browserTab===tab.id" :data-category="tab.id" @click="browserTab=tab.id">{{t(tab.zh,tab.en)}}</button></div><div v-if="!editing" class="launchpad-library-actions"><button @click="openLink()" :disabled="!provider.editable()" data-add-link>＋ {{t('添加链接','Add link')}}</button><button v-if="linkCount" :aria-pressed="managingLinks" @click="managingLinks=!managingLinks" data-manage-links>{{managingLinks?t('完成','Done'):t('管理链接','Manage links')}}</button></div></div>
           <div v-if="catalogueState!=='ready'" class="applications-state launchpad-status" role="status" data-applications-state><span>{{stateText}}</span><button v-if="['error','permission','timeout'].includes(catalogueState)" @click="provider.retry">{{t('重试','Retry')}}</button></div>
+          <div v-if="launchApp&&launchStatus!=='idle'" class="applications-state launchpad-status" role="status" data-entry-state :aria-busy="launchStatus==='loading'"><span>{{launchStatus==='loading'?t('正在打开：','Opening: ')+t(launchApp.zh,launchApp.en):t(launchApp.zh,launchApp.en)+' · '+entryMessage}}</span><template v-if="launchStatus!=='loading'"><button @click="retryLaunch">{{t('重试','Retry')}}</button><button v-if="launchApp.path" @click="configureLaunch" data-entry-config>{{t('打开配置','Open settings')}}</button></template></div>
           <div class="launchpad-result-line"><span>{{editing?t('可添加的入口','Available shortcuts'):t('所有入口','Your library')}} <strong data-library-total>{{query.total}}</strong></span></div>
           <div v-if="!filteredApps.length" class="applications-state"><span v-if="catalogueState==='ready'||browserTab==='tools'||browserTab==='links'">{{browserTab==='apps'&&catalogueState==='ready'&&!provider.state.apps.length?t('没有已安装的扩展应用，可前往软件中心。','No additional apps installed. Explore the software center.'):t('没有匹配的入口，试试其他关键词。','No matching entries. Try another search.')}}</span></div>
           <div v-else-if="editing" class="application-catalogue"><div v-for="app in filteredApps" :key="app.id"><span class="application-icon" :class="app.tone"><ApplicationArtwork :app="app"/></span><div><strong>{{t(app.zh,app.en)}}</strong><small>{{entryAvailability(app)!=='available'?availabilityText(app):t(app.detail,app.detailEn)}}</small></div><button @click="toggleFavorite(app.id)" :disabled="!draft.includes(app.id)&&(draft.length>=24||entryAvailability(app)!=='available')" :aria-pressed="draft.includes(app.id)" :aria-label="t('选择','Select ')+t(app.zh,app.en)" :data-select-app="app.id">{{draft.includes(app.id)?'✓':'+'}}</button></div></div>
@@ -40,6 +41,7 @@
 <script setup lang="ts">
 import {useLauncherRoute} from './useLauncherRoute'
 import type {LauncherMemory,LauncherView} from './launcherRouteState'
+import {resolveAppEntry} from './appEntryClient'
 import appUtils from '../utils/app'
 import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
@@ -73,6 +75,24 @@ const linkCount=computed(()=>linkSession.entries.length)
 const editorColumns=ref(window.innerWidth<650?2:4)
 const provider=useLauncherCatalog(),catalogueState=computed(()=>provider.state.status),catalogue=provider.catalogue
 const activeTool=ref<HomeApplication|null>(null),unavailableApp=ref<HomeApplication|null>(null),systemStore=useSystemStore()
+const launchApp=ref<HomeApplication|null>(null),launchStatus=ref('idle')
+let entryController:AbortController|undefined,activationGeneration=0,activationAlive=true
+const entryMessage=computed(()=>launchStatus.value==='timeout'?t('打开应用超时，请重试。','Opening timed out. Please retry.'):launchStatus.value==='permission'?t('没有解析入口的权限，请重新登录后重试。','No permission to resolve this entry. Sign in and retry.'):t('暂时无法打开，请重试或打开配置。','Unable to open now. Retry or open settings.'))
+function cancelLaunch(){activationGeneration++;entryController?.abort();entryController=undefined;launchStatus.value='idle';launchApp.value=null}
+function retryLaunch(){if(launchApp.value)void activate(launchApp.value)}
+function configureLaunch(){if(launchApp.value)void launchInstalled({...launchApp.value,entryScript:false})}
+async function launchInstalled(app:HomeApplication){
+ if(launchStatus.value==='loading'&&launchApp.value?.id===app.id)return
+ cancelLaunch();const generation=activationGeneration,current=new AbortController();entryController=current;launchApp.value=app
+ let timedOut=false;const timer=window.setTimeout(()=>{timedOut=true;current.abort()},5000)
+ if(app.entryScript)launchStatus.value='loading'
+ try{
+  const target=await resolveAppEntry(app,window.location.href,current.signal)
+  if(!activationAlive||generation!==activationGeneration||current.signal.aborted||!browserOpen.value)return
+  await navigation.remember(app.id)
+  if(activationAlive&&generation===activationGeneration&&!current.signal.aborted&&browserOpen.value)window.location.assign(target)
+ }catch(error){if(activationAlive&&generation===activationGeneration)launchStatus.value=timedOut?'timeout':error instanceof Error&&error.message==='permission'?'permission':'error'}finally{window.clearTimeout(timer)}
+}
 const favorites=computed(()=>homeApplicationSession.favorites.map(provider.resolve))
 const stateText=computed(()=>catalogueState.value==='permission'?t('没有读取应用目录的权限，系统工具仍可使用。','No permission to read apps. System tools remain available.'):catalogueState.value==='timeout'?t('读取应用清单超时，请点击重试。系统工具仍可使用。','Loading applications timed out. Select Retry. System tools remain available.'):catalogueState.value==='error'?t('应用清单暂不可用，系统工具仍可使用。','Apps unavailable. System tools remain available.'):catalogueState.value==='loading'?t('正在读取应用清单…','Loading applications…'):t('还没有安装扩展应用，去软件中心发现更多。','No additional apps installed. Explore the software center.'))
 function availabilityText(app:HomeApplication){const status=entryAvailability(app);return status==='uninstalled'?t('应用已卸载','App uninstalled'):status==='permission'?t('无访问权限','No access'):status==='unsupported'?t('固件不支持','Unsupported'):status==='no-entry'?t('暂无可用入口','No verified entry'):t('状态待确认','Status unknown')}
@@ -86,7 +106,7 @@ async function linkSaved(message:string,id?:string){await cancelLink();notice.va
 const networkStore=useNetworkStore()
 async function activate(app:HomeApplication){
  if(app.kind==='app'&&!props.collapsed&&requestLauncherApp(app))return
- if(app.kind==='app'&&entryAvailability(app)==='available'){await navigation?.remember(app.id);window.location.assign(app.path);return}
+ if(app.kind==='app'&&entryAvailability(app)==='available'){await launchInstalled(app);return}
  if(app.id==='files'){if(browserOpen.value&&!await closeBrowser())return;void appUtils.installAndGo('luci-app-linkease',t('易有云','LinkEase'),'/cgi-bin/luci/admin/services/linkease/file/','app-meta-linkease');return}
  const snapshot=props.network||browserNetwork
  if(app.kind==='builtin'){await navigation?.remember(app.id);emit('navigate',app.path);return}
@@ -97,7 +117,7 @@ async function activate(app:HomeApplication){
 }
 async function launchPinned(app:HomeApplication){await openBrowser(false);browserTab.value='apps';await nextTick();await navigation?.persist();await activate(app)}
 let opener:HTMLElement|null=null,bodyOverflow='',inerted:HTMLElement[]=[],browserNetwork:Record<string,any>|undefined,unregisterBrowser:(()=>void)|undefined
-function startEditing(){if(!provider.begin())return;editing.value=true;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[]}
+function startEditing(){if(!provider.begin())return;cancelLaunch();editing.value=true;linkFormOpen.value=false;managingLinks.value=false;notice.value='';draft.value=[...homeApplicationSession.favorites];history.value=[]}
 async function openBrowser(edit:boolean){if(edit&&!provider.editable())return;if(!props.collapsed&&requestLauncherBrowser(edit,props.network))return;if(document.querySelector('.ordered-editing'))return;if(props.hostOnly)await navigation?.open(edit);else await showBrowser(edit,{tab:'all',page:1},{v:1,search:'',scroll:0,focus:''})}
 async function showBrowser(edit:boolean,view:LauncherView,memory:LauncherMemory){
  if(browserOpen.value){browserTab.value=view.tab;search.value=memory.search;libraryPage.value=view.page;if(edit)startEditing();return}
@@ -106,7 +126,7 @@ async function showBrowser(edit:boolean,view:LauncherView,memory:LauncherMemory)
  await nextTick();const root=document.querySelector('.canvas-home');inerted=Array.from(root?.children||[]).filter((node):node is HTMLElement=>node instanceof HTMLElement&&!node.matches('.applications-browser,.applications-backdrop')&&!node.hasAttribute('inert'));inerted.forEach(node=>node.setAttribute('inert',''));document.querySelector<HTMLButtonElement>('.applications-close')?.focus()
 }
 function releaseModal(){inerted.forEach(node=>node.removeAttribute('inert'));inerted=[];document.body.style.overflow=bodyOverflow}
-function hideBrowser(){browserOpen.value=false;linkFormOpen.value=false;releaseModal();draft.value=[];history.value=[];browserNetwork=undefined;const target=opener?.isConnected?opener:document.querySelector<HTMLElement>('[data-applications-hub] [data-all-apps]');target?.focus({preventScroll:true});opener=null;emit('close')}
+function hideBrowser(){cancelLaunch();browserOpen.value=false;linkFormOpen.value=false;releaseModal();draft.value=[];history.value=[];browserNetwork=undefined;const target=opener?.isConnected?opener:document.querySelector<HTMLElement>('[data-applications-hub] [data-all-apps]');target?.focus({preventScroll:true});opener=null;emit('close')}
 async function closeBrowser(){if(saving())return false;if(props.hostOnly)return navigation?.close()??false;if(unsaved.value&&!window.confirm(t('尚有未保存的入口修改，确定放弃？','Discard unsaved shortcut changes?')))return false;hideBrowser();return true}
 async function saveFavorites(){if(saving())return;try{await provider.saveFavorites([...draft.value]);closeBrowser()}catch(error){notice.value=error instanceof Error?error.message:t('保存失败，草稿保留','Save failed; draft retained')}}
 function commit(ids:string[]){const next=[...new Set(ids)].slice(0,24);if(next.join('|')===draft.value.join('|'))return;history.value=[...history.value.slice(-29),[...draft.value]];draft.value=next}
@@ -118,7 +138,9 @@ function beforeUnload(event:BeforeUnloadEvent){if(unsaved.value||saving()){event
 const navigation=useLauncherRoute({enabled:!!props.hostOnly,opened:browserOpen,tab:browserTab,page:libraryPage,search,dirty:unsaved,saving,show:showBrowser,hide:hideBrowser,confirm:()=>window.confirm(t('尚有未保存的入口修改，确定离开？','Leave without saving shortcut changes?')),settled:()=>provider.state.status!=='loading'&&!provider.preferencesLoading(),currentPage:()=>query.value.current})
 function keyboard(event:KeyboardEvent){if(!browserOpen.value)return;if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();if(linkFormOpen.value)void cancelLink();else closeBrowser();return}if(event.key==='Tab'){const controls=Array.from(document.querySelectorAll<HTMLElement>('.applications-browser button:not(:disabled),.applications-browser input:not(:disabled)')).filter(node=>node.getClientRects().length);const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}}}
 function resizeEditor(){editorColumns.value=window.innerWidth<650?2:4}
-function visibility(){if(document.hidden){activeTool.value=null;unavailableApp.value=null;linkTarget.value=null}}
+function visibility(){if(document.hidden){cancelLaunch();activeTool.value=null;unavailableApp.value=null;linkTarget.value=null}}
+onMounted(()=>window.addEventListener('pagehide',cancelLaunch))
+onUnmounted(()=>{activationAlive=false;cancelLaunch();window.removeEventListener('pagehide',cancelLaunch)})
 onMounted(()=>{window.addEventListener('beforeunload',beforeUnload);if(props.collapsed)unregisterBrowser=registerLauncherBrowser((edit,network)=>{browserNetwork=network;void openBrowser(edit)},app=>{void launchPinned(app)});document.addEventListener('keydown',keyboard,true);document.addEventListener('visibilitychange',visibility);window.addEventListener('resize',resizeEditor);if(hub.value){hubObserver=new ResizeObserver(()=>{const box=hub.value!.getBoundingClientRect();hubWidth.value=box.width;hubHeight.value=box.height});hubObserver.observe(hub.value)}});onUnmounted(()=>{window.removeEventListener('beforeunload',beforeUnload);unregisterBrowser?.();hubObserver?.disconnect();document.removeEventListener('keydown',keyboard,true);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('resize',resizeEditor);if(browserOpen.value)releaseModal()})
 </script>
 <style src="./homeApplications.css" scoped></style>

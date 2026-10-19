@@ -25,7 +25,7 @@ function createLauncher(config:ReturnType<typeof useHomeConfig>){
  function resolveEntry(id:string):HomeApplication{return [...systemTools,...state.apps,...linkSession.entries,...retained.values(),...homeApplications].find(a=>a.id===id)||{id,zh:'不可用入口',en:'Unavailable shortcut',detail:id,detailEn:id,glyph:'grid',path:'',kind:'app',tone:'blue'}}
  function entryAvailability(app:HomeApplication):Availability{
   if(app.kind==='link')return linkSession.entries.some(a=>a.id===app.id)?'available':'unknown'
-  if(app.kind==='app')return state.status==='ready'?(state.apps.some(a=>a.id===app.id)?app.path?'available':'no-entry':'uninstalled'):state.status==='permission'?'permission':'unknown'
+  if(app.kind==='app')return state.status==='ready'?(state.apps.some(a=>a.id===app.id)?app.path||app.entryScript?'available':'no-entry':'uninstalled'):state.status==='permission'?'permission':'unknown'
   const feature=({terminal:'ttyd',firmware:'ota',sandbox:'sandbox'} as Record<string,string>)[app.tool||'']
   if(feature&&!window.quickstart_features?.includes(feature))return 'unsupported'
   if(app.tool==='sandbox')return state.sandbox==='unsupport'?'unsupported':state.sandbox==='unknown'?'unknown':'available'

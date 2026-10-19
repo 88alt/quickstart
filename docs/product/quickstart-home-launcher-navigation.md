@@ -1,6 +1,6 @@
 # 应用启动台：URL、返回恢复与动态入口建议
 
-状态：2026-10-19用户明确偏好“当前窗口打开，并可返回原应用窗口”。本文是核对现状后的实施建议，尚未实现或部署；当前B仍为图标候选e335ceb。视觉、路由器共享布局/收藏/链接与软件中心单次目录GET沿用[正式首页规范](quickstart-home-production.md)，不重新设计界面。
+状态：2026-10-19用户已授权“先修复并更新entry.sh，再URL/返回恢复，再动态入口”连续实施。B脚本已修复并替换；URL与动态解析已编码、本地自动化通过，B前端最终验收进行中，当前以[执行任务与证据](../evidence/m70/installed-apps/navigation/status.md)为准。视觉、路由器共享布局/收藏/链接与软件中心单次目录GET沿用[正式首页规范](quickstart-home-production.md)，不重新设计界面。
 
 ## 建议的浏览行为
 
@@ -20,13 +20,13 @@
 
 滚动与焦点待对应应用可用且渲染后恢复；设备应用变化时夹紧页码，焦点目标消失时回到搜索或关闭按钮。恢复导航不能触发安装、启动或保存。外部应用自身后续创建的历史由其管理，Quickstart保留的是离开时的启动台历史项，不承诺控制外部应用的整个历史栈。
 
-现状：HomeApplications的browserOpen/browserTab/search/libraryPage均为组件内存；openBrowser会清空搜索/分类/页码，activate在导航前调用closeBrowser；全部入口都不改URL。正式Vue Router已用createWebHistory，首页有独立host-only启动台宿主，可接入query驱动，而不把状态绑到响应式卡片。无需修改系统左侧菜单。
+修复前：HomeApplications的browserOpen/browserTab/search/libraryPage均为组件内存；openBrowser会清空搜索/分类/页码，activate在导航前调用closeBrowser；全部入口都不改URL。当前实现以useLauncherRoute绑定独立host-only宿主与Vue Router，launcherRouteState负责有界纯契约，卡片请求宿主，不把状态绑到响应式卡片。系统左侧菜单不变。
 
 ## 动态入口应在点击时解析
 
 所有已安装应用启动位置（完整库、首页固定等）走同一个激活入口：保存返回状态 → 根据能力按需解析目标 → 跳转。首页初载仍只读取installed一次及本地图标，不为展示图标执行全库entry.sh；不把运行状态或动态URL写进收藏。
 
-有entrysh能力的应用可以评估复用现有软件中心`POST /cgi-bin/luci/admin/store/entrysh`，携带真实CSRF token、单个合法应用ID及当前访问hostname。源码确认该接口筛选package后只调用`status`，可能加缓存锁和更新/tmp缓存；不等于前端可执行任意shell，也不能省略package使其扫描全库。点击时需要新鲜状态时须评估update=1，因为旧缓存按UCI mtime失效，服务启停未必改变配置。该新解析能力是独立阶段，不能与已确认的只读列表GET混为一谈。
+有entrysh能力的应用当前复用现有软件中心`POST /cgi-bin/luci/admin/store/entrysh`，携带token GET取得的真实CSRF token、单个合法应用ID、当前访问hostname及update=1。源码确认该接口筛选package后只调用`status`，可能加缓存锁和更新/tmp缓存；不等于前端可执行任意shell，也不能省略package使其扫描全库。强制新鲜状态避免旧缓存仅按UCI mtime失效而遗漏服务启停。单次点击解析5秒截止，失败明确重试和原配置入口；同应用进行中重复点击不追加请求，另一应用/关闭/隐藏/离开会取消旧结果，不执行晚跳转。该能力与已确认的只读列表GET分离，token和动态服务URL不写配置/历史状态或日志。
 
 | 解析结果 | 建议动作 |
 | --- | --- |
@@ -37,11 +37,13 @@
 
 解析需校验HTTP、业务code、结果数组、匹配app ID、协议和目标结构；只接受HTTP(S)或约定的安全本机路径。`:5003`是端口描述，不是可直接跳转的URL，应以当前访问路由器的hostname、脚本协议及合法端口规范化，处理IPv6，不写死测试IP、不误用用户电脑的127.0.0.1。域名/反向代理访问时端口不一定对用户可达，需保留原配置入口，不能把设备本机监听等同于浏览器可达。解析进行中防止重复点击、晚响应覆盖和重复跳转，失败不关闭窗口；不把状态请求变成自动start/stop操作。
 
-脚本状态与已安装身份分开。仅动态入口且无静态entry的应用未来也可能可启动，需由解析能力判断，而不是机械沿用当前“空entry=无入口”；这个变化只在动态解析阶段实施和验收。
+脚本状态与已安装身份分开。安装元数据的flags含entrysh且uci身份合法时声明解析能力；无静态entry但有该能力也可启动，仍按真实解析结果决定目标。纯静态应用不请求token/status。内部工具及自定义链接保持原动作；所有已安装应用的首页固定和启动台入口委托同一宿主激活。
 
 ## KSpeeder例子的实际核查
 
 用户指定的`istoreos-app-hub/apps/istoreenhance/app-meta-istoreenhance/entry.sh`中，status只用`[ -x /usr/sbin/iStoreEnhance ]`判断running=true，再读取adminport，返回web=`:端口`、protocol=http、href=原LuCI页。**可执行文件存在不是服务运行证据**，因此实施动态直达前需要由应用侧修正状态语义，或复用可靠的应用状态来源；不能在Quickstart统一层硬编码此应用的进程规则。现有start/stop分支实际会调用init服务，打开图标不能调用这些分支。
+
+上述为起点问题，当前已在应用仓库afdc652修复：deployed依可执行文件，running依procd实例真实状态，停止时不返回Web，读取失败明确失败，端口有界；meta release为0.8.4-r2。B仅原子替换脚本候选且实际SHA/procd/配置未变核验通过，未重启服务或声称包元数据已升级，见script-round-2证据。前端没有硬编码KSpeeder进程名。
 
 2026-10-19对B只读核查：procd报告istoreenhance实例running=true、命令adminAddr=:5003，UCI端口5003；不带LuCI登录凭据GET`http://192.168.30.244:5003/`得到HTTP200/html。可说明本次B的Web入口可响应，不代表验证了应用登录后业务，也不能用它掩盖脚本在“已安装但停止”时的误报。没有执行entry.sh、entrysh POST或启停服务；未改app-hub仓库。
 
@@ -54,4 +56,4 @@
 1. URL与返回恢复：纯解析/序列化、稳定宿主路由同步、历史项/搜索滚动恢复、关闭与未保存保护、所有已安装应用激活位置统一。证据目录预留`docs/evidence/m70/installed-apps/navigation/`。验收浏览器Back/Forward、刷新、书签直达、直接关闭、分类/分页/搜索/焦点恢复、手机返回、BFCache及完整重载；不新增目录轮询、不改变共享收藏和布局。先实现这一阶段即可改善当前体验。
 2. 动态入口：核对opkg/APK的token/entrysh及结果语义、单应用按需状态、URL归一化、请求去重/超时、可靠running提供者和原配置入口回退。KSpeeder脚本修复属于应用仓库及其匹配包链路，不能仅换Quickstart Web就声称设备脚本已更新。证据目录预留`docs/evidence/m70/installed-apps/entry-resolution/`；覆盖运行/停止但文件仍在/未部署/无入口/旧缓存/失败/权限、IPv4/IPv6/域名、快速重复点击、不同应用切换及回退。只暂停依赖不可靠状态的动态直达，URL恢复可独立完成。
 
-每阶段先冻结候选，最多三轮优化，保留失败，实际打开截图并真实登录态验收B。APK设备先只读验证协议，不把过去的目录/PNG检查当成动态入口或完整UI验收；部署/构建/跨仓库改动沿原保护和发布规范。当前仅交付本实施建议，以上均尚未实现/验收。
+每阶段先冻结候选，最多三轮优化，保留失败，实际打开截图并真实登录态验收B。APK设备仅验证单应用status协议，不把目录/PNG/协议检查当成完整Quickstart验收；部署/构建/跨仓库改动沿原保护和发布规范。当前实现状态、失败与最终验收以执行证据为准，历史“仅建议”段落不能代替实际运行结论。

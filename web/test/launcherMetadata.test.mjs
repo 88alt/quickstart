@@ -12,3 +12,7 @@ test('valid missing entry and duplicate identity retain their existing semantics
  assert.equal(rows[0].id,'valid-app')
  assert.equal(rows[0].path,'')
 })
+test('only declared entrysh capability plus a valid UCI identity enables dynamic entries',()=>{
+ const rows=normalizeInstalled([{name:'dynamic',flags:['entrysh'],uci:'app_config'},{name:'static',entry:'/config',flags:'entrysh',uci:'app'},{name:'invalid-config',flags:['entrysh'],uci:'../file'}])
+ assert.equal(rows[0].entryScript,true);assert.equal(rows[0].path,'');assert.equal(rows[1].entryScript,false);assert.equal(rows[2].entryScript,false)
+})
