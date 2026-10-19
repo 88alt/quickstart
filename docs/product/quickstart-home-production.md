@@ -147,11 +147,13 @@ backend/modules/homeconfig/         已有契约/存储/HTTP基础及待接的�
 
 ### 已安装应用目录：软件中心为准
 
-2026-10-18当前设备复现：首页旧端点HTTP200却返回业务错误，因为其`/tmp/run/istore-meta/meta`不存在；软件中心GET`/cgi-bin/luci/admin/store/installed`实际返回六项。正式首页通过独立`installedAppsClient`读取软件中心原始数组，复用稳定名称ID、双语名称、描述和安全的根路径entry；不读取`configured`（会执行入口脚本），不调用安装、升级、卸载、autoconf或entrysh。软件中心内部读取`/usr/lib/opkg/meta`及包状态并维护/tmp缓存，首页不自行扫描所有opkg包或运行应用。
+2026-10-18当前设备复现：首页旧端点HTTP200却返回业务错误，因为其`/tmp/run/istore-meta/meta`不存在；软件中心GET`/cgi-bin/luci/admin/store/installed`实际返回六项。正式首页通过独立`installedAppsClient`读取软件中心原始数组，复用稳定名称ID、双语名称、描述和安全的根路径entry；不读取`configured`（会执行入口脚本），不调用安装、升级、卸载、autoconf或entrysh。B旧版软件中心内部读取`/usr/lib/opkg/meta`及包状态；新版APK设备通过统一路径读取`/lib/apk/meta`。二者均维护/tmp缓存并获取缓存文件锁，首页不自行扫描所有包或运行应用。这里“只读”指业务只读，并非零文件写入/零锁。
 
 目录由已有launcher owner首载一次，8秒截止、卸载取消、显式重试；刷新不修改固定项、链接或布局，不自动固定新应用。HTTP401/403为无权限，其他HTTP/JSON/结构/网络异常为读取失败，均不能当成空列表或已卸载；仅成功数组`[]`显示未安装。入口缺失时仍展示应用及不可启动说明，不猜测地址。已安装应用的根路径执行同源整页跳转（包括`/apps/`），内置Quickstart入口仍走原路由。旧API及全局旧请求层保持兼容，本修复不要求后端升级。
 
 任务、实机基线及当前验收见[软件中心只读目录修复](../evidence/m70/installed-apps/status.md)。历史原型和旧接口测试通过不代替这次真实目录与UI核验。
+
+2026-10-19新增用户指定APK目标`192.168.9.140`：已只读确认其iStoreOS25.12.5、luci-app-store0.2.1-r1；与B opkg/iStore0.1.29-4均各3次真实认证GET通过，API/元数据/已安装app-meta ID集合一致，均6项。建议当前继续复用软件中心GET，避免重复承担包管理器及软件中心版本差异；其缓存锁与安装任务锁不同，实测尚未出现需要另建接口的阻塞证据。这是分析建议，未将“零锁”设为产品新要求，未切换实现。若零文件写入/零显式文件锁成为硬要求或锁等待被复现，再修复现有catalog而不是增加平行目录。软件中心缺目录可能返回空列表、缓存按目录mtime失效，仍有来源未就绪和新鲜度边界，不能宣称强一致或全部错误可辨。详见[两机方案比较与证据](../evidence/m70/installed-apps/opkg-apk-analysis-20261019/analysis.md)，不代表APK上Quickstart完整UI/安装已验收。
 
 初始化仅在本域文件与有效备份均不存在且旧设置完整读取成功时执行；GET首次读取会完成一次初始化写入，后续读取不写。迁移 receipt 与独立版本一起持久化，旧 UCI 原文保持。坏文件恢复分别提供“恢复有效备份”和“保留坏文件并恢复本域默认”；未来版本两种恢复均禁止。备份恢复后切换 generation，使旧编辑令牌失效。
 
