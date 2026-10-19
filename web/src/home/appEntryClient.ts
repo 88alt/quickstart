@@ -18,19 +18,20 @@ export function appWebTarget(status:Record<string,unknown>,currentURL:string){
  if(target.hostname!==base.hostname&&(/^(localhost|0\.0\.0\.0|127\.)/.test(target.hostname)||['[::1]','[::]'].includes(target.hostname)))throw new Error('error')
  return target.href
 }
-export function entryTarget(app:HomeApplication,data:unknown,currentURL:string){
+export function appEntryResult(app:HomeApplication,data:unknown,currentURL:string){
  const envelope=record(data)
  // LuCI's empty Lua table is serialized as [] or {} across JSON implementations.
  const errors=envelope.errors
  const noErrors=!!errors&&typeof errors==='object'&&Object.keys(errors).length===0
  if(envelope.code!==200||!Array.isArray(envelope.status)||!noErrors||envelope.status.length!==1)throw new Error('error')
  const status=record(envelope.status[0]);if(status.app!==app.id||typeof status.running!=='boolean')throw new Error('error')
- if(status.running===true&&status.deployed!==false&&status.web)return appWebTarget(status,currentURL)
- const fallback=localPath(app.path)||localPath(status.href);if(!fallback)throw new Error('no-entry');return fallback
+ if(status.running===true&&status.deployed!==false&&status.web)return {target:appWebTarget(status,currentURL),direct:true}
+ const fallback=localPath(app.path)||localPath(status.href);if(!fallback)throw new Error('no-entry');return {target:fallback,direct:false}
 }
-export async function resolveAppEntry(app:HomeApplication,currentURL:string,signal:AbortSignal,request:typeof fetch=fetch){
+export function entryTarget(app:HomeApplication,data:unknown,currentURL:string){return appEntryResult(app,data,currentURL).target}
+export async function resolveAppEntryResult(app:HomeApplication,currentURL:string,signal:AbortSignal,request:typeof fetch=fetch){
  if(app.kind!=='app'||!/^[a-zA-Z0-9][a-zA-Z0-9_.+-]{0,127}$/.test(app.id))throw new Error('error')
- if(!app.entryScript){const path=localPath(app.path);if(!path)throw new Error('no-entry');return path}
+ if(!app.entryScript){const path=localPath(app.path);if(!path)throw new Error('no-entry');return {target:path,direct:false}}
  const options={credentials:'same-origin' as const,cache:'no-store' as const,signal}
  const read=async(response:Response)=>{if(!response.ok)throw new Error([401,403].includes(response.status)?'permission':'error');return record(await response.json())}
  const token=await read(await request('/cgi-bin/luci/admin/store/token',{...options,method:'GET'}))
@@ -38,5 +39,6 @@ export async function resolveAppEntry(app:HomeApplication,currentURL:string,sign
  const hostname=new URL(currentURL).hostname
  const body=new URLSearchParams({token:token.token,package:app.id,hostname,update:'1'})
  const response=await request('/cgi-bin/luci/admin/store/entrysh',{...options,method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body})
- return entryTarget(app,await read(response),currentURL)
+ return appEntryResult(app,await read(response),currentURL)
 }
+export async function resolveAppEntry(app:HomeApplication,currentURL:string,signal:AbortSignal,request:typeof fetch=fetch){return (await resolveAppEntryResult(app,currentURL,signal,request)).target}

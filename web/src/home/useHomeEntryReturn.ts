@@ -21,7 +21,7 @@ export function useHomeEntryReturn(enabled:boolean,ready:()=>boolean,settled:(wi
   if(route.path!=='/'||route.query.panel){stop();return}
   if(!ready())return
   const memory=homeEntryMemory(window.history.state?.qsHomeEntry);if(!memory){stop();return}
-  const target=document.querySelector<HTMLElement>('[data-favorite-app="'+CSS.escape(memory.id)+'"]')
+  const target=document.querySelector<HTMLElement>(memory.source==='traffic'?'[data-home-speed]':'[data-favorite-app="'+CSS.escape(memory.id)+'"]')
   if(!target){lastPosition='';stableFrames=0;return}
   const card=target.closest<HTMLElement>('[data-layout-card]'),cards=document.querySelectorAll<HTMLElement>('.canvas-home [data-layout-card]'),top=card?.getBoundingClientRect().top
   const affected=Array.from(cards).filter(node=>top===undefined||node.getBoundingClientRect().top<=top+1).map(node=>node.dataset.layoutCard!)
@@ -43,7 +43,7 @@ export function useHomeEntryReturn(enabled:boolean,ready:()=>boolean,settled:(wi
   for(const event of inputs)document.addEventListener(event,interrupted,{capture:true,passive:true})
   observer=new MutationObserver(schedule);observer.observe(document.querySelector('.canvas-home')||document.body,{childList:true,subtree:true});timer=window.setTimeout(()=>{consume();stop()},10000);schedule()
  }
- function remember(id:string){if(!enabled)return;const memory=homeEntryMemory({v:1,id,scroll:window.scrollY,restoration:window.history.scrollRestoration});if(memory){window.history.replaceState({...window.history.state,qsHomeEntry:memory},'');window.history.scrollRestoration='manual'}}
+ function remember(id:string,source?:'traffic'){if(!enabled)return;const memory=homeEntryMemory({v:1,id,source,scroll:window.scrollY,restoration:window.history.scrollRestoration});if(memory){window.history.replaceState({...window.history.state,qsHomeEntry:memory},'');window.history.scrollRestoration='manual'}}
  watch(()=>[ready(),settled(affectedWidgets.value),route.fullPath],()=>{if(enabled)schedule()},{flush:'post'})
  onMounted(()=>{if(enabled){start();window.addEventListener('pageshow',start)}})
  onUnmounted(()=>{active=false;stop();window.removeEventListener('pageshow',start)})

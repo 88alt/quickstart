@@ -109,6 +109,9 @@ try:
     if os.environ.get('QS_ACCEPT_DETAIL_HEADER') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/detail-header-review.cjs'
         env['QS_DETAIL_HEADER_EVIDENCE'] = str(OUT.resolve() / 'detail-header')
+    if os.environ.get('QS_ACCEPT_FASTNET') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/fastnet-entry-review.cjs'
+        env['QS_FASTNET_EVIDENCE'] = str(OUT.resolve() / 'fastnet')
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:
