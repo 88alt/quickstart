@@ -14,11 +14,12 @@ function createLauncher(config:ReturnType<typeof useHomeConfig>){
  let controller:AbortController|undefined,alive=true
  async function read(){
   controller?.abort();const current=new AbortController();controller=current;state.status='loading'
-  const timer=window.setTimeout(()=>current.abort(),8000)
+  let timedOut=false
+  const timer=window.setTimeout(()=>{timedOut=true;current.abort()},8000)
   try{
    const apps=await readInstalledApplications(current.signal)
    if(alive&&controller===current){for(const app of state.apps)if(homeApplicationSession.favorites.includes(app.id))retained.set(app.id,app);for(const id of retained.keys())if(!homeApplicationSession.favorites.includes(id))retained.delete(id);state.apps=apps;state.status='ready'}
-  }catch(error){if(alive&&controller===current)state.status=error instanceof Error&&error.message==='permission'?'permission':'error'}finally{window.clearTimeout(timer)}
+  }catch(error){if(alive&&controller===current)state.status=timedOut?'timeout':error instanceof Error&&error.message==='permission'?'permission':'error'}finally{window.clearTimeout(timer)}
  }
  async function readSandbox(){const current=new AbortController(),timer=window.setTimeout(()=>current.abort(),8000);try{const r=await fetch('/cgi-bin/luci/istore/nas/sandbox/',{signal:current.signal,credentials:'same-origin',cache:'no-store'});const e=await r.json();if(alive&&r.ok&&(e.success===undefined||e.success===0)&&!e.error)state.sandbox=e.result?.status||'unknown'}catch{}finally{window.clearTimeout(timer)}}
  function resolveEntry(id:string):HomeApplication{return [...systemTools,...state.apps,...linkSession.entries,...retained.values(),...homeApplications].find(a=>a.id===id)||{id,zh:'不可用入口',en:'Unavailable shortcut',detail:id,detailEn:id,glyph:'grid',path:'',kind:'app',tone:'blue'}}
