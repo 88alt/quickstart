@@ -13,11 +13,18 @@ export function useNaturalSizing(root:Ref<HTMLElement|null>,rows:Ref<ActualRow[]
   for(const row of rows.value){
    const element=Array.from(root.value.children).find(e=>(e as HTMLElement).dataset.orderedRow===row.id) as HTMLElement|undefined
    if(!element)continue
-   element.setAttribute('data-size-measuring','')
+   // Measuring briefly changes grid geometry. Keep the browser from choosing
+   // an anchor in that temporary layout, including on data refresh after Back.
+   const style=document.documentElement.style,anchor=style.getPropertyValue('overflow-anchor'),priority=style.getPropertyPriority('overflow-anchor')
+   style.setProperty('overflow-anchor','none','important')
    try{
+    element.setAttribute('data-size-measuring','')
     const columns=Array.from(element.querySelectorAll<HTMLElement>(':scope > .ordered-column')).map(c=>Array.from(c.querySelectorAll<HTMLElement>(':scope > .ordered-card')).map(card=>Math.ceil(card.getBoundingClientRect().height)))
     next[row.id]={height:Math.ceil(Math.max(row.chartHeight||0,...columns.map(c=>c.reduce((sum,h)=>sum+h,0)+Math.max(0,c.length-1)*18))),columns}
-   }finally{element.removeAttribute('data-size-measuring')}
+   }finally{
+    element.removeAttribute('data-size-measuring')
+    if(anchor)style.setProperty('overflow-anchor',anchor,priority);else style.removeProperty('overflow-anchor')
+   }
   }
   passes++
   if(JSON.stringify(next)!==JSON.stringify(sizes.value))sizes.value=next

@@ -11,3 +11,9 @@
 probe-anchor唯一改变是在测试浏览器中禁用CSS锚定，旧恢复逻辑和容差不变：同一minimized用例即时/稳定/500ms均1020，通过。确认锚定参与偏移，永久禁用锚定不作为产品方案。
 
 第一候选：有界恢复owner暂时关闭原生scrollRestoration和CSS锚定，等目标位置/尺寸连续三帧相同且文档可容纳原scroll，再恢复位置/焦点；成功/超时/卸载还原原inline值及priority、原历史模式。用户pointer/touch/wheel/keyboard操作立即取消并清掉待恢复记忆，不与用户争抢滚动。仅在本次有历史记忆时采样，最多10秒，不持久化测量或增加业务读取。
+
+第一候选9d2675e通过本地21组，但B严格390英文失败（round-1/b-390-en）。恢复owner收敛不能避免随后数据更新时的自然高度测量：measure临时改行样式并同步getBoundingClientRect，虽在绘制前恢复，却能影响浏览器滚动锚定。带详细测量读数的trace-measure改变了时序且通过，不当成修复证据。
+
+单变量probe-measure-guard只在每行设置/移除data-size-measuring之间临时设置html overflow-anchor:none!important，并精确还原原值/priority；不增加几何读取、不改恢复逻辑。B同一完整pinned脚本全部11组通过，首次模拟及真实KSpeeder返回均保持原scroll（原始report.json留在round-1/probe-measure-guard）。这定位了临时测量引起的锚定副作用。
+
+第二候选将该保护放入正式useNaturalSizing.measure的同步try/finally，覆盖后续业务数据更新。保留原先有界返回owner和用户中断清理，避免常驻禁用锚定、固定补偿8px、滚动轮询。正式验收移除浏览器测量补丁，不使用任何放宽scroll断言的选项。
