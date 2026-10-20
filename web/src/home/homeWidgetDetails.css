@@ -124,20 +124,6 @@
 .ordered-home .layout-widget .native-system .content{padding:0;margin:16px 0 0}
 .ordered-home .layout-widget .native-system .content .chart_box{padding-bottom:16px;margin-bottom:16px;border-color:var(--c-line)}
 .ordered-home .layout-widget .native-system .content .chart_box>.chart>div:last-child{color:var(--c-muted);line-height:1.5}
-.ordered-home .layout-widget .native-system .content .info{gap:12px}
-.ordered-home .layout-widget .native-system .content .info .item1{
- margin-top:0;padding:16px;background:var(--home-surface-inset);border:1px solid var(--c-line);
- border-radius:8px;color:var(--c-text);align-items:flex-start;text-align:left;
-}
-.ordered-home .layout-widget .native-system .content .info .item1>div{color:var(--c-muted);font-size:var(--home-caption-size);margin-bottom:8px}
-.ordered-home .layout-widget .native-system .content .info .item1>div>svg{width:20px;height:20px}
-.ordered-home .layout-widget .native-system .content .info .item1>span{font-weight:500!important;font-size:var(--home-body-size);line-height:1.5;overflow-wrap:anywhere}
-.ordered-home .layout-widget .native-system .content .info .item{
- display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px;align-items:baseline;
- justify-content:flex-start;padding:0 16px;color:var(--c-muted);
-}
-.ordered-home .layout-widget .native-system .content .info .item>div{color:var(--c-muted)}
-.ordered-home .layout-widget .native-system .content .info .item>span{font-size:var(--home-body-size);color:var(--c-text);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 /* Gauge color/thresholds still belong to the original business component.
  * A neutral center label is readable in both themes without recoloring rings. */
 .ordered-home .layout-widget .native-system .center-label{
@@ -258,20 +244,13 @@
  .ordered-home .layout-widget .native-storage .content .disk-item.load .value-data>button{min-height:44px}
 }
 
-/* M66.77: original gauges together, device facts in a separate reading area.
- * Only the design build adds system-composition; no new charts or readers. */
+/* Keep the existing gauge composition. SystemInfo owns the facts below. */
 .ordered-home .layout-widget .native-system .system-composition{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:center}
 .ordered-home .layout-widget .native-system .system-composition .chart_box{display:flex;justify-content:center;gap:12px;margin:0;padding:0;border:0}
 .ordered-home .layout-widget .native-system .system-composition .chart_box>.chart{flex:0 0 150px!important}
-.ordered-home .layout-widget .native-system .system-composition .info{grid-template-columns:minmax(0,1fr)!important;gap:16px}
-.ordered-home .layout-widget .native-system .system-composition .info .item1{border:0;background:none;border-radius:0;padding:0!important;gap:0}
-.ordered-home .layout-widget .native-system .system-composition .info .item1>div{margin-bottom:4px;gap:6px}
-.ordered-home .layout-widget .native-system .system-composition .info .item1>div>svg{width:16px;height:16px}
-.ordered-home .layout-widget .native-system .system-composition .info .item{padding:0;gap:8px}
-.ordered-home .layout-widget .native-system .system-kernel{display:block;margin-top:4px;font-size:var(--home-caption-size);font-weight:400;color:var(--c-muted);line-height:1.5}
 @container(min-width:840px){
  .ordered-home .layout-widget .native-system .system-composition{grid-template-columns:minmax(480px,1.35fr) minmax(0,1fr);gap:24px}
- .ordered-home .layout-widget .native-system .system-composition .info{border-left:1px solid var(--c-line);padding-left:24px}
+ .ordered-home .layout-widget .native-system .system-composition .system-facts{border-left:1px solid var(--c-line);padding-left:24px}
 }
 
 /* M66.78: compact service selection and one coherent active-service body. */
