@@ -52,13 +52,15 @@
                     <div>{{ $gettext("内核版本") }}：</div>
                     <span>{{ version?.kernelVersion }}</span>
                 </div> -->
-                <div class="item">
-                    <div>{{ $gettext("系统时间") }}：</div>
-                    <span>{{ systemStatus?.localtime || '—' }}</span>
-                </div>
-                <div class="item">
-                    <div>{{ $gettext("已启动") }}：</div>
-                    <span>{{ systemStatus?stamp(systemStatus.uptime):'—' }}</span>
+                <div class="system-times">
+                    <div class="system-time-row">
+                        <div>{{ $gettext("系统时间") }}：</div>
+                        <span>{{ systemStatus?.localtime || '—' }}</span>
+                    </div>
+                    <div class="system-time-row">
+                        <div>{{ $gettext("已启动") }}：</div>
+                        <span>{{ systemStatus?stamp(systemStatus.uptime):'—' }}</span>
+                    </div>
                 </div>
 
                 <!-- 占位标签 -->
@@ -208,6 +210,34 @@ a {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
+
+        .system-times {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            column-gap: 0;
+            row-gap: 16px;
+            align-items: baseline;
+
+            .system-time-row {
+                display: contents;
+
+                >div {
+                    color: var(--c-muted, var(--app-container_title-color));
+                    text-align: right;
+                    white-space: nowrap;
+                }
+
+                >span {
+                    min-width: 0;
+                    color: var(--c-text, var(--app-container_status-label_block));
+                    font-size: var(--home-body-size, 16px);
+                    line-height: 1.5;
+                    font-variant-numeric: tabular-nums;
+                    overflow-wrap: anywhere;
+                }
+            }
+        }
 
         .item {
             display: flex;

@@ -118,6 +118,8 @@ try:
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-page-spacing-review.cjs'
     if os.environ.get('QS_ACCEPT_HEADER_BAND') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-header-band-review.cjs'
+    if os.environ.get('QS_ACCEPT_SYSTEM_TIME') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/system-time-alignment-review.cjs'
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:
