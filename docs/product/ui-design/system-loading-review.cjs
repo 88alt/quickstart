@@ -16,6 +16,7 @@ const report={checks:[],cases:[],errors:[],result:'running',real};let browser,se
   const context=await browser.newContext({viewport:{width:scenario.width,height:1000},locale:scenario.english?'en-US':'zh-CN',hasTouch:scenario.width<600,colorScheme:scenario.theme});
   if(real)await context.addCookies([{name:'sysauth_http',value:process.env.QS_ACCEPT_SID,domain:'192.168.30.244',path:'/'}]);
   else await context.addInitScript(d=>{window.vue_base='/';window.vue_lang=d.english?'en':'zh-cn';window.quickstart_features=d.fixtures.features||[];window.quickstart_configs=d.fixtures.configs||{}},{...scenario,fixtures});
+  if(real)await context.addInitScript(desired=>{let url='';Object.defineProperty(window,'vue_lang',{configurable:true,get:()=>desired,set:actual=>window.__qs_test_native_lang=actual});Object.defineProperty(window,'vue_lang_data',{configurable:true,get:()=>url,set:actual=>url=actual.replace(/\/i18n\/[^/?]+\.json/,'/i18n/'+desired+'.json')})},scenario.english?'en':'zh-cn');
   let releaseStatus,releaseVersion;const statusGate=new Promise(r=>releaseStatus=r),versionGate=new Promise(r=>releaseVersion=r);let reads=0,fail=!!scenario.fail;
   if(!real)await context.route('**/cgi-bin/luci/istore/**',async route=>{const key=new URL(route.request().url()).pathname.replace('/cgi-bin/luci/istore','');let body;
    if(key==='/home/v1/layout/')body={success:0,canEdit:true,result:{state:'saved',version:'a'.repeat(32)+':1',value:defaults.layout}};
@@ -35,6 +36,7 @@ const report={checks:[],cases:[],errors:[],result:'running',real};let browser,se
    const card=page.locator('[data-layout-card=system]');
    const measure=()=>card.evaluate(n=>({width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height,stacked:n.closest('.ordered-column')?.querySelectorAll(':scope>.ordered-card').length>1,text:n.innerText,structure:!!n.querySelector('.reusable-card'),blur:n.querySelector('.card-body')?getComputedStyle(n.querySelector('.card-body')).filter:null,busy:n.querySelector('[aria-busy=true]')!==null,form:n.getAttribute('data-presentation')}));
    entry.pending=await measure();const original=entry.pending.structure?await card.locator('.reusable-card').elementHandle():null;await card.screenshot({path:path.join(out,scenario.width+'-'+scenario.theme+'-pending.png')});
+   entry.actualLanguage=await page.evaluate(()=>window.vue_lang);assert.equal(entry.actualLanguage,scenario.english?'en':'zh-cn');assert.match(entry.pending.text,scenario.english?/^System information/:/^系统信息/);
    if(scenario.statusFirst)releaseStatus();else releaseVersion();await page.waitForTimeout(200);entry.partial=await measure();
    releaseStatus();releaseVersion();await page.waitForFunction(()=>!!document.querySelector('[data-layout-card=system] .reusable-card')&&!document.querySelector('[data-layout-card=system] [data-system-loading]'),null,{timeout:15000});await page.waitForTimeout(100);
    entry.complete=await measure();await card.screenshot({path:path.join(out,scenario.width+'-'+scenario.theme+'-complete.png')});
@@ -45,6 +47,7 @@ const report={checks:[],cases:[],errors:[],result:'running',real};let browser,se
    assert.equal(entry.partial.height,entry.pending.height);assert.equal(entry.complete.busy,false);assert.equal(entry.complete.blur,'none');
    if(scenario.fail){assert.match(entry.complete.text,/失败|Unavailable|unavailable/);fail=false;await card.getByRole('button',{name:scenario.english?'Retry':'重试',exact:true}).first().click();await page.waitForFunction(()=>{const n=document.querySelector('[data-layout-card=system]');return n&&!/失败|Unavailable|unavailable/.test(n.innerText)&&/\d+(?:\.\d+)?[%℃]/.test(n.innerText)},null,{timeout:15000});entry.retried=await measure()}
    else{assert.ok(!/失败|Unavailable|unavailable/.test(entry.complete.text),'Real system reads failed');assert.match(entry.complete.text,/\d+(?:\.\d+)?[%℃]/,'No real system metrics appeared')}
+   if(entry.retried)assert.ok(Math.abs(entry.retried.height-entry.pending.height)<=1,'Retry changed card height');
    report.checks.push(scenario.width+' '+scenario.theme+' '+entry.pending.form+(scenario.fail?' failure/retry':' delayed read')+' stable');
   }finally{releaseStatus();releaseVersion();await context.close()}
  }
