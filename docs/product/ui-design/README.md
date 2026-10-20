@@ -1,5 +1,9 @@
 # Quickstart Vue 首页设计原型
 
+## 当前：淡雅底面与业务点彩（2026-10-20）
+
+用户要求将点彩逻辑应用到正式Quickstart web：大部分淡雅，用重要文字和图标本身的颜色增加生机，参考旧版Quickstart，不靠加深操作/图标底色。当前默认[鲜明点彩版](http://192.168.9.19:5180/)与正式首页共用`home/homeSemanticColors.css`；[浓底方向](http://192.168.9.19:5180/?palette=bold)和[原设计](http://192.168.9.19:5180/?palette=classic)仅在隔离预览对照。中性画布、白卡片、淡操作、彩色线条图标和业务名称着色，状态与身份色独立；保留既有布局、正式蓝色顶部和无粗线规则。[当前色彩规范](../quickstart-home-color-study.md)、[正式实施与设备证据](../../evidence/m70/semantic-colors-production/status.md)。以下是历史设计基线与各自候选验收。
+
 ## 当前：网络连接与紧凑网络接口降高
 
 连接改为三个完整信息行，紧凑端口由三层收成两层；字体、状态来源、隐私、原表单和详情保持。约463px桌面卡宽下实测连接334→238px、接口161→136px；长值/异常/触屏可自然增高，手机完整接口形态保留原总数与字段。[目标及任务树](../quickstart-home-network-density.md)、[当前100组检查、截图与资源指纹](../../evidence/m66/network-density/acceptance.md)。下述按钮/命名规范继续有效，旧候选结果作为历史保留。

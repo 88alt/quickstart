@@ -1,5 +1,5 @@
 <template>
- <Teleport to="body"><div class="network-dialog-shade" @click.self="$emit('close')"><section ref="element" class="network-dialog" role="dialog" aria-modal="true" :aria-label="title" tabindex="-1" @keydown="key">
+ <Teleport to="body"><div class="network-dialog-shade" @click.self="$emit('close')"><section ref="element" class="network-dialog home-semantic-colors" role="dialog" aria-modal="true" :aria-label="title" tabindex="-1" @keydown="key">
   <header><div><small>QUICKSTART</small><h2>{{title}}</h2></div><button data-network-dialog-close @click="$emit('close')" :aria-label="english?'Close details':'关闭详情'">×</button></header>
   <div class="network-dialog-body"><slot/></div>
  </section></div></Teleport>

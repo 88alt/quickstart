@@ -11,7 +11,8 @@ function createLauncher(config:ReturnType<typeof useHomeConfig>){
  const state=reactive({status:'loading',apps:[] as HomeApplication[],sandbox:'unknown'}),retained=new Map<string,HomeApplication>()
  const homeApplicationSession={get favorites(){return config.launcher.value.favorites}}
  const linkSession={get entries():HomeApplication[]{return config.launcher.value.links.map(l=>({id:l.id,zh:l.name,en:l.name,path:l.url,glyph:l.glyph,detail:'用户添加的链接',detailEn:'Custom link',kind:'link',tone:'teal'}))}}
- let controller:AbortController|undefined,alive=true
+ let controller:AbortController|undefined,alive=true,pendingRead:Promise<void>|undefined
+ function refresh(){return pendingRead=read()}
  async function read(){
   controller?.abort();const current=new AbortController();controller=current;state.status='loading'
   let timedOut=false
@@ -45,9 +46,9 @@ function createLauncher(config:ReturnType<typeof useHomeConfig>){
  }
  async function deleteLink(id:string){const current=config.launcher.value;await config.save('launcher',{...current,links:current.links.filter(l=>l.id!==id),favorites:current.favorites.filter(pin=>pin!==id)})}
  const system=useSystemStore();let updateTimer:number|undefined
- onMounted(()=>{void read();void readSandbox();if(!window.quickstart_configs?.update?.disable&&window.quickstart_features?.includes('ota'))updateTimer=window.setTimeout(()=>{if(!document.hidden)system.requestCheckUpdate()},1100)})
+ onMounted(()=>{void refresh();void readSandbox();if(!window.quickstart_configs?.update?.disable&&window.quickstart_features?.includes('ota'))updateTimer=window.setTimeout(()=>{if(!document.hidden)system.requestCheckUpdate()},1100)})
  onUnmounted(()=>{alive=false;controller?.abort();window.clearTimeout(updateTimer)})
- return {state,catalogue,resolve:resolveEntry,resolveEntry,entryAvailability,homeApplicationSession,linkSession,saveLink,deleteLink,saveFavorites,retry:read,begin:()=>config.begin('launcher'),editable:()=>config.editable('launcher'),saving:()=>config.state.launcher.saving,preferencesLoading:()=>config.state.launcher.loading}
+ return {state,catalogue,resolve:resolveEntry,resolveEntry,entryAvailability,homeApplicationSession,linkSession,saveLink,deleteLink,saveFavorites,retry:refresh,waitForRead:()=>pendingRead||Promise.resolve(),begin:()=>config.begin('launcher'),editable:()=>config.editable('launcher'),saving:()=>config.state.launcher.saving,preferencesLoading:()=>config.state.launcher.loading}
 }
 type Launcher=ReturnType<typeof createLauncher>
 const key:InjectionKey<Launcher>=Symbol('quickstart-home-launcher')

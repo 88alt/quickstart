@@ -65,6 +65,16 @@ let browser,server;
  if(visualOnly)await page.addStyleTag({content:'body{margin:0}'});
  report.formalMetrics=await inspect(page);
  await capture('formal-1440');assert.equal(await page.locator('[data-layout-card]').count(),11);assert.equal(report.errors.length,0);report.checks.push('Formal entry renders all 11 widgets without page errors');
+ if(process.env.QS_HOME_COLOR_REVIEW==='1'){
+  const colours=require('./home-semantic-colour-checks.cjs');report.colourParity=[];
+  for(const theme of ['light','dark']){
+   await reference.evaluate(theme=>document.body.setAttribute('theme',theme),theme);await page.evaluate(theme=>document.body.setAttribute('theme',theme),theme);await page.waitForTimeout(350);
+   const expected=await colours.snapshot(reference),actual=await colours.snapshot(page);assert.deepEqual(actual,expected,'Formal colours differ from the accepted preview');
+   report.colourParity.push({theme,colours:actual,semantics:await colours.check(page)});
+   await page.screenshot({path:path.join(out,'colour-parity-'+theme+'.png'),fullPage:true});
+  }
+  await page.evaluate(()=>document.body.setAttribute('theme','light'));report.checks.push('Formal light/dark semantic colours exactly match the frozen accepted preview; glyph/name/state/hover contrast and uptime meaning preserved');
+ }
  await checkHomeShell(page,report,{editable:!process.env.QS_HOME_CONFIG_STATE||configDomain==='launcher',touch});
  if(process.env.QS_HOME_NAVIGATION_REVIEW==='1')await require('./launcher-navigation-checks.cjs')(page,report,out);
  if(process.env.QS_HOME_ENTRY_REVIEW==='1'){expectedFailures.add('/cgi-bin/luci/admin/store/entrysh'.slice(prefix.length));await require('./entry-resolution-checks.cjs')(page,report,out)}
