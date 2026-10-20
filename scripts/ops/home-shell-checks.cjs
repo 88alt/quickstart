@@ -3,9 +3,9 @@ async function checkHomeHeader(page){
  const metrics=await page.locator('[data-ordered-home]').evaluate(root=>{
   const top=root.querySelector('[data-home-top]'),r=top.getBoundingClientRect(),s=getComputedStyle(top),parent=root.closest('#maincontent')||root;
   const p=parent.getBoundingClientRect(),a=top.querySelector('a'),b=top.querySelector('[data-home-settings]'),ab=a.getBoundingClientRect(),bb=b.getBoundingClientRect();
-  return {height:r.height,left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right,background:s.backgroundColor,expectedPrimary:getComputedStyle(document.body).getPropertyValue('--primary').trim(),text:getComputedStyle(a).color,icon:getComputedStyle(b.querySelector('path')).fill,controlsInside:Math.min(ab.top,bb.top)>=r.top&&Math.max(ab.bottom,bb.bottom)<=r.bottom};
+  return {height:r.height,expectedHeight:matchMedia('(max-width:600px),(pointer:coarse)').matches?48:32,left:r.left,right:r.right,parentLeft:p.left,parentRight:p.right,background:s.backgroundColor,expectedPrimary:getComputedStyle(document.body).getPropertyValue('--primary').trim(),text:getComputedStyle(a).color,icon:getComputedStyle(b.querySelector('path')).fill,controlsInside:Math.min(ab.top,bb.top)>=r.top&&Math.max(ab.bottom,bb.bottom)<=r.bottom};
  });
- assert.equal(metrics.height,48,'Legacy blue utility bar height changed');
+ assert.equal(metrics.height,metrics.expectedHeight,'Desktop blue band / touch target height changed');
  assert.ok(Math.abs(metrics.left-metrics.parentLeft)<1&&Math.abs(metrics.right-metrics.parentRight)<1,'Utility bar is inset inside the content');
  const expected=await page.evaluate(color=>{const n=document.createElement('span');n.style.color=color;document.body.append(n);const result=getComputedStyle(n).color;n.remove();return result},metrics.expectedPrimary||'#606de8');
  assert.equal(metrics.background,expected,'Utility bar must use the system blue');
