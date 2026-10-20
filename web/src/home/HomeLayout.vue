@@ -1,5 +1,5 @@
 <template>
-  <main class="canvas-home layout-design-home ordered-home natural-home" :class="{'ordered-editing':editing,'slot-overview-active':overview}" data-ordered-home @pointerdown.capture="sizeClickPending=false" @click.capture="eatSizeClick" @click="blankClick">
+  <main class="canvas-home layout-design-home ordered-home natural-home home-semantic-colors" :class="{'ordered-editing':editing,'slot-overview-active':overview}" data-ordered-home @pointerdown.capture="sizeClickPending=false" @click.capture="eatSizeClick" @click="blankClick">
     <div class="home-top" data-home-top>
       <div class="home-top-actions"><a href="https://www.istoreos.com/" target="_blank" rel="noopener noreferrer">{{t('iStoreOS官网','iStoreOS website')}}</a><button ref="editButton" class="home-module-settings" @click="editing?cancel():begin()" :disabled="startupLoading||!canEdit||externalBusy||saving" :aria-pressed="editing" :aria-label="t('自定义首页','Customize home')" :title="t('模块设置','Module settings')" data-home-settings><ModuleIcon color="#fff"/></button></div>
     </div>
@@ -369,5 +369,6 @@ onUnmounted(()=>{observer?.disconnect();interruptMove();window.removeEventListen
 <style src="./homeWidgetChrome.css"></style>
 <style src="./homeVisualTokens.css"></style>
 <style src="./homeWidgetDetails.css"></style>
+<style src="./homeSemanticColors.css"></style>
 <style src="./luciHomeBoundary.css"></style>
 <style src="./homeTop.css" scoped></style>

@@ -1,6 +1,6 @@
 /* Design-only colour study. No production import, measurements or state rules.
  * Accent is decorative identity; good/warning/offline keep business semantics. */
-.ordered-home.natural-home:is([data-color-style=vivid],[data-color-style=bold]){
+.ordered-home.natural-home[data-color-style=bold]{
  --c-bg:#f3f5f7;--c-panel:#fff;--c-soft:#f5f7fa;--c-hover:#edf2f8;
  --c-text:#253247;--c-muted:#5b687a;--c-line:#e1e6ed;--c-accent:#155dfc;
  --c-good:#008236;--c-warning:#946000;
@@ -32,7 +32,7 @@
  --color-violet-start:#9a31c8;--color-violet-end:#5830ce;
  --color-card-glow:#eaf1ff;
 }
-body[theme=dark] .ordered-home.natural-home:is([data-color-style=vivid],[data-color-style=bold]){
+body[theme=dark] .ordered-home.natural-home[data-color-style=bold]{
  --c-bg:#191d24;--c-panel:#2c2c2c;--c-soft:#343a43;--c-hover:#3b4655;
  --c-text:#e6ebf3;--c-muted:#b1bdce;--c-line:#414b59;--c-accent:#91b9ff;
  --c-good:#70e2b2;--c-warning:#ffce76;
@@ -56,47 +56,27 @@ body[theme=dark] .ordered-home.natural-home[data-color-style=bold]{
 }
 /* Quiet neutral edges leave business text and coloured glyphs in focus.
  * Preserve the existing one-pixel border and geometry; no decorative top rule. */
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .layout-widget :is(.network_container,.network-business-card,.canvas-module,.home-applications,.native-summary,.compact-preview,.native-business-surface>.reusable-card){
+.ordered-home[data-color-style=bold] .layout-widget :is(.network_container,.network-business-card,.canvas-module,.home-applications,.native-summary,.compact-preview,.native-business-surface>.reusable-card){
  background:var(--c-panel);
  border-color:var(--color-card-border);
  box-shadow:0 2px 10px #182b480a;
 }
 .ordered-home[data-color-style=bold] .layout-widget :is(.network_container,.network-business-card,.canvas-module,.home-applications,.native-summary,.compact-preview,.native-business-surface>.reusable-card){background:linear-gradient(145deg,var(--color-card-glow),transparent 180px),var(--c-panel)}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .traffic-header-actions>.layout-speed{color:var(--color-action-ink)!important}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .layout-widget :is(.widget-action-group,.settings-wrapper) .widget-menu-trigger{color:var(--color-action-ink)!important}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .settings-wrapper{--app-container_title-color:var(--color-action-ink)}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .settings-btn>.btn_settings svg :is([fill="#0a0a0a"],[fill="#000"],[fill="#000000"],[fill="black"]){fill:currentColor}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .widget-action-group :is(button,.btn_settings):hover{background:#7c9fe42b}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .layout-widget :is(.applications-heading>div:first-child>svg,.canvas-module>header>div:first-child>svg,.network-business-card h2>svg,.card-header .left>svg){color:var(--c-accent)}
+.ordered-home[data-color-style=bold] .traffic-header-actions>.layout-speed{color:var(--color-action-ink)!important}
+.ordered-home[data-color-style=bold] .layout-widget :is(.widget-action-group,.settings-wrapper) .widget-menu-trigger{color:var(--color-action-ink)!important}
+.ordered-home[data-color-style=bold] .settings-wrapper{--app-container_title-color:var(--color-action-ink)}
+.ordered-home[data-color-style=bold] .settings-btn>.btn_settings svg :is([fill="#0a0a0a"],[fill="#000"],[fill="#000000"],[fill="black"]){fill:currentColor}
+.ordered-home[data-color-style=bold] .widget-action-group :is(button,.btn_settings):hover{background:#7c9fe42b}
+.ordered-home[data-color-style=bold] .layout-widget :is(.applications-heading>div:first-child>svg,.canvas-module>header>div:first-child>svg,.network-business-card h2>svg,.card-header .left>svg){color:var(--c-accent)}
 .ordered-home[data-color-style=bold] .layout-widget .home-applications .application-icon,
 .ordered-home[data-color-style=bold] .applications-browser .application-icon{
  background:linear-gradient(140deg,var(--color-blue-start),var(--color-blue-end));color:var(--color-icon-ink);box-shadow:0 3px 8px #2459d91f;
 }
 .ordered-home[data-color-style=bold] :is(.home-applications,.applications-browser) .application-icon.teal{background:linear-gradient(140deg,var(--color-teal-start),var(--color-teal-end));color:var(--color-icon-ink)}
 .ordered-home[data-color-style=bold] :is(.home-applications,.applications-browser) .application-icon.violet{background:linear-gradient(140deg,var(--color-violet-start),var(--color-violet-end));color:var(--color-icon-ink)}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .native-business-surface .content .tab>.item.active{color:var(--color-selected-ink)}
-.ordered-home:is([data-color-style=vivid],[data-color-style=bold]) .inventory-heading>strong{color:var(--c-accent)}
+.ordered-home[data-color-style=bold] .native-business-surface .content .tab>.item.active{color:var(--color-selected-ink)}
+.ordered-home[data-color-style=bold] .inventory-heading>strong{color:var(--c-accent)}
 .ordered-home[data-color-style=bold] :is(.lab-edit-button,.ordered-savebar>.primary,.applications-save){background:linear-gradient(135deg,var(--color-blue-start),var(--color-blue-end))!important;color:#fff!important}
 
-/* Default study: the native Quickstart identity colours live on glyphs and
- * service names. Identity colour never means that an unenabled service runs. */
-.ordered-home[data-color-style=vivid] :is(.lab-edit-button,.ordered-savebar>.primary,.applications-save){background:var(--home-icon-blue-bg)!important;color:var(--home-icon-blue)!important}
-.ordered-home[data-color-style=vivid] .layout-widget{--color-widget-icon:var(--home-icon-blue)}
-.ordered-home[data-color-style=vivid] [data-layout-card=traffic]{--color-widget-icon:var(--color-icon-cyan)}
-.ordered-home[data-color-style=vivid] :is([data-layout-card=connection],[data-layout-card=downloads],[data-layout-card=remote]){--color-widget-icon:var(--color-icon-green)}
-.ordered-home[data-color-style=vivid] [data-layout-card=sharing]{--color-widget-icon:var(--home-icon-violet)}
-.ordered-home[data-color-style=vivid] :is([data-layout-card=storage],[data-layout-card=system]){--color-widget-icon:var(--color-icon-slate)}
-.ordered-home[data-color-style=vivid] .layout-widget :is(.applications-heading>div:first-child>svg,.canvas-module>header>div:first-child>svg,.network-business-card h2>svg,.card-header .left>svg,.native-summary h2>svg,.compact-preview h2>svg){color:var(--color-widget-icon)}
-.ordered-home[data-color-style=vivid] .layout-widget .card-header .left>svg [fill]:not([fill=none]){fill:currentColor}
-.ordered-home[data-color-style=vivid] .layout-widget .native-business-surface .content .tab>.item{--color-service-soft:var(--color-service-blue-bg);background:var(--color-service-soft)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-business-surface .content .tab>.item.memory{--home-service-icon:var(--color-icon-green);--color-service-soft:var(--color-service-green-bg)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-business-surface .content .tab>.item.network{--color-service-soft:var(--color-service-violet-bg)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-downloads .content .tab>.item.cloud{--color-service-soft:var(--color-service-orange-bg)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-downloads .content .tab>.item.memory{--home-service-icon:var(--color-icon-slate);--color-service-soft:var(--home-option)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-downloads .content .tab>.item.network{--home-service-icon:var(--home-icon-teal);--color-service-soft:var(--color-service-teal-bg)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-remote .content .tab>.item.network{--home-service-icon:var(--color-icon-slate);--color-service-soft:var(--home-option)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-business-surface .content .tab>.item>.title{color:var(--home-service-icon)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-business-surface .content .tab>.item:hover{background:var(--c-hover)}
-.ordered-home[data-color-style=vivid] .connection-business[data-connection-state=netSuccess] .connection-status-text strong{color:var(--c-good)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-system .info .item1.bgcolor1>span{color:var(--home-icon-blue)}
-.ordered-home[data-color-style=vivid] .layout-widget .native-system .info .item1.bgcolor2>span{color:var(--color-icon-green)}
+/* The recommended view consumes the same production colour contract. */
+.ordered-home[data-color-style=vivid] .lab-edit-button{background:var(--home-icon-blue-bg)!important;color:var(--home-icon-blue)!important}
