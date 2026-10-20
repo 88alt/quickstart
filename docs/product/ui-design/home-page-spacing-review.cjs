@@ -17,6 +17,8 @@ async function measure(){return page.locator('[data-ordered-home]').evaluate(roo
   page.on('pageerror',e=>report.errors.push(e.message));page.on('response',r=>{if(r.status()>=400)report.httpErrors.push({path:new URL(r.url()).pathname,status:r.status()})});page.on('request',r=>{if(!r.url().startsWith(base)||r.method()==='GET')return;const p=new URL(r.url()).pathname;if(p==='/ubus/'){const body=r.postDataJSON();for(const call of Array.isArray(body)?body:[body])report.readRPC.push({method:call.method,object:call.params?.[1],operation:call.params?.[2]})}else report.mutations.push(p)});
   await page.goto(base+'/cgi-bin/luci/admin/quickstart/',{waitUntil:'networkidle'});await page.locator('[data-layout-card=traffic]').waitFor();await page.waitForTimeout(1000);await setSystemTheme(page,c.theme);
   const m=await measure();report.views.push({...c,metrics:m,header:await checkHomeHeader(page)});assert.equal(m.overflow,false);
+  // Capture the normal homepage before editor notices and focus/scroll changes.
+  if(c.lang==='zh'&&[2560,1440,390,320].includes(c.width)||c.lang==='en'&&c.width===320)await page.screenshot({path:path.join(out,[c.lang,c.theme,c.width].join('-')+'.png'),fullPage:c.width>600});
   if(!baseline){
    const left=m.content.left-m.main.left,right=m.main.right-m.content.right;
    assert.ok(Math.abs(left-(m.native.marginLeft+m.native.paddingLeft))<1,'Left gutter differs from original LuCI container: '+left);assert.ok(Math.abs(right-(m.native.marginRight+m.native.paddingRight))<1,'Right gutter differs from original LuCI container: '+right);
@@ -27,11 +29,10 @@ async function measure(){return page.locator('[data-ordered-home]').evaluate(roo
     const before=JSON.parse(fs.readFileSync(process.env.QS_SPACING_BEFORE));const old=before.views.find(v=>v.width===c.width);if(old)assert.deepEqual(m.shell,old.metrics.shell,'System shell changed');
    }
    if([2560,1440,390,320].includes(c.width)){
-    await checkHomeShell(page,{checks:[]},{touch:c.width<600});const before=await page.locator('[data-ordered-home]').getAttribute('class');await page.locator('[data-layout-card=connection] [data-widget-more]').click();await page.keyboard.press('Escape');assert.equal(await page.locator('[role=menu]').count(),0);assert.equal(await page.locator('[data-ordered-home]').getAttribute('class'),before);
-    await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-applications-browser]').waitFor();await page.keyboard.press('Escape');assert.equal(await page.locator('[data-applications-browser]').count(),0);
+    await checkHomeShell(page,{checks:[]},{touch:c.width<600});const before=await page.locator('[data-ordered-home]').getAttribute('class');await page.locator('[data-layout-card=connection] [data-widget-more]').click();await page.keyboard.press('Escape');await page.locator('[role=menu]').waitFor({state:'detached'});assert.equal(await page.locator('[data-ordered-home]').getAttribute('class'),before);
+    await page.locator('[data-layout-card=applications] [data-all-apps]').click();await page.locator('[data-applications-browser]').waitFor();await page.keyboard.press('Escape');await page.locator('[data-applications-browser]').waitFor({state:'detached'});
    }
   }
-  if(c.lang==='zh'&&[2560,1440,390,320].includes(c.width)||c.lang==='en'&&c.width===320)await page.screenshot({path:path.join(out,[c.lang,c.theme,c.width].join('-')+'.png'),fullPage:c.width>600});
   await context.close();page=null;
  }
  assert.deepEqual(report.errors,[]);assert.deepEqual(report.mutations,[]);for(const r of report.readRPC){if(r.method==='list'&&!r.object)continue;assert.equal(r.method,'call');assert.ok(['luci.getFeatures','file.list','uci.changes'].includes(r.object+'.'+r.operation),JSON.stringify(r))}
