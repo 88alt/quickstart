@@ -41,10 +41,10 @@ async function geometry(){return page.locator('[data-layout-card]').evaluateAll(
    await page.keyboard.press('Escape');assert.equal(await page.locator('[data-applications-browser]').count(),0);
    const target=page.locator('[data-canvas-device]').first(),id=await target.getAttribute('data-canvas-device');await target.click();await page.waitForURL(u=>u.pathname.endsWith('/devicemanagement')&&u.searchParams.get('device')===id);await page.locator('.drawer-backdrop').waitFor();await page.goBack({waitUntil:'networkidle'});await page.locator('[data-ordered-home]').waitFor();
   }
-  await context.close();page=null;
+  await context.unrouteAll({behavior:'wait'});await context.close();page=null;
  }
  assert.deepEqual(report.errors,[]);assert.deepEqual(report.mutations,[]);for(const r of report.readRPC){if(r.method==='list'&&!r.object)continue;assert.equal(r.method,'call');assert.ok(['luci.getFeatures','file.list','uci.changes'].includes(r.object+'.'+r.operation),JSON.stringify(r))}
  for(const e of report.httpErrors)assert.ok(e.status===404&&e.path==='/luci-static/resources/app-icons/kai.png','Unexpected HTTP failure: '+JSON.stringify(e));
  report.result='passed';
 }catch(e){report.result='failed';report.failure=e.stack;process.exitCode=1;if(page)await page.screenshot({path:path.join(out,'failure.png')}).catch(()=>{})}
-finally{await browser?.close();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({result:report.result,views:report.views.length,details:report.details.length,failure:report.failure},null,2))}})();
+finally{if(browser)for(const context of browser.contexts())await context.unrouteAll({behavior:'wait'});await browser?.close();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({result:report.result,views:report.views.length,details:report.details.length,failure:report.failure},null,2))}})();
