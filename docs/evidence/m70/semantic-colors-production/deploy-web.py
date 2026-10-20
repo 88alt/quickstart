@@ -22,6 +22,7 @@ backup = '/root/quickstart-backups/home-0166-semantic-' + short + '-r2'
 template = '/usr/lib/lua/luci/view/quickstart/main.htm'
 web = '/www/luci-static/quickstart/'
 quote = shlex.quote
+asset_key = lambda name: 'web.' + name.replace('/', '.')
 
 
 def remote(command, data=None):
@@ -47,7 +48,7 @@ report['before'] = snapshot()
 assert report['before']['policyEnabled'] == '0' and not report['before']['policyPIDs']
 old_manifest = dict(line.split('=', 1) for line in Path('bin/previews/d189c25/MANIFEST').read_text().splitlines())
 for name in ['index.js', 'style.css', 'vendor.js', 'i18n/en.json']:
-    assert remote('sha256sum ' + quote(web + name)).decode().split()[0] == old_manifest['web.' + name], 'Current B frontend changed since preflight'
+    assert remote('sha256sum ' + quote(web + name)).decode().split()[0] == old_manifest[asset_key(name)], 'Current B frontend changed since preflight'
 original_template = remote('cat ' + quote(template))
 updated_template, count = re.subn(rb'local asset_version = "[^"]+"', b'local asset_version = "' + manifest['asset_version'].encode() + b'"', original_template)
 assert count == 1
@@ -58,8 +59,8 @@ try:
     with zipfile.ZipFile(candidate / 'quickstart_web.zip') as archive:
         for name in ['style.css', 'index.js', 'vendor.js', 'i18n/en.json']:
             data = archive.read('luci-static/quickstart/' + name)
-            assert hashlib.sha256(data).hexdigest() == manifest['web.' + name]
-            if manifest['web.' + name] == old_manifest['web.' + name]:
+            assert hashlib.sha256(data).hexdigest() == manifest[asset_key(name)]
+            if manifest[asset_key(name)] == old_manifest[asset_key(name)]:
                 continue
             target = web + name
             temporary = target + '.semantic-' + short
@@ -70,7 +71,7 @@ try:
     remote('set -eu\ntest ! -e ' + quote(temporary) + '\ncat > ' + quote(temporary), updated_template)
     remote('set -eu\nchmod 644 ' + quote(temporary) + '\nmv ' + quote(temporary) + ' ' + quote(template))
     for name in ['index.js', 'style.css', 'vendor.js', 'i18n/en.json']:
-        assert remote('sha256sum ' + quote(web + name)).decode().split()[0] == manifest['web.' + name]
+        assert remote('sha256sum ' + quote(web + name)).decode().split()[0] == manifest[asset_key(name)]
     report['after'] = snapshot()
     assert report['before'] == report['after'], 'Protected configuration/process/package state changed'
     report['result'] = 'passed'
