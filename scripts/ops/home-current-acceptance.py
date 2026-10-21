@@ -82,6 +82,8 @@ try:
     env = dict(os.environ, NODE_PATH='/config/playwright-runner/node_modules', QS_ACCEPT_HOST=HOST,
                QS_ACCEPT_SID=sessions[0], QS_ACCEPT_SECOND_SID=sessions[1], QS_ACCEPT_OUT=str(OUT.resolve()))
     test_script = Path(__file__).with_name('home-current-acceptance.cjs')
+    if os.environ.get('QS_ACCEPT_LAYOUT_NOTICE') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/layout-notice-review.cjs'
     if os.environ.get('QS_ACCEPT_WIDGET_MENUS') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/widget-menu-removal-review.cjs'
     if os.environ.get('QS_ACCEPT_CONNECTION_WIZARD') == '1':
