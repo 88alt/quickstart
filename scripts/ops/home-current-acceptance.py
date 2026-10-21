@@ -132,6 +132,8 @@ try:
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/service-widgets-review.cjs'
     if os.environ.get('QS_ACCEPT_DEVICE_SPACING') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/device-page-spacing-review.cjs'
+    if os.environ.get('QS_ACCEPT_DEVICE_VISUAL') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/device-visual-refinement-review.cjs'
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:

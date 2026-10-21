@@ -2,7 +2,7 @@
     <main id="page" class="device-management" :aria-label="$gettext('局域网设备管理')">
         <nav class="breadcrumbs" :aria-label="$gettext('面包屑')"><router-link to="/">{{ $gettext('首页') }}</router-link><span aria-hidden="true">›</span><span>{{ $gettext('局域网设备管理') }}</span></nav>
         <nav class="primary-tabs" role="tablist" :aria-label="$gettext('局域网设备管理')">
-            <button v-for="tab in tabs" :key="tab.id" type="button" role="tab" :aria-selected="activeTab === tab.id" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id"><span aria-hidden="true">{{ tab.icon }}</span>{{ tab.label }}</button>
+            <button v-for="tab in tabs" :key="tab.id" type="button" role="tab" :aria-selected="activeTab === tab.id" :class="{ active: activeTab === tab.id }" @click="activeTab = tab.id"><HomeGlyph :name="tab.icon" />{{ tab.label }}</button>
         </nav>
         <section class="primary-content" role="tabpanel">
             <DeviceCenterList v-if="activeTab === 'devices'" />
@@ -18,21 +18,22 @@ import { useGettext } from '/@/plugins/i18n'
 import DeviceCenterList from './deviceCenterList.vue'
 import DeviceGroupsPanel from './deviceGroupsPanel.vue'
 import LanSettingsPanel from './lanSettingsPanel.vue'
+import HomeGlyph from '/@/home/HomeGlyph.vue'
+import './deviceVisualTokens.css'
 
 const { $gettext } = useGettext()
 const activeTab = ref<'devices'|'groups'|'settings'>('devices')
 const tabs = computed(() => [
-    { id: 'devices' as const, icon: '◉', label: $gettext('设备') },
-    { id: 'groups' as const, icon: '◫', label: $gettext('分组与计划') },
-    { id: 'settings' as const, icon: '⚙', label: $gettext('局域网设置') },
+    { id: 'devices' as const, icon: 'devices', label: $gettext('设备') },
+    { id: 'groups' as const, icon: 'layers', label: $gettext('分组与计划') },
+    { id: 'settings' as const, icon: 'tune', label: $gettext('局域网设置') },
 ])
 </script>
 
 <style lang="scss" scoped>
-.device-management { --device-accent: #553afe; width: 100%; max-width: none; margin: 0; color: var(--flow-span-color); }.breadcrumbs { display: flex; align-items: center; gap: 7px; margin-bottom: 18px; padding-top: 4px; font-size: 13px; }.breadcrumbs a { color: var(--breadcrumbs-tit-color); text-decoration: none; }.breadcrumbs span:last-child { color: var(--breadcrumbs-tit-color1); }.primary-tabs { display: flex; gap: 6px; padding: 5px; background: rgba(127,127,127,.07); border-radius: 11px 11px 0 0; }.primary-tabs button { display: inline-flex; align-items: center; gap: 7px; min-height: 42px; padding: 8px 16px; color: inherit; background: transparent; border: 0; border-radius: 8px; cursor: pointer; }.primary-tabs button.active { color: var(--device-accent); background: var(--card-bg-color); box-shadow: 0 2px 8px rgba(30,20,90,.07); font-weight: 600; }.primary-tabs button:focus-visible { outline: 2px solid var(--device-accent); outline-offset: 2px; }.primary-content { min-height: 62vh; padding: 18px; background: var(--card-bg-color); border-radius: 0 0 11px 11px; }
-@media(prefers-color-scheme:dark){.device-management{--device-accent:#a697ff}}
+.device-management { width: 100%; max-width: none; margin: 0; color: var(--device-text); font-size: 14px; }.breadcrumbs { display: flex; align-items: center; gap: 7px; margin-bottom: 18px; padding-top: 4px; font-size: 13px; }.breadcrumbs a { color: var(--breadcrumbs-tit-color); text-decoration: none; }.breadcrumbs span:last-child { color: var(--breadcrumbs-tit-color1); }.primary-tabs { display: flex; gap: 6px; padding: 5px; background: var(--device-panel); border: 1px solid var(--device-line); border-bottom: 0; border-radius: 10px 10px 0 0; }.primary-tabs button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 8px 16px; color: var(--device-muted); background: transparent; border: 0; border-radius: 7px; cursor: pointer; }.primary-tabs button svg { width: 18px; height: 18px; flex: none; }.primary-tabs button.active { color: var(--device-accent); background: var(--device-accent-soft); font-weight: 600; }.primary-tabs button:focus-visible { outline: 2px solid var(--device-accent); outline-offset: 2px; }.primary-content { min-height: 62vh; padding: 18px; background: var(--device-panel); border: 1px solid var(--device-line); border-top: 0; border-radius: 0 0 10px 10px; }
 @media(max-width:700px){.primary-tabs{overflow-x:auto}.primary-tabs button{flex:1;justify-content:center;min-width:max-content;padding:8px 11px}.primary-content{padding:13px}}
-@media(max-width:420px){.primary-tabs button span{display:none}.primary-content{padding:11px 8px}}
+@media(max-width:420px){.primary-tabs button{min-width:0;padding:8px 6px;font-size:13px;white-space:normal}.primary-tabs button svg{display:none}.primary-content{padding:11px 8px}}
 </style>
 
 <style lang="scss">

@@ -5,6 +5,14 @@
                 <h2 id="device-center-title">{{ $gettext('设备') }}</h2>
                 <p>{{ $gettext('查看当前在线和本次开机发现过的局域网设备') }}</p>
             </div>
+        </div>
+        <div class="device-toolbar">
+            <nav class="device-filters" :aria-label="$gettext('设备筛选')">
+                <button v-for="item in filters" :key="item.value" type="button"
+                    :class="{ active: filter === item.value }" @click="filter = item.value">
+                    {{ item.label }} <span>{{ counts[item.value] }}</span>
+                </button>
+            </nav>
             <div class="device-center__tools">
                 <label class="device-search">
                     <span class="sr-only">{{ $gettext('搜索设备') }}</span>
@@ -17,17 +25,6 @@
                 <button class="icon-button" type="button" :disabled="loading" @click="load" :aria-label="$gettext('刷新')">↻</button>
                 <button class="add-device" type="button" @click="adding = !adding">{{ adding ? $gettext('取消添加') : $gettext('添加设备') }}</button>
             </div>
-        </div>
-
-        <form v-if="adding" class="add-device-form" @submit.prevent="addManualDevice"><div><strong>{{ $gettext('添加尚未上线的设备') }}</strong><small>{{ $gettext('保存 MAC 和备注，设备首次出现后会自动合并，不会创建孤立规则。') }}</small></div><label><span>{{ $gettext('设备备注') }}</span><input v-model.trim="manual.alias" maxlength="64" :placeholder="$gettext('例如：孩子的电脑')" /></label><label><span>MAC</span><input v-model.trim="manual.mac" required autocomplete="off" placeholder="AA:BB:CC:DD:EE:FF" /></label><button type="submit" :disabled="addingDevice">{{ addingDevice ? $gettext('正在添加…') : $gettext('确认添加') }}</button><p v-if="addError" role="alert">{{ addError }}</p></form>
-
-        <nav class="device-filters" :aria-label="$gettext('设备筛选')">
-            <button v-for="item in filters" :key="item.value" type="button"
-                :class="{ active: filter === item.value }" @click="filter = item.value">
-                {{ item.label }} <span>{{ counts[item.value] }}</span>
-            </button>
-        </nav>
-
         <details class="filter-panel">
             <summary>{{ $gettext('更多筛选') }}<small v-if="activeAdvancedFilterCount">{{ activeAdvancedFilterCount }}</small></summary>
             <div class="filter-panel__controls">
@@ -37,6 +34,9 @@
                 <button v-if="activeAdvancedFilterCount" type="button" class="clear-filters" @click="clearAdvancedFilters">{{ $gettext('清除筛选') }}</button>
             </div>
         </details>
+        </div>
+
+        <form v-if="adding" class="add-device-form" @submit.prevent="addManualDevice"><div><strong>{{ $gettext('添加尚未上线的设备') }}</strong><small>{{ $gettext('保存 MAC 和备注，设备首次出现后会自动合并，不会创建孤立规则。') }}</small></div><label><span>{{ $gettext('设备备注') }}</span><input v-model.trim="manual.alias" maxlength="64" :placeholder="$gettext('例如：孩子的电脑')" /></label><label><span>MAC</span><input v-model.trim="manual.mac" required autocomplete="off" placeholder="AA:BB:CC:DD:EE:FF" /></label><button type="submit" :disabled="addingDevice">{{ addingDevice ? $gettext('正在添加…') : $gettext('确认添加') }}</button><p v-if="addError" role="alert">{{ addError }}</p></form>
 
         <div v-if="telemetryHealth === 'partial' || telemetryHealth === 'stale'" class="telemetry-notice" role="status">
             {{ telemetryHealth === 'stale' ? $gettext('流量数据更新延迟，正在恢复采样') : $gettext('流量采样暂不可用，设备清单仍可正常使用') }}
@@ -52,11 +52,12 @@
 
         <div v-if="!loading && !loadError && visibleDevices.length" class="device-table-wrap">
             <table class="device-table">
+                <colgroup><col class="identity-column" /><col class="address-column" /><col class="status-column" /><col class="connection-column" /><col class="traffic-column" /><col /></colgroup>
                 <thead>
                     <tr>
                         <th>{{ $gettext('设备') }}</th>
-                        <th>{{ $gettext('状态') }}</th>
                         <th>{{ $gettext('地址') }}</th>
+                        <th>{{ $gettext('状态') }}</th>
                         <th>{{ $gettext('连接') }}</th>
                         <th>{{ $gettext('实时流量') }}</th>
                         <th>{{ $gettext('策略与操作') }}</th>
@@ -68,7 +69,7 @@
                             <div class="device-identity">
                                 <DeviceSceneIcon :scene="device.scene" :icon-key="device.iconKey" :label="sceneLabel(device.scene)" />
                                 <div>
-                                    <strong>
+                                    <strong :title="displayName(device)">
                                         <template v-for="(part, index) in highlight(displayName(device))" :key="index">
                                             <mark v-if="part.matched">{{ part.text }}</mark><template v-else>{{ part.text }}</template>
                                         </template>
@@ -77,10 +78,10 @@
                                 </div>
                             </div>
                         </td>
+                        <td class="device-address"><span class="mono">{{ device.primaryAddress || '—' }}</span><small v-if="device.extraAddressCount">+{{ device.extraAddressCount }}</small></td>
                         <td><span class="status-pill" :class="presenceClass(device)">{{ presenceLabel(device) }}</span></td>
-                        <td><span class="mono">{{ device.primaryAddress || '—' }}</span><small v-if="device.extraAddressCount">+{{ device.extraAddressCount }}</small></td>
                         <td>{{ connectionLabel(device.connection.kind) }}</td>
-                        <td><div class="traffic"><span>↑ {{ trafficLabel(device, 'up') }}</span><span>↓ {{ trafficLabel(device, 'down') }}</span></div></td>
+                        <td><div class="traffic" :class="{ 'traffic-ready': device.telemetry?.state === 'ready' }"><span class="traffic-upload">↑ {{ trafficLabel(device, 'up') }}</span><span class="traffic-download">↓ {{ trafficLabel(device, 'down') }}</span></div></td>
                         <td>
                             <div class="policy-action">
                                 <div class="policy-list">
@@ -98,14 +99,14 @@
                 <div class="device-card__top">
                     <div class="device-identity">
                         <DeviceSceneIcon :scene="device.scene" :icon-key="device.iconKey" :label="sceneLabel(device.scene)" />
-                        <div><strong>{{ displayName(device) }}</strong><span class="identity-meta"><b v-if="identityPresentation(device).showBrandInMeta">{{ device.brand }}</b><template v-if="identityPresentation(device).showBrandInMeta"> · </template>{{ categoryMeta(device) }}</span></div>
+                        <div><strong :title="displayName(device)">{{ displayName(device) }}</strong><span class="identity-meta"><b v-if="identityPresentation(device).showBrandInMeta">{{ device.brand }}</b><template v-if="identityPresentation(device).showBrandInMeta"> · </template>{{ categoryMeta(device) }}</span></div>
                     </div>
                     <span class="status-pill" :class="presenceClass(device)">{{ presenceLabel(device) }}</span>
                 </div>
                 <div class="device-card__facts">
                     <span><small>{{ $gettext('地址') }}</small><span class="mono">{{ device.primaryAddress || '—' }}</span></span>
                     <span><small>{{ $gettext('连接') }}</small>{{ connectionLabel(device.connection.kind) }}</span>
-                    <span><small>{{ $gettext('实时流量') }}</small>↑ {{ trafficLabel(device, 'up') }} · ↓ {{ trafficLabel(device, 'down') }}</span>
+                    <span :class="{ 'traffic-ready': device.telemetry?.state === 'ready' }"><small>{{ $gettext('实时流量') }}</small><span><span class="traffic-upload">↑ {{ trafficLabel(device, 'up') }}</span> · <span class="traffic-download">↓ {{ trafficLabel(device, 'down') }}</span></span></span>
                     <span><small>{{ $gettext('策略') }}</small>{{ device.policyLabels.length ? device.policyLabels.map(policyLabel).join(' · ') : $gettext('无策略') }}</span>
                 </div>
             </article>
@@ -454,57 +455,66 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.device-center { color: var(--flow-span-color); }
-.device-center__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 14px; }
-.device-center__header h2 { margin: 0; padding: 0; color: inherit; background: none !important; font-size: 20px; text-align: left; }
-.device-center__header p { margin: 5px 0 0; opacity: .65; font-size: 13px; }
-.device-center__tools { display: flex; align-items: center; gap: 8px; }
-.device-search input { width: 280px; max-width: 100%; min-height: 36px; padding: 7px 12px; color: inherit; background: transparent; border: 1px solid rgba(127, 127, 127, .3); border-radius: 7px; }
-select, .icon-button { min-height: 36px; color: inherit; background: transparent; border: 1px solid rgba(127, 127, 127, .3); border-radius: 7px; }
-.add-device { min-height:36px;padding:7px 11px;color:#fff;background:#553afe;border:1px solid #553afe;border-radius:7px;cursor:pointer;white-space:nowrap }.add-device-form{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:9px;align-items:end;margin:0 0 14px;padding:12px;background:rgba(85,58,254,.05);border:1px solid rgba(85,58,254,.14);border-radius:9px}.add-device-form>div,.add-device-form label{display:grid;gap:4px}.add-device-form small{opacity:.62}.add-device-form label span{font-size:12px}.add-device-form input{box-sizing:border-box;min-width:0;min-height:36px;padding:7px 9px;color:inherit;background:transparent;border:1px solid rgba(127,127,127,.28);border-radius:7px}.add-device-form button{min-height:36px;padding:7px 11px;color:#fff;background:#553afe;border:1px solid #553afe;border-radius:7px}.add-device-form p{grid-column:1/-1;margin:0;color:#9b3b16}
+.device-center { color: var(--device-text); container-type: inline-size; }
+.device-center__header { margin-bottom: 14px; }
+.device-center__header h2 { margin: 0; padding: 0; color: inherit; background: none !important; border: 0; box-shadow: none; font-size: 16px; text-align: left; }
+.device-center__header p { margin: 5px 0 0; color: var(--device-muted); font-size: 12px; }
+.device-toolbar { display: grid; grid-template-columns: auto auto minmax(0,1fr); gap: 8px 12px; align-items: start; margin-bottom: 14px; }
+.device-center__tools { grid-column: 3; grid-row: 1; display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-width: 0; }
+.device-search { flex: 1; max-width: 320px; min-width: 120px; }
+.device-search input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 7px 12px; color: inherit; background: var(--device-panel); border: 1px solid var(--device-line); border-radius: 7px; }
+.device-center__tools select { width: auto; max-width: 100%; }
+select, .icon-button { min-height: 44px; color: inherit; background: var(--device-panel); border: 1px solid var(--device-line); border-radius: 7px; }
+.add-device { min-height:44px;padding:7px 11px;color:var(--device-primary-text);background:var(--device-primary-bg);border:1px solid var(--device-primary-bg);border-radius:7px;cursor:pointer;white-space:nowrap }.add-device-form{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:9px;align-items:end;margin:0 0 14px;padding:12px;background:var(--device-soft);border:1px solid var(--device-line);border-radius:9px}.add-device-form>div,.add-device-form label{display:grid;gap:4px}.add-device-form small{opacity:.62}.add-device-form label span{font-size:12px}.add-device-form input{box-sizing:border-box;min-width:0;min-height:36px;padding:7px 9px;color:inherit;background:transparent;border:1px solid rgba(127,127,127,.28);border-radius:7px}.add-device-form button{min-height:36px;padding:7px 11px;color:var(--device-primary-text);background:var(--device-primary-bg);border:1px solid var(--device-primary-bg);border-radius:7px}.add-device-form p{grid-column:1/-1;margin:0;color:#9b3b16}
 select { padding: 0 28px 0 10px; }
-.icon-button { width: 38px; cursor: pointer; font-size: 19px; }
-.device-filters { display: flex; gap: 6px; margin-bottom: 14px; }
-.device-filters button { padding: 7px 12px; color: inherit; background: transparent; border: 1px solid transparent; border-radius: 999px; cursor: pointer; }
-.device-filters button span { margin-left: 5px; opacity: .6; }
-.device-filters button.active { color: #553afe; background: rgba(85, 58, 254, .09); border-color: rgba(85, 58, 254, .18); }
-.filter-panel { margin: -5px 0 14px; border: 0; }.filter-panel > summary { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; color: #553afe; cursor: pointer; font-size: 13px; }.filter-panel > summary small { display: inline-grid; place-items: center; min-width: 20px; height: 20px; color: #fff; background: #553afe; border-radius: 999px; }.filter-panel__controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 9px; padding: 10px; background: rgba(127,127,127,.045); border: 1px solid rgba(127,127,127,.12); border-radius: 8px; }.filter-panel__controls label { display: grid; gap: 4px; min-width: 145px; }.filter-panel__controls label span { font-size: 12px; opacity: .65; }.clear-filters,.context-notice button { min-height: 36px; padding: 6px 10px; color: #553afe; background: transparent; border: 1px solid rgba(85,58,254,.35); border-radius: 7px; cursor: pointer; }
+.icon-button { flex: none; width: 44px; cursor: pointer; font-size: 22px; }
+.device-filters { display: flex; gap: 3px; margin: 0; }
+.device-filters button { min-width: 44px; min-height: 44px; padding: 7px 10px; white-space: nowrap; color: var(--device-muted); background: transparent; border: 1px solid transparent; border-radius: 7px; cursor: pointer; }
+.device-filters button span { margin-left: 4px; font-size: 12px; }
+.device-filters button.active { color: var(--device-accent); background: var(--device-accent-soft); border-color: var(--device-line); }
+.filter-panel { grid-column: 2; grid-row: 1; margin: 0; border: 0; }.filter-panel[open] { grid-column: 1 / -1; grid-row: auto; }.filter-panel > summary { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; color: var(--device-muted); cursor: pointer; font-size: 12px; white-space: nowrap; }.filter-panel > summary small { display: inline-grid; place-items: center; min-width: 20px; height: 20px; color: #fff; background: var(--device-accent); border-radius: 999px; }.filter-panel__controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 9px; padding: 12px; background: var(--device-soft); border: 1px solid var(--device-line); border-radius: 8px; }.filter-panel__controls label { display: grid; gap: 4px; min-width: 145px; }.filter-panel__controls label span { font-size: 12px; opacity: .65; }.clear-filters,.context-notice button { min-height: 36px; padding: 6px 10px; color: var(--device-accent); background: transparent; border: 1px solid var(--device-line); border-radius: 7px; cursor: pointer; }
 .telemetry-notice { margin: 0 0 12px; padding: 8px 11px; color: #8a5a00; background: #fff8e8; border: 1px solid #f3d18a; border-radius: 7px; font-size: 12px; }
+.device-center :deep(.page-state) { color: var(--device-text); background: var(--device-soft); border-color: var(--device-line); }
+.device-center :deep(.page-state__icon),.device-center :deep(.page-state button) { color: var(--device-accent); }
+.device-center :deep(.page-state button) { min-height: 44px; border-color: var(--device-line); }
 .device-table-wrap { width: 100%; overflow: hidden; }
-.device-table { width: 100%; border-collapse: collapse; }
-.device-table th { padding: 12px 10px; text-align: left; white-space: nowrap; font-size: 13px; font-weight: 500; opacity: .7; background: rgba(127, 127, 127, .055); }
-.device-table td { padding: 15px 10px; border-bottom: 1px solid rgba(127, 127, 127, .11); vertical-align: middle; }
-.device-table tbody tr { cursor: pointer; transition: background .15s ease; }
-.device-table tbody tr:hover { background: rgba(85, 58, 254, .035); }
-.device-table tbody tr:focus-visible,.device-card:focus-visible { outline: 2px solid #553afe; outline-offset: -2px; background: rgba(85,58,254,.04); }
+.device-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+.identity-column { width: clamp(190px,25vw,320px); }.address-column { width: clamp(145px,17vw,230px); }.status-column { width: 105px; }.connection-column { width: 85px; }.traffic-column { width: 125px; }
+.device-table th { padding: 11px 10px; text-align: left; white-space: nowrap; font-size: 12px; font-weight: 500; color: var(--device-muted); background: var(--device-soft); border-bottom: 1px solid var(--device-line); }
+.device-table td { padding: 13px 10px; border-bottom: 1px solid var(--device-line); vertical-align: middle; overflow-wrap: anywhere; }
+.device-table tbody tr:nth-child(n) { background: var(--device-panel); cursor: pointer; transition: background .15s ease; }
+.device-table tbody tr:nth-child(n):hover { background: var(--device-hover); }
+.device-table tbody tr:focus-visible,.device-card:focus-visible { outline: 2px solid var(--device-accent); outline-offset: -2px; background: var(--device-hover); }
 .device-identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .device-identity div { display: flex; flex-direction: column; min-width: 0; }
-.device-identity strong { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.device-identity span { margin-top: 2px; opacity: .72; font-size: 12px; }
+.device-identity strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; }
+.device-identity .identity-meta { margin-top: 4px; color: var(--device-muted); font-size: 12px; }
 .identity-meta { display: block; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.identity-meta b { color: #553afe; font-weight: 600; }
+.identity-meta b { font-weight: 500; }
 mark { color: inherit; background: #fff0a6; border-radius: 2px; }
 .status-pill { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .status-pill::before { width: 7px; height: 7px; content: ''; border-radius: 50%; background: #a8adb7; }
-.status-pill.online::before { background: #26a269; box-shadow: 0 0 0 3px rgba(38, 162, 105, .12); }
-.status-pill.offline { opacity: .65; }
-.status-pill.never-seen::before { background:#806cff;box-shadow:0 0 0 3px rgba(128,108,255,.12) }.status-pill.never-seen{color:#624bd1}
+.status-pill.online { color: var(--device-good); }.status-pill.online::before { background: currentColor; }
+.status-pill.offline,.status-pill.never-seen { color: var(--device-muted); }
+.device-address { font-size: 13px; overflow-wrap: anywhere; }
 .mono, code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-td > small { margin-left: 5px; color: #553afe; }
+td > small { margin-left: 5px; color: var(--device-accent); }
 .traffic { display: flex; flex-direction: column; gap: 3px; white-space: nowrap; font-size: 13px; }
-.policy-action { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.policy-list { display: flex; flex-wrap: wrap; gap: 5px; }
-.policy-list > span:not(.muted) { padding: 3px 7px; color: #553afe; background: rgba(85, 58, 254, .08); border-radius: 999px; font-size: 12px; }
-.policy-action button, .secondary-button { padding: 6px 10px; color: #553afe; background: transparent; border: 1px solid rgba(85, 58, 254, .45); border-radius: 6px; cursor: pointer; white-space: nowrap; }
-button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #553afe; outline-offset: 2px; }
-.muted { opacity: .55; }
+.traffic-ready .traffic-upload { color: var(--device-upload); }.traffic-ready .traffic-download { color: var(--device-download); }
+.policy-action { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.policy-list { display: flex; flex: 1; min-width: 80px; flex-wrap: wrap; gap: 5px; }
+.policy-list > span:not(.muted) { padding: 3px 7px; color: var(--device-accent); background: var(--device-accent-soft); border-radius: 999px; font-size: 12px; }
+.policy-action button, .secondary-button { min-height: 44px; padding: 6px 10px; color: var(--device-text); background: var(--device-panel); border: 1px solid var(--device-line); border-radius: 7px; cursor: pointer; white-space: nowrap; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--device-accent); outline-offset: 2px; }
+.clear-filters,.context-notice button,.add-device-form button,.drawer-tabs button,.address-copy { min-height: 44px; }
+.muted { color: var(--device-muted); }
 .device-card { display: none; }
 .drawer-backdrop { position: fixed; inset: 0; z-index: 1000; display: flex; justify-content: flex-end; background: rgba(0, 0, 0, .36); }
-.device-drawer { width: min(430px, 100%); height: 100%; padding: 22px; overflow-y: auto; color: var(--flow-span-color); background: #fff; box-shadow: -8px 0 28px rgba(0, 0, 0, .18); }
+.device-drawer { width: min(430px, 100%); height: 100%; padding: 22px; overflow-y: auto; color: var(--device-text); background: var(--device-panel); box-shadow: -8px 0 28px rgba(0, 0, 0, .18); }
 .drawer-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .device-drawer h3 { margin: 0; padding: 0; color: inherit; background: none !important; font-size: 19px; text-align: left; }
-.drawer-close { color: inherit; background: transparent; border: 0; cursor: pointer; font-size: 28px; }
-.drawer-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin: 16px 0 10px; }.drawer-summary > span { display: grid; gap: 3px; min-width: 0; padding: 9px; background: rgba(85,58,254,.05); border-radius: 8px; overflow-wrap: anywhere; }.drawer-summary small { opacity: .58; }.context-notice { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 10px; padding: 8px 10px; color: #745500; background: rgba(255,196,77,.12); border-radius: 7px; font-size: 12px; }.drawer-tabs { position: sticky; top: -22px; z-index: 2; display: flex; gap: 4px; margin: 0 -22px; padding: 9px 22px; overflow-x: auto; background: var(--card-bg-color); border-bottom: 1px solid rgba(127,127,127,.12); }.drawer-tabs button { flex: none; padding: 7px 9px; color: inherit; background: transparent; border: 0; border-radius: 7px; cursor: pointer; }.drawer-tabs button.active { color: #553afe; background: rgba(85,58,254,.09); font-weight: 600; }
+.drawer-close { flex: none; width: 44px; height: 44px; color: inherit; background: transparent; border: 0; cursor: pointer; font-size: 28px; }
+.drawer-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin: 16px 0 10px; }.drawer-summary > span { display: grid; gap: 3px; min-width: 0; padding: 9px; background: var(--device-soft); border-radius: 8px; overflow-wrap: anywhere; }.drawer-summary small { opacity: .58; }.context-notice { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 10px; padding: 8px 10px; color: #745500; background: rgba(255,196,77,.12); border-radius: 7px; font-size: 12px; }.drawer-tabs { position: sticky; top: -22px; z-index: 2; display: flex; gap: 4px; margin: 0 -22px; padding: 9px 22px; overflow-x: auto; background: var(--card-bg-color); border-bottom: 1px solid rgba(127,127,127,.12); }.drawer-tabs button { flex: none; padding: 7px 9px; color: inherit; background: transparent; border: 0; border-radius: 7px; cursor: pointer; }.drawer-tabs button.active { color: var(--device-accent); background: var(--device-accent-soft); font-weight: 600; }
 .drawer-section { padding: 18px 0; border-bottom: 1px solid rgba(127, 127, 127, .14); }
 .drawer-section h4 { margin: 0 0 10px; font-size: 14px; }
 dl { margin: 0; }
@@ -515,15 +525,15 @@ dd { margin: 0; overflow-wrap: anywhere; }
 code { padding: 7px 9px; overflow-wrap: anywhere; background: rgba(127, 127, 127, .07); border-radius: 5px; }
 .address-copy { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 0; color: inherit; text-align: left; background: transparent; border: 0; cursor: pointer; }
 .address-copy code { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.address-copy span { flex: none; color: #553afe; font-size: 12px; }
+.address-copy span { flex: none; color: var(--device-accent); font-size: 12px; }
 .traffic-chart { display: flex; align-items: flex-end; gap: 3px; height: 72px; margin-top: 13px; padding: 8px; background: rgba(127, 127, 127, .055); border-radius: 7px; }
 .traffic-chart__bar { display: flex; flex: 1; align-items: flex-end; justify-content: center; gap: 1px; height: 100%; }
 .traffic-chart__bar i { display: block; width: min(4px, 45%); min-height: 2px; border-radius: 2px 2px 0 0; }
-.traffic-chart__bar .upload { background: #8c7cf0; }
-.traffic-chart__bar .download { background: #32a873; }
-.chart-legend { display: flex; gap: 14px; margin-top: 6px; opacity: .65; }
+.traffic-chart__bar .upload { background: var(--device-upload); }
+.traffic-chart__bar .download { background: var(--device-download); }
+.chart-legend { display: flex; gap: 14px; margin-top: 6px; }.chart-legend>span:first-child{color:var(--device-upload)}.chart-legend>span:last-child{color:var(--device-download)}
 .drawer-footer { padding-top: 20px; }
-.technical-details { margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(127,127,127,.14); }.technical-details summary { color: #553afe; cursor: pointer; font-weight: 600; }.technical-details[open] summary { margin-bottom: 8px; }
+.technical-details { margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(127,127,127,.14); }.technical-details summary { color: var(--device-accent); cursor: pointer; font-weight: 600; }.technical-details[open] summary { margin-bottom: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 980px) {
@@ -533,32 +543,40 @@ code { padding: 7px 9px; overflow-wrap: anywhere; background: rgba(127, 127, 127
     .device-search input { width: 100%; }
     .add-device-form { grid-template-columns:1fr 1fr }.add-device-form>div,.add-device-form button{grid-column:1/-1}
     .device-table th:nth-child(4), .device-table td:nth-child(4) { display: none; }
+    .connection-column { display: none; }
 }
 
-@media (max-width: 700px) {
+@container (max-width: 980px) {
+    .device-toolbar { grid-template-columns: 1fr auto; }.device-center__tools { grid-column:1/-1; grid-row:1; width:100%; }.device-filters{grid-column:1;grid-row:2}.filter-panel{grid-column:2;grid-row:2}
+}
+@container (max-width: 980px) {
     .device-center__tools { flex-wrap: wrap; }
-    .device-search { flex-basis: 100%; }
+    .device-search { flex-basis: 100%; max-width: none; }
+    .device-center__tools select { flex: 1; min-width: 0; width: 0; }
     .device-table { display: none; }
-    .device-card { display: block; margin-bottom: 10px; padding: 14px; border: 1px solid rgba(127, 127, 127, .15); border-radius: 9px; cursor: pointer; }
+    .device-card { display: block; margin-bottom: 10px; padding: 14px; border: 1px solid var(--device-line); border-radius: 9px; cursor: pointer; }
     .device-card__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .device-card__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .device-card__top>.device-identity { flex: 1; }.device-card__top>.status-pill { flex: none; font-size:12px; }
+    .device-card__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-top: 12px; font-size:13px; }
     .device-card__facts > span { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
-    .device-card__facts small { margin-bottom: 3px; opacity: .55; }
+    .device-card__facts small { margin-bottom: 3px; color: var(--device-muted); font-size:12px; }
     .identity-meta { max-width: min(220px, 58vw); }
     .filter-panel__controls label { flex: 1 1 135px; min-width: 0; }
+}
+@media (max-width: 360px) {
+    .device-toolbar { grid-template-columns: minmax(0,1fr); }
+    .device-filters { justify-content: space-between; }
+    .filter-panel { grid-column: 1; grid-row: 3; }
 }
 
 @media (max-width: 420px) {
     .device-center__header p { max-width: 30ch; }
-    .device-filters { overflow-x: auto; }
+    .device-toolbar { gap:8px 4px; }.device-filters button { padding:7px 6px; }
     .device-filters button { flex: none; }
-    .device-card__facts { grid-template-columns: 1fr; }
+    .device-card__facts > span:first-child,.device-card__facts > span:last-child { grid-column:1/-1; }
     .device-drawer { padding: 18px 16px; }
     .drawer-summary { grid-template-columns: 1fr 1fr; }.drawer-summary > span:last-child { grid-column: 1 / -1; }.drawer-tabs { top: -18px; margin: 0 -16px; padding: 8px 16px; }
     .add-device-form{grid-template-columns:1fr}.add-device-form>*{grid-column:1!important}.add-device{flex:1}
     .filter-panel__controls { display: grid; grid-template-columns: 1fr; }.clear-filters { width: 100%; }
 }
-@media (prefers-color-scheme: dark) { .device-drawer { background: #202024; } }
-:global(body[theme="dark"]) .device-drawer { background: #202024; }
-:global(body[theme="light"]) .device-drawer { background: #fff; }
 </style>
