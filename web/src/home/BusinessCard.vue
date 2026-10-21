@@ -13,6 +13,7 @@ import NetworkWidgetDialog from './NetworkWidgetDialog.vue'
 import WidgetMenu from './WidgetMenu.vue'
 import StudioGlyph from './HomeGlyph.vue'
 import {widget,type WidgetId} from './layout/rowLayout'
+import {serviceState,domainState,stateLabel} from './servicePresentation'
 const props=defineProps<{id:WidgetId;data:Record<string,any>;errors:Record<string,string>;summary?:boolean}>()
 defineEmits<{(e:'retry'):void}>()
 const details=ref(false),english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh
@@ -24,9 +25,9 @@ const summaryLines=computed(()=>{
  if(props.id==='system')return [t('CPU使用率','CPU usage')+' '+(d.system?.cpuUsage||0)+'% · '+t('CPU温度','CPU temperature')+' '+(d.system?.cpuTemperature||0)+'℃',t('内存使用率','Memory usage')+' '+(100-(d.system?.memAvailablePercentage||100))+'%',d.version?.firmwareVersion||t('读取中','Loading')]
  if(props.id==='storage')return [`${props.errors.disks||!d.disks?'—':d.disks.disks?.length||0} ${t('块磁盘','disks')} · RAID ${props.errors.raid||!d.raid?'—':d.raid.disks?.length||0}`,...(props.errors.disks||props.errors.raid?[t('部分磁盘信息暂不可用','Some disk information is unavailable')]:[])]
  if(props.id==='sharing')return d.sharing?[`易有云 · ${d.sharing.linkease?.enabel?t('已配置','Configured'):t('未配置','Not configured')}`,`SAMBA · ${d.sharing.sambas?.length?t('已启用','Enabled'):t('未启用','Disabled')}`,`WEBDAV · ${d.sharing.webdav?.path?t('已启用','Enabled'):t('未启用','Disabled')}`]:[t('读取中','Loading')]
- if(props.id==='docker')return [d.docker?.status==='not installed'?t('未安装','Not installed'):d.docker?.status==='running'?t('运行中','Running'):d.docker?t('未运行','Stopped'):t('读取中','Loading'),d.docker?.status==='running'?d.docker.path:''].filter(Boolean)
- if(props.id==='downloads')return ['aria2','qbittorrent','transmission'].map(name=>`${name} · ${d.download?.[name]?.status==='running'?t('运行中','Running'):d.download?t('未运行','Stopped'):t('读取中','Loading')}`)
- return [d.remote?.ddnstoDomain?'DDNSTO · '+t('正常','Online'):'DDNSTO · '+t('未启动','Not started'),...['ipv4Domain','ipv6Domain'].filter(k=>d.remote?.[k]).map(k=>k.slice(0,4).toUpperCase()+' · '+(['Stopped','Disabled'].includes(d.remote[k])?t('未启动','Not started'):d.remote[k]))]
+ if(props.id==='docker')return [d.docker?stateLabel(serviceState(d.docker.status),english):t('读取中','Loading'),d.docker?.status==='running'?d.docker.path:''].filter(Boolean)
+ if(props.id==='downloads')return ['aria2','qbittorrent','transmission'].map(name=>`${name} · ${d.download?stateLabel(serviceState(d.download[name]?.status),english):t('读取中','Loading')}`)
+ return d.remote?['DDNSTO · '+stateLabel(domainState(d.remote.ddnstoDomain),english),...['ipv4Domain','ipv6Domain'].filter(k=>d.remote[k]).map(k=>k.slice(0,4).toUpperCase()+' · '+stateLabel(domainState(d.remote[k]),english)+(['Stopped','Disabled'].includes(d.remote[k])?'':' · '+d.remote[k]))]:[t('读取中','Loading')]
 })
 </script>
 <style scoped>

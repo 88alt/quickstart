@@ -16,28 +16,26 @@
             <div><a @click="onClickqBittorrent">{{ $gettext("qBittorrent高级配置") }}</a></div>
             <div><a @click="onClickTransmission">{{ $gettext("Transmission高级配置") }}</a></div>
         </template>
-        <div class="content">
+        <div class="content service-downloads">
             <div class="tab">
                 <button type="button" :aria-pressed="active == 'aria2'" class="item cloud" :class="{ active: active == 'aria2' }" @click="tabChange('aria2')">
                     <downloadIcon color="#f54900" class="icon2" />
                     <div class="title">Aria2</div>
-                    <span v-if="downloadService?.aria2?.status == 'running'">{{ $gettext("已启用") }}</span>
-                    <span v-else>{{ $gettext("未启用") }}</span>
+                    <span :data-service-state="serviceState(downloadService?.aria2?.status)">{{ stateLabel(serviceState(downloadService?.aria2?.status), english) }}</span>
                 </button>
                 <button type="button" :aria-pressed="active == 'qbittorrent'" class="item memory" :class="{ active: active == 'qbittorrent' }" @click="tabChange('qbittorrent')">
                     <downloadIcon color="#4a5565" class="icon2" />
                     <div class="title">qBittorrent</div>
-                    <span v-if="downloadService?.qbittorrent?.status == 'running'">{{ $gettext("已启用") }}</span>
-                    <span v-else>{{ $gettext("未启用") }}</span>
+                    <span :data-service-state="serviceState(downloadService?.qbittorrent?.status)">{{ stateLabel(serviceState(downloadService?.qbittorrent?.status), english) }}</span>
                 </button>
                 <button type="button" :aria-pressed="active == 'transmission'" class="item network" :class="{ active: active == 'transmission' }"
                     @click="tabChange('transmission')">
                     <downloadIcon color="#009689" class="icon2" />
                     <div class="title">Transmission</div>
-                    <span v-if="downloadService?.transmission?.status == 'running'">{{ $gettext("已启用") }}</span>
-                    <span v-else>{{ $gettext("未启用") }}</span>
+                    <span :data-service-state="serviceState(downloadService?.transmission?.status)">{{ stateLabel(serviceState(downloadService?.transmission?.status), english) }}</span>
                 </button>
             </div>
+            <p v-if="downloadService?.[active]?.status !== 'running'" class="service-idle">{{ downloadDescription(downloadService?.[active]?.status, english) }}</p>
             <aria2-vue v-if="active == 'aria2'" :aria2="downloadService?.aria2"></aria2-vue>
             <qbittorrent-vue v-else-if="active == 'qbittorrent'" :qbittorrent="downloadService?.qbittorrent">
             </qbittorrent-vue>
@@ -48,7 +46,10 @@
 </template>
 
 <script lang="ts" setup>
+import '/@/home/serviceWidgetBody.css'
 import {useOwnedBusinessActions} from "/@/home/useOwnedBusinessActions"
+import {serviceState,stateLabel,downloadDescription} from '/@/home/servicePresentation'
+const english=window.vue_lang==='en'
 const openAction=useOwnedBusinessActions()
 import { ref, onUnmounted } from "vue"
 import {useHomeSnapshot} from "/@/home/widgetContext"

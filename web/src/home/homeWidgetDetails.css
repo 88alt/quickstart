@@ -14,17 +14,6 @@
 .ordered-home .layout-widget .native-business-surface .content .tab>.item:is(.cloud,.memory,.network)>span{color:var(--c-muted)}
 .ordered-home .layout-widget :is(button,a,[role=button],summary):focus-visible{outline:2px solid var(--home-focus)!important;outline-offset:3px}
 .ordered-home .layout-widget :is(.widget-action-group,.settings-wrapper) :is(button,.btn_settings){transition:background-color var(--home-motion),color var(--home-motion)}
-.ordered-home .layout-widget .native-remote .info .status>span{background:var(--home-good-soft);color:var(--c-good)}
-.ordered-home .layout-widget .native-remote .info .status>span.offline{background:var(--c-soft);color:var(--c-muted)}
-.ordered-home .layout-widget .native-docker .status-icon{background:var(--home-good-soft);color:var(--c-good)}
-/* The original disabled branch owns its inline neutral state. Only its colors
- * are adapted here; the branch and switch remain unchanged. */
-.ordered-home .layout-widget .native-docker .status-icon[style]{background:var(--c-soft)!important;color:var(--c-muted)!important}
-.ordered-home .layout-widget .native-business-surface :is(.docker_box>.path,.title_box>.path){
- border:0;border-left:2px solid var(--c-line);border-radius:0;
- padding:12px;background:var(--home-surface-inset);color:var(--c-text);line-height:1.5;
-}
-.ordered-home .layout-widget .native-business-surface :is(.docker_box>.path,.title_box>.path) a{color:var(--c-accent)}
 
 /* M66.53: service content uses the same rhythm, keeping every original field,
  * tab, condition and handler. Long addresses wrap inside their existing cells. */
@@ -75,51 +64,6 @@
 .ordered-home .layout-widget .native-sharing .content .configure.enabel{color:var(--c-accent);text-decoration:underline;text-underline-offset:3px}
 .ordered-home .layout-widget .native-sharing .app-container_linkease>div{
  border-top:1px solid var(--c-line);margin-top:12px;padding-top:12px;line-height:1.5;
-}
-/* M66.72: service-specific content keeps its own fields and conditions while
- * sharing the same label/value rhythm. Empty space remains honest empty space. */
-.ordered-home .layout-widget :is(.native-docker,.native-downloads) .content li:is(.docker-item,.aria2-item,.qbittorrent-item,.transmission-item){
- display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:8px 16px;
- align-items:baseline;padding:8px 0;margin:0;
-}
-.ordered-home .layout-widget :is(.native-docker,.native-downloads) .content :is([class*="-item_name"],[class*="-item_value"]){
- width:auto;max-width:none;padding:0;line-height:1.5;
-}
-.ordered-home .layout-widget :is(.native-docker,.native-downloads) .content [class*="-item_name"]{color:var(--c-muted)}
-.ordered-home .layout-widget :is(.native-docker,.native-downloads) .content [class*="-item_value"]{color:var(--c-text)}
-.ordered-home .layout-widget :is(.native-docker,.native-downloads) .content li:is(.docker-item,.aria2-item,.qbittorrent-item,.transmission-item):first-child{
- padding-top:0;padding-bottom:12px;margin-bottom:4px;border-bottom:1px solid var(--c-line);
-}
-.ordered-home .layout-widget .native-docker .docker-item_value{gap:8px;flex-wrap:wrap;align-items:center}
-.ordered-home .layout-widget .native-docker .status-icon{margin:0;line-height:1.4;white-space:nowrap}
-.ordered-home .layout-widget .native-docker .app-container_docker>li.content{margin:16px 0 0}
-.ordered-home .layout-widget .native-docker .app-container_docker>li.content>.docker-item_name>span{color:var(--c-muted)!important}
-.ordered-home .layout-widget .native-docker .docker_box{margin-top:8px;padding:0;gap:8px;align-items:center}
-.ordered-home .layout-widget .native-docker .docker_box>.path{min-width:0;max-width:100%;font-family:inherit}
-.ordered-home .layout-widget .native-downloads .content .configure{padding:0}
-.ordered-home .layout-widget .native-downloads .content .use-url_app{
- border-top:1px solid var(--c-line);margin-top:12px;padding:12px 0 0;line-height:1.5;
-}
-.ordered-home .layout-widget .native-business-surface .content :is(.configure,.use-url_app){color:var(--c-accent)}
-.ordered-home .layout-widget .native-docker .docker_box>.path{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.ordered-home .layout-widget .native-remote .content{padding:0}
-.ordered-home .layout-widget .native-remote .content>.info{margin-top:0}
-.ordered-home .layout-widget .native-remote .info .status{
- padding:0 0 12px;margin:0;border-top:0;border-bottom:1px solid var(--c-line);gap:16px;align-items:center;
-}
-.ordered-home .layout-widget .native-remote .info .status>div{font-size:var(--home-body-size);font-weight:500;color:var(--c-muted)}
-.ordered-home .layout-widget .native-remote .info .title_box{margin:16px 0 0}
-.ordered-home .layout-widget .native-remote .info .title_box>.title{color:var(--c-muted)}
-.ordered-home .layout-widget .native-remote .info .title_box>.path{
- display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
-}
-.ordered-home .layout-widget .native-remote .info .path>a{
- min-width:0;overflow-wrap:anywhere;white-space:normal;overflow:visible;text-overflow:clip;
-}
-.ordered-home .layout-widget .native-remote .info .path>span{padding:0;border:0;background:none}
-.ordered-home .layout-widget .native-remote .path .item_btn{
- border:1px solid var(--home-option-border);padding:4px 8px;
- color:var(--c-accent);background:var(--c-panel);border-radius:4px;white-space:nowrap;
 }
 .ordered-home .layout-widget .native-system .content{padding:0;margin:16px 0 0}
 .ordered-home .layout-widget .native-system .content .chart_box{padding-bottom:16px;margin-bottom:16px;border-color:var(--c-line)}
@@ -281,23 +225,6 @@
  .ordered-home .layout-widget .native-sharing .samba-item>[data-label]::before{display:block}
 }
 
-/* M66.79: status-led Docker, full-width download fields, domain-led remote. */
-.ordered-home .layout-widget .native-docker .content li.docker-item:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;margin:0 0 20px;background:var(--home-surface-inset);border:0;border-radius:6px}
-.ordered-home .layout-widget .native-docker .content li.docker-item:first-child>.docker-item_name{flex:1;max-width:none;padding:0}
-.ordered-home .layout-widget .native-docker .content li.docker-item:first-child>.docker-item_value{flex:0 1 auto;max-width:none;padding:0;justify-content:flex-end}
-.ordered-home .layout-widget .native-docker .content .app-container_docker>li.content{margin:0}
-.ordered-home .layout-widget .native-docker .docker_box{margin-top:8px!important}
-.ordered-home .layout-widget .native-downloads .content li:is(.aria2-item,.qbittorrent-item,.transmission-item){grid-template-columns:minmax(0,1fr);gap:6px;padding:10px 0}
-.ordered-home .layout-widget .native-downloads .content li:is(.aria2-item,.qbittorrent-item,.transmission-item):first-child{grid-template-columns:minmax(0,1fr) auto;margin-bottom:4px;padding-bottom:12px}
-.ordered-home .layout-widget .native-downloads .content li:is(.aria2-item,.qbittorrent-item,.transmission-item):not(:first-child)>[class*="-item_value"]{line-height:1.65}
-.ordered-home .layout-widget .native-downloads .content .aria2-item:has(.right){display:flex;flex-wrap:wrap;gap:4px 8px;padding-top:4px}
-.ordered-home .layout-widget .native-downloads .content .aria2-item:has(.right)>.right{flex:none}
-.ordered-home .layout-widget .native-downloads .content .aria2-item:has(.right)>.aria2-item_value{flex:0 1 auto;min-width:0}
-.ordered-home .layout-widget .native-downloads .content .use-url_app{padding:12px 0 0}
-.ordered-home .layout-widget .native-remote .info .title_box{margin-top:16px}
-.ordered-home .layout-widget .native-remote .info .title_box>.title{margin:0 0 8px}
-.ordered-home .layout-widget .native-remote .info .title_box>.path{padding:12px;line-height:1.65}
-.ordered-home .layout-widget .native-remote .info .path>.configure{font-weight:500}
 
 /* Compact complete connection rows. Preserve the shared type scale and let
  * long addresses / errors grow naturally rather than clipping or scrolling. */
