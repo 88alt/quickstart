@@ -1,5 +1,7 @@
 # 局域网设备管理：产品与领域基线
 
+2026-10-21 用户要求移除内容顶部重复的设备管理标题及介绍，仅保留面包屑作为当前页面定位和原三项页签；主区域保留可访问名称。进一步与首页统一的视觉建议见[设备页视觉方案](product/lan-device-visual-refinement.md)，其中未实施建议不覆盖本文件的身份、状态、权限和事务语义。
+
 > 状态：**当前唯一产品与领域基线（M64 业务验收候选）**
 > 基线版本：M64 / 2026-09-28
 > 范围：Quickstart `backend` / `web`、OpenWrt `quickstart` 集成、`floatip`、`luci-app-oui`、`luci-app-bandix`  
