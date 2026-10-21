@@ -7174,3 +7174,75 @@ msgstr "The speed limit service is installed, but the selected enforcement mode 
 
 msgid "已安装限速服务，但当前执行方式不可用；请在下方高级设置中查看服务状态，选择后预览。"
 msgstr "The speed limit service is installed, but the selected mode is unavailable. Review service status in the advanced settings below, then choose and preview a mode."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "权限说明"
+msgstr "Permission scope"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "配置只读"
+msgstr "Read-only configuration"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "本机配置"
+msgstr "Local configuration"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "地址池"
+msgstr "Address pool"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "以下为本机保存的配置，不代表其他路由器当前生效的配置。"
+msgstr "These settings are saved on this router; they do not describe the active configuration of another router."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "查看本机配置"
+msgstr "View local configuration"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "本机配置暂不可用"
+msgstr "Local configuration unavailable"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "未能读取可靠的地址分配配置，其他服务仍可使用。"
+msgstr "Address configuration could not be read reliably. Other services remain available."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "状态未更新"
+msgstr "Status not updated"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "查看执行方式"
+msgstr "Inspect enforcement mode"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "已安装限速服务，但当前执行方式不可用。"
+msgstr "The speed limit service is installed, but the selected enforcement mode is unavailable."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "检测到其他设备负责地址分配，请在负责地址分配的路由器上管理相关设置。"
+msgstr "Another device was observed assigning addresses. Manage related settings on the router responsible for address allocation."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "地址配置可编辑"
+msgstr "Address configuration editable"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "地址配置只读"
+msgstr "Address configuration read-only"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "路线只读"
+msgstr "Internet paths read-only"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "其他服务按各自权限管理"
+msgstr "Other services have their own permissions"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "检查超时，请重试。草稿已保留。"
+msgstr "The check timed out. Retry when ready; your draft is retained."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "检查失败，状态未更新。请重试，草稿已保留。"
+msgstr "The check failed and status was not updated. Retry when ready; your draft is retained."

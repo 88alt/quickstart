@@ -1183,9 +1183,10 @@ export const DeviceMangement = {
   },
   //全局配置
   globalConfigs: {
-    GET() {
+    GET(signal?: AbortSignal) {
       return Request<any>("/lanctrl/globalConfigs/", {
         method: "GET",
+        signal,
       });
     },
   },

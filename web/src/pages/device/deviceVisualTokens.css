@@ -6,6 +6,7 @@
  --device-accent:#155dfc; --device-accent-soft:#f0f5ff;
  --device-good:#008236; --device-upload:#7534d7; --device-download:#0876bd;
  --device-primary-bg:#155dfc; --device-primary-text:#fff;
+ --device-warning:#946000; --device-warning-soft:#fff5e5;
 }
 @media(prefers-color-scheme:dark) {
  body:not([theme="light"]) .device-management {
@@ -14,6 +15,7 @@
   --device-accent:#91b9ff; --device-accent-soft:#2c3e59;
   --device-good:#70e2b2; --device-upload:#c7a0ff; --device-download:#68d6ff;
   --device-primary-bg:#91b9ff; --device-primary-text:#172b48;
+  --device-warning:#ffce76; --device-warning-soft:#514024;
  }
 }
 body[theme="dark"] .device-management {
@@ -22,4 +24,5 @@ body[theme="dark"] .device-management {
  --device-accent:#91b9ff; --device-accent-soft:#2c3e59;
  --device-good:#70e2b2; --device-upload:#c7a0ff; --device-download:#68d6ff;
  --device-primary-bg:#91b9ff; --device-primary-text:#172b48;
+ --device-warning:#ffce76; --device-warning-soft:#514024;
 }

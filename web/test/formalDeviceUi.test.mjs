@@ -93,7 +93,7 @@ test('M40 follow-up keeps advanced workflows progressive and mobile rules readab
 
 test('M30 LAN settings use read-only role guidance local degradation and draft-preserving installation', async () => {
     const source = await readFile(new URL('../src/pages/device/lanSettingsPanel.vue', import.meta.url), 'utf8')
-    for (const label of ['只读引导', '网络服务', '上网路线', '规则台账', 'DNS 跟随路线', '其他设置仍可使用', '发现现有设备设置', '确认接管现有设置']) assert.match(source, new RegExp(label))
+    for (const label of ['地址配置只读', '路线只读', '网络服务', '上网路线', '规则台账', 'DNS 跟随路线', '其他设置仍可使用', '发现现有设备设置', '确认接管现有设置']) assert.match(source, new RegExp(label))
     assert.match(source, /routerContextV2/)
     assert.match(source, /lanDeviceMigrationV2\.PLAN/)
     assert.match(source, /lanDeviceMigrationV2\.APPLY/)

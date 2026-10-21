@@ -1,12 +1,11 @@
 <template>
-    <section class="lan-settings" aria-labelledby="lan-settings-title">
-        <header><div><h2 id="lan-settings-title">{{ $gettext('局域网设置') }}</h2><p>{{ $gettext('管理本机提供的网络服务，并集中处理需要维护的设备规则。') }}</p></div></header>
+    <section class="lan-settings" :aria-label="$gettext('局域网设置')">
         <PageState v-if="loading" kind="loading" :title="$gettext('正在读取局域网设置')" />
         <PageState v-else-if="error" kind="error" :title="$gettext('局域网设置读取失败')" :description="error" :action-label="$gettext('重新加载')" @action="load" />
         <template v-else>
             <article class="context-card" :class="routerContext?.topologyPosition">
-                <div><strong>{{ contextTitle }}</strong><span>{{ contextDescription }}</span></div>
-                <span class="context-state">{{ routeEditability }}</span>
+                <div><strong>{{ contextTitle }}</strong><span>{{ permissionScope }}</span></div>
+                <span class="context-state">{{ $gettext('权限说明') }}</span>
             </article>
 
             <details v-if="migrationPlan && !migrationPlan.alreadyApplied && migrationPlan.items?.length" class="migration-card" aria-labelledby="migration-title">
@@ -25,15 +24,24 @@
             </nav>
 
             <div v-if="section === 'services'" class="settings-stack">
-                <article class="setting-card">
-                    <div class="card-heading"><div><h3>{{ $gettext('地址分配服务') }}</h3><p>{{ $gettext('由本机为局域网设备分配地址。关闭后，设备应由其他路由器分配地址。') }}</p></div><label class="switch-line"><input v-model="dhcp.enabled" type="checkbox" :disabled="!dhcpEditable" />{{ dhcp.enabled ? $gettext('已开启') : $gettext('已关闭') }}</label></div>
-                    <p v-if="!dhcpEditable" class="state-message">{{ contextDescription }}</p>
-                    <fieldset :disabled="!dhcpEditable">
-                        <div class="two-columns"><label><span>{{ $gettext('地址池起始地址') }}</span><input v-model.trim="dhcp.poolStart" inputmode="decimal" placeholder="192.168.1.100" /></label><label><span>{{ $gettext('地址池结束地址') }}</span><input v-model.trim="dhcp.poolEnd" inputmode="decimal" placeholder="192.168.1.249" /></label></div>
-                        <label><span>{{ $gettext('地址租期') }}</span><input v-model.trim="dhcp.leaseTime" placeholder="12h" /></label>
+                <article class="setting-card dhcp-card">
+                    <div class="card-heading"><div><h3><HomeGlyph name="network" />{{ $gettext('地址分配服务') }}</h3><p v-if="dhcpEditable">{{ $gettext('由本机为局域网设备分配地址。关闭后，设备应由其他路由器分配地址。') }}</p></div><label v-if="dhcpEditable" class="switch-line"><input v-model="dhcp.enabled" type="checkbox" :disabled="!dhcpEditable" />{{ dhcp.enabled ? $gettext('已开启') : $gettext('已关闭') }}</label><span v-else class="context-state">{{ $gettext('配置只读') }}</span></div>
+                    <template v-if="dhcpState">
+                    <dl v-if="!dhcpEditable" class="local-config-summary">
+                        <div><dt>{{ $gettext('本机配置') }}</dt><dd>{{ dhcpState.settings.enabled ? $gettext('已开启') : $gettext('已关闭') }}</dd></div>
+                        <div><dt>{{ $gettext('地址池') }}</dt><dd class="config-address">{{ dhcpState.settings.poolStart || '—' }} – {{ dhcpState.settings.poolEnd || '—' }}</dd></div>
+                        <div><dt>{{ $gettext('地址租期') }}</dt><dd>{{ dhcpState.settings.leaseTime || '—' }}</dd></div>
+                    </dl>
+                    <p v-if="!dhcpEditable" class="setting-hint config-origin">{{ $gettext('以下为本机保存的配置，不代表其他路由器当前生效的配置。') }}</p>
+                    <button v-if="!dhcpEditable" class="config-disclosure" type="button" :aria-expanded="showLocalConfig" aria-controls="lan-local-config" @click="showLocalConfig = !showLocalConfig"><HomeGlyph name="arrow" />{{ $gettext('查看本机配置') }}</button>
+                    <fieldset v-if="dhcpEditable || showLocalConfig" id="lan-local-config" :disabled="!dhcpEditable">
+                        <div class="two-columns"><label><span>{{ $gettext('地址池起始地址') }}</span><input v-model.trim="dhcp.poolStart" inputmode="decimal" :placeholder="dhcpEditable ? '192.168.1.100' : '—'" /></label><label><span>{{ $gettext('地址池结束地址') }}</span><input v-model.trim="dhcp.poolEnd" inputmode="decimal" :placeholder="dhcpEditable ? '192.168.1.249' : '—'" /></label></div>
+                        <label><span>{{ $gettext('地址租期') }}</span><input v-model.trim="dhcp.leaseTime" :placeholder="dhcpEditable ? '12h' : '—'" /></label>
                         <label><span>{{ $gettext('默认上网路线') }}</span><select v-model="dhcp.defaultTargetId"><option v-for="target in gatewayTargets.filter(item => item.supported && item.id !== 'default' && item.gateway)" :key="target.id" :value="target.id">{{ gatewayTargetLabel(target) }}{{ target.gateway ? ` · ${target.gateway}` : '' }}</option></select></label>
                     </fieldset>
-                    <button class="primary" type="button" :disabled="!dhcpEditable || saving === 'dhcp-plan'" @click="planDhcp">{{ saving === 'dhcp-plan' ? $gettext('正在检查…') : $gettext('预览地址分配设置') }}</button>
+                    <button v-if="dhcpEditable" class="primary" type="button" :disabled="!dhcpEditable || saving === 'dhcp-plan'" @click="planDhcp">{{ saving === 'dhcp-plan' ? $gettext('正在检查…') : $gettext('预览地址分配设置') }}</button>
+                    </template>
+                    <PageState v-else kind="unavailable" :title="$gettext('本机配置暂不可用')" :description="$gettext('未能读取可靠的地址分配配置，其他服务仍可使用。')" />
                     <section v-if="pendingDhcpPlan" class="impact-preview" aria-live="polite">
                         <h4>{{ $gettext('地址分配影响') }}</h4>
                         <p v-if="!dhcp.enabled">{{ $gettext('关闭后预计影响设备') }}：{{ pendingDhcpPlan.affectedDevices }}</p>
@@ -44,27 +52,28 @@
                     </section>
                 </article>
 
-                <article class="setting-card">
-                    <div class="card-heading"><div><h3>{{ $gettext('设备限速服务') }}</h3><p>{{ $gettext('为设备设置最高上传和下载速度；联网权限不依赖此服务。') }}</p></div><span class="capability-pill" :class="speedCapability.state">{{ capabilityLabel(speedCapability.state) }}</span></div>
-                    <div v-if="!speedProviderReady" class="capability-action" role="status"><p>{{ speedProviderGuidance }}</p><div class="capability-actions"><button v-if="canInstallSpeedProvider" class="primary" type="button" :disabled="installing" @click="installCapability('device_speed_limit')">{{ installing ? $gettext('正在安装…') : $gettext('安装所需服务') }}</button><button type="button" @click="load">{{ $gettext('重新检查') }}</button></div></div>
-                    <template v-else>
+                <article class="setting-card speed-card" :aria-busy="speedRefreshing">
+                    <div class="card-heading"><div><h3><HomeGlyph name="activity" />{{ $gettext('设备限速服务') }}</h3><p>{{ $gettext('为设备设置最高上传和下载速度；联网权限不依赖此服务。') }}</p></div><span class="capability-pill" :class="speedStatusFresh ? speedCapability.state : 'error'">{{ speedStatusFresh ? capabilityLabel(speedCapability.state) : $gettext('状态未更新') }}</span></div>
+                    <div v-if="!speedProviderReady || !speedStatusFresh" class="capability-action" role="status"><p>{{ speedRefreshError || speedProviderGuidance }}</p><div class="capability-actions"><button v-if="canInstallSpeedProvider" class="primary" type="button" :disabled="installing || speedRefreshing || !speedStatusFresh" @click="installCapability('device_speed_limit')">{{ installing ? $gettext('正在安装…') : $gettext('安装所需服务') }}</button></div></div>
+                    <template v-if="speedProviderReady">
                         <template v-if="speed.provider === 'eqos'">
                             <label class="switch-line"><input v-model="speed.enabled" type="checkbox" />{{ enableSpeedLabel }}</label>
                             <div v-if="speed.enabled" class="two-columns"><label><span>{{ $gettext('总上传带宽（Mbit/s）') }}</span><input v-model.number="speed.upload" type="number" min="1" /></label><label><span>{{ $gettext('总下载带宽（Mbit/s）') }}</span><input v-model.number="speed.download" type="number" min="1" /></label></div>
                             <p class="setting-hint">{{ $gettext('总带宽用于计算设备限速队列，不会自动平均分配给每台设备。') }}</p>
                         </template>
-                        <p v-else-if="speed.provider === 'quickstart-native'" class="service-ready">{{ $gettext('服务已就绪，请在设备详情中为需要的设备设置速度上限。') }}</p>
-                        <p v-else class="setting-hint">{{ $gettext('现有 Bandix 仅用于迁移，请先完成下方步骤。') }}</p>
-                        <button v-if="speed.provider === 'eqos' || speed.provider !== currentSpeedProvider" class="primary" type="button" :disabled="saving === 'speed-plan' || !speedProviderReady" @click="planSpeed">{{ saving === 'speed-plan' ? $gettext('正在检查…') : $gettext('预览限速服务设置') }}</button>
+                        <p v-else-if="speed.provider === 'quickstart-native' && speedStatusFresh" class="service-ready">{{ $gettext('服务已就绪，请在设备详情中为需要的设备设置速度上限。') }}</p>
+                        <p v-else-if="speed.provider === 'bandix'" class="setting-hint">{{ $gettext('现有 Bandix 仅用于迁移，请先完成下方步骤。') }}</p>
+                        <button v-if="speed.provider === 'eqos' || speed.provider !== currentSpeedProvider" class="primary" type="button" :disabled="saving === 'speed-plan' || !speedProviderReady || speedRefreshing || !speedStatusFresh" @click="planSpeed">{{ saving === 'speed-plan' ? $gettext('正在检查…') : $gettext('预览限速服务设置') }}</button>
+                    </template>
                         <section v-if="pendingSpeedPlan" class="impact-preview" aria-live="polite">
                             <h4>{{ $gettext('限速服务影响') }}</h4>
                             <p>{{ pendingSpeedPlan.changes?.length ? $gettext('将更新限速执行方式，现有规则保持不变。') : $gettext('设置没有变化。') }}</p>
                             <p v-if="pendingSpeedPlan.error" class="field-error">{{ pendingSpeedPlan.error.message }}</p>
-                            <div class="preview-actions"><button type="button" @click="pendingSpeedPlan=undefined">{{ $gettext('取消') }}</button><button class="primary" type="button" :disabled="!pendingSpeedPlan.canApply || saving === 'speed-apply'" @click="applySpeed">{{ saving === 'speed-apply' ? $gettext('正在应用…') : $gettext('确认应用') }}</button></div>
+                            <div class="preview-actions"><button type="button" @click="pendingSpeedPlan=undefined">{{ $gettext('取消') }}</button><button class="primary" type="button" :disabled="!pendingSpeedPlan.canApply || saving === 'speed-apply' || speedRefreshing || !speedStatusFresh || !speedProviderReady" @click="applySpeed">{{ saving === 'speed-apply' ? $gettext('正在应用…') : $gettext('确认应用') }}</button></div>
                         </section>
-                    </template>
-                    <details class="advanced-group"><summary>{{ $gettext('高级：执行方式与迁移') }}</summary>
-                        <label><span>{{ $gettext('执行方式') }}</span><select v-model="speed.provider" @change="pendingSpeedPlan=undefined"><option v-for="provider in selectableSpeedProviders" :key="provider.id" :value="provider.id" :disabled="!provider.available">{{ providerLabel(provider.id) }}{{ provider.available ? '' : ` · ${providerReason(provider.reason)}` }}</option></select><small>{{ providerDescription }}</small></label>
+                    <div class="speed-check-actions"><button type="button" class="speed-recheck" :disabled="speedRefreshing || Boolean(saving) || installing || rateMigrating" @click="refreshSpeed">{{ speedRefreshing ? $gettext('正在检查…') : $gettext('重新检查') }}</button><button v-if="!speedProviderReady || !speedStatusFresh" type="button" class="speed-inspect" @click="showSpeedAdvanced">{{ $gettext('查看执行方式') }}</button></div>
+                    <details class="advanced-group" :open="speedAdvancedOpen" @toggle="onSpeedAdvancedToggle"><summary>{{ $gettext('高级：执行方式与迁移') }}</summary>
+                        <label><span>{{ $gettext('执行方式') }}</span><select ref="speedProviderControl" v-model="speed.provider" @change="pendingSpeedPlan=undefined"><option v-for="provider in selectableSpeedProviders" :key="provider.id" :value="provider.id" :disabled="!provider.available">{{ providerLabel(provider.id) }}{{ provider.available ? '' : ` · ${providerReason(provider.reason)}` }}</option></select><small>{{ providerDescription }}</small></label>
                         <section v-if="bandixProvider?.installed && speed.provider === 'bandix'" class="legacy-migration" aria-labelledby="rate-migration-title">
                             <h4 id="rate-migration-title">{{ $gettext('迁移现有 Bandix 规则') }}</h4>
                             <p>{{ $gettext('先扫描并逐条检查；不会自动停止、卸载或改写 Bandix。') }}</p>
@@ -119,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useGettext } from '/@/plugins/i18n'
 import request from '/@/request'
 import Toast from '/@/components/toast'
@@ -129,6 +138,8 @@ import NetworkRulesHub from './networkRulesHub.vue'
 import { resolveCapability, type DeviceCapability } from './deviceCapabilities'
 import type { GatewayTarget, GatewayTargetMutationPlan, GatewayTargetMutationRequest } from './gatewayTargets'
 import type { LanDhcpSettingsResult } from './lanDhcpSettings'
+import { readDhcpSnapshot, readSpeedSnapshot } from './lanSettingsStatus'
+import HomeGlyph from '/@/home/HomeGlyph.vue'
 
 const { $gettext } = useGettext()
 const enableSpeedLabel = $gettext('启用设备限速')
@@ -143,6 +154,17 @@ const dhcp = reactive({ enabled: true, poolStart: '', poolEnd: '', leaseTime: '1
 const dhcpState = ref<LanDhcpSettingsResult>()
 const pendingDhcpPlan = ref<LanDhcpSettingsResult>()
 const pendingSpeedPlan = ref<any>()
+const showLocalConfig = ref(false), speedAdvancedOpen = ref(false)
+const speedProviderControl = ref<HTMLSelectElement>()
+const speedRefreshing = ref(false), speedRefreshError = ref(''), speedStatusFresh = ref(true)
+let speedCheck: AbortController | undefined
+let speedCheckGeneration = 0
+let speedCheckTimer: number | undefined
+const cancelSpeedCheck = () => {
+    speedCheckGeneration++; speedCheck?.abort(); window.clearTimeout(speedCheckTimer)
+    speedCheck = undefined; speedCheckTimer = undefined; speedRefreshing.value = false
+}
+onBeforeUnmount(cancelSpeedCheck)
 const routeEditor = ref(Boolean(restored.routeEditor))
 const routeDraft = reactive<{ targetId: string; name: string; kind: 'bypass'|'custom'; gateway: string }>({ targetId: '', name: restored.routeName || '', kind: restored.routeKind === 'custom' ? 'custom' : 'bypass', gateway: restored.routeGateway || '' })
 const gatewayTargets = ref<GatewayTarget[]>([])
@@ -150,9 +172,9 @@ const pendingRoutePlan = ref<GatewayTargetMutationPlan>()
 const pendingRouteRequest = ref<GatewayTargetMutationRequest>()
 const replacementTargetId = ref('')
 const sections = computed(() => [{ id: 'services' as const, label: $gettext('网络服务') }, { id: 'routes' as const, label: $gettext('上网路线') }, { id: 'rules' as const, label: $gettext('规则台账') }])
-const dhcpEditable = computed(() => Boolean(dhcpState.value?.editable))
+const dhcpEditable = computed(() => Boolean(dhcpState.value?.editable && dhcpState.value.settings))
 const routes = computed(() => gatewayTargets.value.filter(target => target.kind === 'bypass' || target.kind === 'custom'))
-const speedProviders = computed(() => globalData.value?.speedLimit?.providers || [])
+const speedProviders = computed(() => Array.isArray(globalData.value?.speedLimit?.providers) ? globalData.value.speedLimit.providers : [])
 const selectableSpeedProviders = computed(() => speedProviders.value.filter((provider:any) => provider.id !== 'bandix' || speed.provider === 'bandix'))
 const selectedSpeedProvider = computed(() => speedProviders.value.find((provider:any) => provider.id === speed.provider))
 const bandixProvider = computed(() => speedProviders.value.find((provider:any) => provider.id === 'bandix'))
@@ -161,7 +183,7 @@ const speedProviderReady = computed(() => Boolean(selectedSpeedProvider.value?.a
 const canInstallSpeedProvider = computed(() => selectedSpeedProvider.value?.reason === 'dependency_not_installed' && !speedProviders.value.some((provider:any) => provider.id === 'quickstart-native' && provider.installed))
 const providerLabel = (id:string) => ({'quickstart-native':$gettext('智能设备限速（推荐）'),bandix:$gettext('现有 Bandix（仅用于迁移）'),eqos:$gettext('兼容模式（按 IPv4）')} as Record<string,string>)[id] || id
 const providerReason = (reason:string) => ({dependency_not_installed:$gettext('未安装'),kernel_not_supported:$gettext('系统内核不支持'),engine_unavailable:$gettext('服务未运行'),interface_not_supported:$gettext('版本不兼容')} as Record<string,string>)[reason] || $gettext('当前不可用')
-const speedProviderGuidance = computed(() => speedCapability.value.reason === 'selected_provider_unavailable' ? $gettext('已安装限速服务，但当前执行方式不可用；请在下方高级设置中查看服务状态，选择后预览。') : speed.provider === 'quickstart-native' ? $gettext('Quickstart 限速服务未就绪。请安装或启动服务后重新检查；系统不会自动改用其他方式。') : $gettext('当前执行方式不可用，请先安装或启用对应服务。'))
+const speedProviderGuidance = computed(() => speedCapability.value.reason === 'selected_provider_unavailable' ? $gettext('已安装限速服务，但当前执行方式不可用。') : speed.provider === 'quickstart-native' ? $gettext('Quickstart 限速服务未就绪。请安装或启动服务后重新检查；系统不会自动改用其他方式。') : $gettext('当前执行方式不可用，请先安装或启用对应服务。'))
 const providerDescription = computed(() => speed.provider === 'quickstart-native' ? $gettext('按设备身份同时覆盖 IPv4 与 IPv6，并验证规则是否真正生效。') : speed.provider === 'bandix' ? $gettext('仅用于查看和迁移现有规则，不再作为新规则的默认执行方式。') : $gettext('资源占用较低，按固定 IPv4 执行。'))
 const routeEditable = computed(() => Boolean(routerContext.value?.routeEditability?.editable))
 const replacementRequired = computed(() => pendingRoutePlan.value?.error?.code === 'replacement_required')
@@ -172,13 +194,17 @@ const contextDescription = computed(() => {
     return ({
         local_dhcp_unhealthy: $gettext('当前无法读取地址分配状态，其他设置仍可使用。'),
         multiple_dhcp_evidence: $gettext('局域网角色需要确认'),
-        external_dhcp_authority: $gettext('当前由其他设备负责地址分配，本页只读。'),
+        external_dhcp_authority: $gettext('检测到其他设备负责地址分配，请在负责地址分配的路由器上管理相关设置。'),
         multiple_external_dhcp_servers: $gettext('局域网角色需要确认'),
         dhcp_authority_not_detected: $gettext('当前仅提供查看与引导，不会自动修改其他设备。'),
         router_context_unavailable: $gettext('暂时无法判断局域网角色'),
     } as Record<string,string>)[routerContext.value?.routeEditability?.reason] || $gettext('当前仅提供查看与引导，不会自动修改其他设备。')
 })
-const routeEditability = computed(() => routerContext.value?.routeEditability?.editable ? $gettext('路线可编辑') : $gettext('只读引导'))
+const permissionScope = computed(() => [
+    dhcpEditable.value ? $gettext('地址配置可编辑') : $gettext('地址配置只读'),
+    routeEditable.value ? $gettext('路线可编辑') : $gettext('路线只读'),
+    $gettext('其他服务按各自权限管理'),
+].join(' · '))
 const routeKindLabel = (value: string) => ({ bypass: $gettext('旁路由'), custom: $gettext('指定网关') } as Record<string,string>)[value] || $gettext('自定义路线')
 const dhcpConflictLabel = (value:string) => ({router:$gettext('路由器地址'),floating_gateway:$gettext('浮动网关'),gateway_node:$gettext('网关节点'),address_reservation:$gettext('固定地址')} as Record<string,string>)[value] || $gettext('受保护地址')
 const capabilityLabel = (state: string) => ({ available: $gettext('可用'), disabled: $gettext('未启用'), not_installed: $gettext('未安装'), unsupported: $gettext('不支持'), error: $gettext('需要检查') } as Record<string,string>)[state] || $gettext('未知')
@@ -203,13 +229,14 @@ const rememberDraft = () => sessionStorage.setItem(draftKey, JSON.stringify({ se
 watch([section, routeEditor, () => routeDraft.name, () => routeDraft.kind, () => routeDraft.gateway], rememberDraft)
 
 const load = async () => {
+    cancelSpeedCheck()
     loading.value = true; error.value = ''
     try {
-        const [contextResponse, globalResponse, targetResponse, dhcpResponse, migrationResponse] = await Promise.all([request.DeviceMangement.routerContextV2.GET(), request.DeviceMangement.globalConfigs.GET(), request.DeviceMangement.gatewayTargetsV2.GET(), request.DeviceMangement.lanDhcpSettingsV2.GET(), request.DeviceMangement.lanDeviceMigrationV2.PLAN().catch(() => undefined)])
+        const [contextResponse, globalResponse, targetResponse, dhcpResponse, migrationResponse] = await Promise.all([request.DeviceMangement.routerContextV2.GET(), request.DeviceMangement.globalConfigs.GET().catch(() => undefined), request.DeviceMangement.gatewayTargetsV2.GET(), request.DeviceMangement.lanDhcpSettingsV2.GET().catch(() => undefined), request.DeviceMangement.lanDeviceMigrationV2.PLAN().catch(() => undefined)])
         routerContext.value = contextResponse.data?.result
-        globalData.value = globalResponse.data?.result || {}
+        globalData.value = globalResponse?.data?.result || {}
         gatewayTargets.value = targetResponse.data?.result?.targets || []
-        dhcpState.value = dhcpResponse.data?.result
+        dhcpState.value = readDhcpSnapshot(dhcpResponse?.data)
         migrationPlan.value = migrationResponse?.data?.result?.plan
         migrationError.value = !migrationResponse
         speedCapability.value = resolveCapability(globalData.value, 'speedLimit')
@@ -219,8 +246,44 @@ const load = async () => {
         speed.upload = globalData.value?.speedLimit?.uploadSpeed || 100
         speed.download = globalData.value?.speedLimit?.downloadSpeed || 1000
         speed.provider = globalData.value?.speedLimit?.provider || speedProviders.value.find((item:any)=>item.available)?.id || ''
+        try { readSpeedSnapshot(globalResponse?.data); speedStatusFresh.value = true; speedRefreshError.value = '' }
+        catch { speedStatusFresh.value = false; speedRefreshError.value = $gettext('检查失败，状态未更新。请重试，草稿已保留。') }
     } catch (reason: any) { error.value = reason?.message || $gettext('读取结果失败') }
     finally { loading.value = false }
+}
+const onSpeedAdvancedToggle = (event: Event) => { speedAdvancedOpen.value = (event.target as HTMLDetailsElement).open }
+const showSpeedAdvanced = async () => {
+    speedAdvancedOpen.value = true
+    await nextTick()
+    speedProviderControl.value?.focus({ preventScroll: true })
+    speedProviderControl.value?.scrollIntoView({ block: 'nearest' })
+}
+const refreshSpeed = async () => {
+    if (speedRefreshing.value || saving.value || installing.value || rateMigrating.value) return
+    const generation = ++speedCheckGeneration
+    const controller = new AbortController()
+    speedCheck = controller
+    speedRefreshing.value = true; speedRefreshError.value = ''
+    let timedOut = false
+    const timer = window.setTimeout(() => { timedOut = true; controller.abort() }, 10000)
+    speedCheckTimer = timer
+    try {
+        const response = await request.DeviceMangement.globalConfigs.GET(controller.signal)
+        if (generation !== speedCheckGeneration) return
+        if (controller.signal.aborted) throw new Error('aborted_service_check')
+        const snapshot = readSpeedSnapshot(response.data)
+        // Observations only. Draft values and pending plans retain their owners.
+        globalData.value = { ...globalData.value, speedLimit: snapshot.speedLimit }
+        speedCapability.value = snapshot.capability as DeviceCapability
+        speedStatusFresh.value = true
+    } catch {
+        if (generation !== speedCheckGeneration) return
+        speedStatusFresh.value = false
+        speedRefreshError.value = timedOut ? $gettext('检查超时，请重试。草稿已保留。') : $gettext('检查失败，状态未更新。请重试，草稿已保留。')
+    } finally {
+        window.clearTimeout(timer)
+        if (generation === speedCheckGeneration) { speedRefreshing.value = false; speedCheck = undefined; speedCheckTimer = undefined }
+    }
 }
 const cancelDhcpPlan=()=>{pendingDhcpPlan.value=undefined}
 const requestDhcpPlan=async(confirmDisable=false)=>{saving.value='dhcp-plan';feedback.value='';try{const result=(await request.DeviceMangement.lanDhcpSettingsV2.PLAN({settings:{...dhcp},confirmDisable,idempotencyKey:`lan-dhcp-${Date.now().toString(36)}`})).data?.result as LanDhcpSettingsResult;pendingDhcpPlan.value=result;if(result?.error&&result.error.code!=='confirmation_required'){feedbackKind.value='error';feedback.value=result.error.message}}catch(reason:any){feedbackKind.value='error';feedback.value=reason?.message||$gettext('无法预览地址分配设置')}finally{saving.value=''}}
@@ -309,8 +372,17 @@ load()
 
 <style lang="scss" scoped>
 .lan-settings fieldset{min-width:0;margin:0;padding:0;border:0}
-.lan-settings { color: var(--tit-color); }.lan-settings header h2,.setting-card h3,.migration-card h3 { margin:0;padding:0;color:inherit;background:none!important;text-align:left }.lan-settings header h2{font-size:20px}.lan-settings header p,.card-heading p{margin:5px 0 0;opacity:.65}.context-card{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:16px 0 12px;padding:13px 14px;background:rgba(85,58,254,.06);border:1px solid rgba(85,58,254,.14);border-radius:9px}.context-card>div{display:grid;gap:4px}.context-card span{opacity:.68}.context-state{flex:none;padding:4px 8px;background:var(--card-bg-color);border-radius:999px;font-size:12px}.migration-card{margin:0 0 13px;padding:0;border:1px solid rgba(85,58,254,.18);border-radius:9px;background:rgba(85,58,254,.045)}.migration-heading,.migration-actions{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.migration-heading{min-height:44px;padding:13px 14px;cursor:pointer;list-style:none}.migration-heading::-webkit-details-marker{display:none}.migration-heading h3{font-size:16px}.migration-heading p{margin:4px 0 0;opacity:.67}.migration-heading>strong{flex:none;padding:4px 8px;background:var(--card-bg-color);border-radius:999px;font-size:12px}.migration-body{padding:0 14px 13px}.migration-card ul{display:grid;gap:5px;margin:0 0 11px;padding:0;list-style:none}.migration-card li{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(120px,1.4fr) auto;gap:8px;align-items:center;padding:7px 8px;background:rgba(127,127,127,.05);border-radius:6px}.migration-card li b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.migration-card li em{font-size:12px;font-style:normal}.migration-card li em.conflict,.migration-card li em.unresolved,.migration-warning{color:#9b3b16}.migration-more,.migration-warning,.migration-read-error{margin:8px 0;font-size:12px}.migration-actions{justify-content:flex-end}.migration-actions button{min-height:34px;padding:6px 11px;color:var(--device-accent);background:transparent;border:1px solid rgba(85,58,254,.34);border-radius:7px;cursor:pointer}.migration-actions .primary{color:#fff;background:#553afe;border-color:#553afe}.settings-nav{display:flex;gap:5px;margin-bottom:13px;border-bottom:1px solid rgba(127,127,127,.14)}.settings-nav button{padding:9px 12px;color:inherit;background:transparent;border:0;border-bottom:2px solid transparent;cursor:pointer}.settings-nav button.active{color:var(--device-accent);border-color:var(--device-accent);font-weight:600}.settings-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.setting-card{min-width:0;padding:14px;border:1px solid rgba(127,127,127,.15);border-radius:9px}.setting-card h3{font-size:16px}.card-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:13px}.setting-card label:not(.switch-line){display:grid;gap:5px;margin:10px 0;font-size:12px}.setting-card input:not([type=checkbox]),.setting-card select{box-sizing:border-box;width:100%;min-width:0;min-height:36px;padding:7px 9px;color:inherit;background:transparent;border:1px solid rgba(127,127,127,.28);border-radius:7px}.switch-line{display:flex;align-items:center;gap:7px;white-space:nowrap}.two-columns,.route-form{display:grid;grid-template-columns:1fr 1fr;gap:9px}.route-form button{grid-column:1/-1}.setting-card button{min-height:34px;padding:6px 11px;color:var(--device-accent);background:transparent;border:1px solid rgba(85,58,254,.34);border-radius:7px;cursor:pointer}.setting-card .primary{color:#fff;background:#553afe;border-color:#553afe}.capability-pill{flex:none;padding:4px 8px;border-radius:999px;background:rgba(127,127,127,.08);font-size:12px}.capability-pill.available{color:#176b45;background:rgba(38,162,105,.1)}.capability-pill.not_installed,.capability-pill.error{color:#9b3b16;background:#fff1e8}.capability-action,.state-message{padding:10px;background:rgba(127,127,127,.06);border-radius:8px}.capability-action p{margin:0 0 9px}.route-list{display:grid;gap:6px;margin-top:12px}.route-list>div{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px;background:rgba(127,127,127,.05);border-radius:7px}.route-list span{display:grid;gap:2px}.route-list small{opacity:.62}.route-actions,.preview-actions{display:flex;gap:6px;align-items:center}.impact-preview{margin-top:12px;padding:12px;border:1px solid rgba(85,58,254,.2);border-radius:8px;background:rgba(85,58,254,.05)}.impact-preview h4{margin:0 0 6px}.impact-preview p{margin:5px 0}.preview-actions{justify-content:flex-end;margin-top:10px}.field-error{color:#9b3b16}.danger-link{color:#a13c3c!important;border-color:rgba(161,60,60,.3)!important}.feedback{margin:12px 0 0;padding:9px;border-radius:7px}.feedback.success{color:#176b45;background:rgba(38,162,105,.1)}.feedback.error{color:#9b3b16;background:#fff1e8}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--device-accent);outline-offset:2px}button:disabled{opacity:.55;cursor:not-allowed}
-.capability-actions{display:flex;gap:7px;flex-wrap:wrap}.service-ready{margin:0 0 12px;padding:10px;color:#176b45;background:rgba(38,162,105,.08);border-radius:8px}.advanced-group{margin-top:13px;padding-top:11px;border-top:1px solid rgba(127,127,127,.14)}.advanced-group summary{cursor:pointer;font-weight:600}.advanced-group>label{margin-top:12px!important}.advanced-group small{opacity:.66}.legacy-migration{margin-top:12px;padding:11px;border-radius:8px;background:rgba(127,127,127,.05)}.legacy-migration h4{margin:0}.legacy-migration p{margin:6px 0 10px}.migration-review{margin-top:10px}.migration-review ul{display:grid;gap:5px;margin:0 0 8px;padding:0;list-style:none}.migration-review li{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(120px,1.4fr) auto;gap:8px;align-items:center;padding:7px 8px;background:rgba(127,127,127,.05);border-radius:6px}.migration-review li b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.migration-review li em{font-size:12px;font-style:normal}.migration-review li em.unsupported,.migration-review li em.conflict{color:#9b3b16}.migration-review li em.convert{color:#176b45}.checkbox-line{display:flex!important;align-items:flex-start;gap:7px}.setting-hint{font-size:12px;opacity:.68}
+.setting-card h3{display:flex;align-items:center;gap:8px}.setting-card h3>svg{width:18px;height:18px;flex:none;color:var(--device-accent)}
+.settings-nav button{min-height:44px}.context-card strong{font-size:14px}.context-state{white-space:nowrap}
+.local-config-summary{display:grid;gap:12px;margin:0}.local-config-summary>div{display:grid;grid-template-columns:90px minmax(0,1fr);gap:12px;align-items:baseline}
+.local-config-summary dt{font-size:12px;color:var(--device-muted)}.local-config-summary dd{margin:0;font-size:14px;overflow-wrap:anywhere}.config-address{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px!important}
+.config-origin{margin:14px 0 4px}.setting-card .config-disclosure{display:inline-flex;align-items:center;gap:6px;padding:6px 0;border:0;color:var(--device-accent)}.config-disclosure svg{width:14px;height:14px;transform:rotate(0deg)}.config-disclosure[aria-expanded=true] svg{transform:rotate(90deg)}
+.speed-check-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.setting-card .speed-inspect{color:var(--device-accent)}
+.switch-line{min-height:44px;cursor:pointer}
+.advanced-group>summary{min-height:44px;display:flex;align-items:center;gap:6px;list-style:none}.advanced-group>summary::-webkit-details-marker{display:none}.advanced-group>summary::before{content:'▸';font-size:12px}.advanced-group[open]>summary::before{transform:rotate(90deg)}
+.lan-settings :deep(.page-state){color:var(--device-text);background:var(--device-soft);border-color:var(--device-line)}.lan-settings :deep(.page-state__icon){color:var(--device-accent)}.lan-settings :deep(.page-state__body span){color:var(--device-muted);opacity:1}
+.lan-settings { color: var(--device-text); }.setting-card h3,.migration-card h3 { margin:0;padding:0;color:inherit;background:none!important;text-align:left }.card-heading p{margin:5px 0 0;color:var(--device-muted);font-size:12px;line-height:1.5}.context-card{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:0 0 14px;padding:13px 14px;background:var(--device-soft);border:1px solid var(--device-line);border-radius:9px}.context-card>div{display:grid;gap:4px}.context-card span{color:var(--device-muted);font-size:12px;line-height:1.6}.context-state{flex:none;padding:4px 8px;background:var(--device-panel);border-radius:999px;font-size:12px}.migration-card{margin:0 0 13px;padding:0;border:1px solid var(--device-line);border-radius:9px;background:var(--device-soft)}.migration-heading,.migration-actions{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.migration-heading{min-height:44px;padding:13px 14px;cursor:pointer;list-style:none}.migration-heading::-webkit-details-marker{display:none}.migration-heading h3{font-size:16px}.migration-heading p{margin:4px 0 0;opacity:.67}.migration-heading>strong{flex:none;padding:4px 8px;background:var(--device-panel);border-radius:999px;font-size:12px}.migration-body{padding:0 14px 13px}.migration-card ul{display:grid;gap:5px;margin:0 0 11px;padding:0;list-style:none}.migration-card li{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(120px,1.4fr) auto;gap:8px;align-items:center;padding:7px 8px;background:rgba(127,127,127,.05);border-radius:6px}.migration-card li b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.migration-card li em{font-size:12px;font-style:normal}.migration-card li em.conflict,.migration-card li em.unresolved,.migration-warning{color:#9b3b16}.migration-more,.migration-warning,.migration-read-error{margin:8px 0;font-size:12px}.migration-actions{justify-content:flex-end}.migration-actions button{min-height:44px;padding:6px 11px;color:var(--device-accent);background:transparent;border:1px solid var(--device-line);border-radius:7px;cursor:pointer}.migration-actions .primary{color:var(--device-primary-text);background:var(--device-primary-bg);border-color:var(--device-primary-bg)}.settings-nav{display:flex;gap:5px;margin-bottom:13px;border-bottom:1px solid rgba(127,127,127,.14)}.settings-nav button{padding:9px 12px;color:inherit;background:transparent;border:0;border-bottom:2px solid transparent;cursor:pointer}.settings-nav button.active{color:var(--device-accent);border-color:var(--device-accent);font-weight:600}.settings-stack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}.setting-card{min-width:0;padding:14px;border:1px solid var(--device-line);border-radius:9px}.setting-card h3{font-size:16px}.card-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:13px}.setting-card label:not(.switch-line){display:grid;gap:5px;margin:10px 0;font-size:12px}.setting-card input:not([type=checkbox]),.setting-card select{box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:7px 9px;color:inherit;background:transparent;border:1px solid var(--device-line);border-radius:7px}.switch-line{display:flex;align-items:center;gap:7px;white-space:nowrap}.two-columns,.route-form{display:grid;grid-template-columns:1fr 1fr;gap:9px}.route-form button{grid-column:1/-1}.setting-card button{min-height:44px;padding:6px 11px;color:var(--device-accent);background:transparent;border:1px solid var(--device-line);border-radius:7px;cursor:pointer}.setting-card .primary{color:var(--device-primary-text);background:var(--device-primary-bg);border-color:var(--device-primary-bg)}.capability-pill{flex:none;padding:4px 8px;border-radius:999px;background:rgba(127,127,127,.08);font-size:12px}.capability-pill.available{color:var(--device-good);background:var(--device-soft)}.capability-pill.not_installed,.capability-pill.error,.capability-pill.unsupported{color:var(--device-warning);background:var(--device-warning-soft)}.capability-action,.state-message{padding:0;color:var(--device-muted);font-size:13px;line-height:1.6}.capability-action p{margin:0 0 9px}.route-list{display:grid;gap:6px;margin-top:12px}.route-list>div{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px;background:rgba(127,127,127,.05);border-radius:7px}.route-list span{display:grid;gap:2px}.route-list small{opacity:.62}.route-actions,.preview-actions{display:flex;gap:6px;align-items:center}.impact-preview{margin-top:12px;padding:12px;border:1px solid var(--device-line);border-radius:8px;background:var(--device-accent-soft)}.impact-preview h4{margin:0 0 6px}.impact-preview p{margin:5px 0}.preview-actions{justify-content:flex-end;margin-top:10px}.field-error{color:#9b3b16}.danger-link{color:#a13c3c!important;border-color:rgba(161,60,60,.3)!important}.feedback{margin:12px 0 0;padding:9px;border-radius:7px}.feedback.success{color:var(--device-good);background:var(--device-soft)}.feedback.error{color:#9b3b16;background:#fff1e8}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--device-accent);outline-offset:2px}button:disabled{opacity:.55;cursor:not-allowed}
+.capability-actions{display:flex;gap:7px;flex-wrap:wrap}.service-ready{margin:0 0 12px;padding:10px;color:var(--device-good);background:var(--device-soft);border-radius:8px}.advanced-group{margin-top:13px;padding-top:11px;border-top:1px solid rgba(127,127,127,.14)}.advanced-group summary{cursor:pointer;font-weight:600}.advanced-group>label{margin-top:12px!important}.advanced-group small{opacity:.66}.legacy-migration{margin-top:12px;padding:11px;border-radius:8px;background:rgba(127,127,127,.05)}.legacy-migration h4{margin:0}.legacy-migration p{margin:6px 0 10px}.migration-review{margin-top:10px}.migration-review ul{display:grid;gap:5px;margin:0 0 8px;padding:0;list-style:none}.migration-review li{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(120px,1.4fr) auto;gap:8px;align-items:center;padding:7px 8px;background:rgba(127,127,127,.05);border-radius:6px}.migration-review li b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.migration-review li em{font-size:12px;font-style:normal}.migration-review li em.unsupported,.migration-review li em.conflict{color:#9b3b16}.migration-review li em.convert{color:#176b45}.checkbox-line{display:flex!important;align-items:flex-start;gap:7px}.setting-hint{font-size:12px;color:var(--device-muted);line-height:1.6}
 @media(max-width:900px){.settings-stack{grid-template-columns:1fr}}
-@media(max-width:520px){.context-card,.card-heading,.migration-heading{align-items:flex-start;flex-direction:column}.migration-card li,.migration-review li{grid-template-columns:1fr auto}.migration-card li b,.migration-review li b{grid-column:1/-1;grid-row:2}.settings-nav{overflow-x:auto}.settings-nav button{flex:none}.two-columns,.route-form{grid-template-columns:1fr}.route-list>div{align-items:flex-start;flex-direction:column}.route-actions{width:100%;justify-content:flex-end}.setting-card{padding:12px}}
+@media(max-width:520px){.context-card,.card-heading,.migration-heading{align-items:flex-start;flex-direction:column}.migration-card li,.migration-review li{grid-template-columns:1fr auto}.migration-card li b,.migration-review li b{grid-column:1/-1;grid-row:2}.settings-nav{overflow-x:auto}.settings-nav button{flex:1;min-width:0;white-space:normal;padding:8px 6px;font-size:13px}.two-columns,.route-form{grid-template-columns:1fr}.route-list>div{align-items:flex-start;flex-direction:column}.route-actions{width:100%;justify-content:flex-end}.setting-card{padding:12px}}
 </style>
