@@ -14,7 +14,7 @@
                     <!-- <settingIcon class="settings-icon" /> -->
                     <slot name="settings"></slot>
                 </div>
-                <WidgetMenu v-if="home && !homeCustomMenu" :label="title + $gettext('更多操作')" :items="[{id:'complete',label:$gettext('完整信息')}, ...homeMenu.map((item,index)=>({id:String(index),label:item.label}))]" @select="selectHomeMenu"/>
+                <WidgetMenu v-if="home && !homeCustomMenu && homeMenu.length" :label="title + $gettext('更多操作')" :items="homeMenu.map((item,index)=>({id:String(index),label:item.label}))" @select="selectHomeMenu"/>
                 <!-- 下拉菜单 -->
                 <transition v-if="!home" name="fade">
                     <div v-show="isOpen" class="dropdown-menu">
@@ -36,7 +36,7 @@ import { computed, ref, onMounted, onBeforeUnmount } from "vue"
 import {useHomeProjection} from "/@/home/widgetContext"
 import WidgetMenu from "/@/home/WidgetMenu.vue"
 const home=useHomeProjection()
-function selectHomeMenu(id){if(id==='complete')home.details();else {const item=props.homeMenu[Number(id)];if(item?.action)item.action();else if(item?.href)window.location.assign(item.href)}}
+function selectHomeMenu(id){const item=props.homeMenu[Number(id)];if(item?.action)item.action();else if(item?.href)window.location.assign(item.href)}
 import { useGettext } from '/@/plugins/i18n'
 const { $gettext } = useGettext()
 

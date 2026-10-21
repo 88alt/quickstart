@@ -3,7 +3,7 @@
   <template v-if="id==='system'"><p v-if="ready&&partial&&!failed" class="native-partial" role="status">{{t('部分信息读取失败，以下为已取得的快照，当前状态待确认。','Some information is unavailable. Showing previous snapshots; current state is unconfirmed.')}} <button @click="$emit('retry')">{{t('重试','Retry')}}</button></p><component :is="compact?SystemOverview:System" :loading="!ready" :read-error="failed?t('读取失败，其他组件仍可使用','Unavailable; other widgets remain usable'):undefined" @details="$emit('details')" @retry="$emit('retry')"/></template>
   <div v-else-if="failed" class="native-read-state" role="status">{{title}} · {{t('读取失败，其他组件仍可使用','Unavailable; other widgets remain usable')}}<button @click="$emit('retry')">{{t('重试','Retry')}}</button></div>
   <template v-else><p v-if="partial" class="native-partial" role="status">{{t('部分信息读取失败，以下为已取得的快照，当前状态待确认。','Some information is unavailable. Showing previous snapshots; current state is unconfirmed.')}} <button @click="$emit('retry')">{{t('重试','Retry')}}</button></p><component v-if="ready&&visible" :is="component"/><div v-else class="native-read-state" role="status">{{title}} · {{t('读取中…','Loading…')}}</div></template>
-  <p v-if="ready&&!unbounded&&projectionWarning" class="native-partial" role="status" data-projection-warning>{{projectionWarning}}</p>
+  <p v-if="ready&&!unbounded&&projectionWarning" class="native-partial" role="status" data-projection-warning>{{projectionWarning}} <button @click="$emit('details')" data-projection-warning-open>{{t('查看异常','View warnings')}}</button></p>
  </div>
 </template>
 <script setup lang="ts">
@@ -31,7 +31,7 @@ const ready=computed(()=>keys.value.every(k=>props.data[k]||props.errors[k]))
 const projectionWarning=computed(()=>{
  if(props.id!=='storage')return ''
  const physical=props.errors.disks?[]:props.data.disks?.disks||[],raid=props.errors.raid?[]:props.data.raid?.disks||[]
- return [...physical,...raid].slice(3).some(d=>d.errorInfo||d.smartWarning||d.childrens?.some((p:any)=>p.isReadOnly&&p.filesystem!=='swap'))?t('有未展开的磁盘异常，请在标题菜单查看完整信息。','Additional disks have warnings. Open complete information in the title menu.'):''
+ return [...physical,...raid].slice(3).some(d=>d.errorInfo||d.smartWarning||d.childrens?.some((p:any)=>p.isReadOnly&&p.filesystem!=='swap'))?t('有未展开的磁盘异常。','Additional disks have warnings.'):''
 })
 onMounted(()=>document.addEventListener('visibilitychange',visibility))
 onUnmounted(()=>document.removeEventListener('visibilitychange',visibility))

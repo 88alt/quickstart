@@ -1,7 +1,7 @@
 <template>
  <section class="native-business-card" :class="{'native-summary':summary&&id!=='system'}" :data-native-widget="id" :data-system-presentation="id==='system'?(summary?'summary':'standard'):undefined">
   <BusinessSurface v-if="id==='system'&&!details" :id="id" :data="data" :errors="errors" :compact="summary" @details="details=true" @retry="$emit('retry')"/>
-  <template v-else-if="summary"><header><h2><StudioGlyph :name="widget(id).glyph"/>{{title}}</h2><WidgetMenu :label="title+t('更多操作',' actions')" :items="[{id:'complete',label:t('完整信息','Complete information')}]" @select="details=true"/></header><p v-if="failure" role="status">{{t('信息暂不可用','Information unavailable')}} <button @click="$emit('retry')">{{t('重试','Retry')}}</button></p><template v-else><p v-for="line in summaryLines" :key="line">{{line}}</p></template></template>
+  <template v-else-if="summary"><header><h2><StudioGlyph :name="widget(id).glyph"/>{{title}}</h2></header><p v-if="failure" role="status">{{t('信息暂不可用','Information unavailable')}} <button @click="$emit('retry')">{{t('重试','Retry')}}</button></p><template v-else><p v-for="line in summaryLines" :key="line">{{line}}</p></template></template>
   <BusinessSurface v-else-if="!details" :id="id" :data="data" :errors="errors" @details="details=true" @retry="$emit('retry')"/>
   <NetworkWidgetDialog v-if="details" :title="title" @close="details=false"><BusinessSurface :id="id" :data="data" :errors="errors" unbounded @retry="$emit('retry')"/></NetworkWidgetDialog>
  </section>
@@ -10,7 +10,6 @@
 import {computed,ref} from 'vue'
 import BusinessSurface from './BusinessSurface.vue'
 import NetworkWidgetDialog from './NetworkWidgetDialog.vue'
-import WidgetMenu from './WidgetMenu.vue'
 import StudioGlyph from './HomeGlyph.vue'
 import {widget,type WidgetId} from './layout/rowLayout'
 import {serviceState,domainState,stateLabel} from './servicePresentation'
