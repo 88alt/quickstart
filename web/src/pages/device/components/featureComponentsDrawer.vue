@@ -1,5 +1,6 @@
 <template>
- <div v-show="open" ref="overlay" class="feature-overlay" @click.self="close" data-feature-overlay>
+ <Teleport to="body">
+ <div v-show="open" ref="overlay" class="feature-overlay device-feature-surface" @click.self="close" data-feature-overlay>
   <section ref="panel" class="feature-drawer" role="dialog" aria-modal="true" :aria-label="t('功能组件','Feature components')" tabindex="-1" data-feature-components>
    <div class="feature-heading"><div><h2>{{t('功能组件','Feature components')}}</h2><p>{{t('按需准备组件，再选择需要的功能。','Prepare components, then choose how to use them.')}}</p></div><button class="feature-close" type="button" @click="close" :aria-label="t('关闭功能组件','Close feature components')" data-close-components>×</button></div>
    <div class="feature-tools"><span>{{t('安装与启用不会自动切换当前限速方式。','Installing or enabling does not switch the selected limit mode.')}}</span><button type="button" :disabled="reading" @click="read" data-check-components>{{reading?t('正在检查…','Checking…'):t('重新检查','Check again')}}</button></div>
@@ -28,10 +29,12 @@
    <p v-if="allowConfigure===false" class="feature-progress">{{t('执行方式和网关配置可在“局域网设置”中调整。','Change the limit mode and gateway configuration in LAN settings.')}}</p>
   </section>
  </div>
+ </Teleport>
 </template>
 <script setup lang="ts">
 import {nextTick,onBeforeUnmount,ref,watch} from 'vue'
 import HomeGlyph from '/@/home/HomeGlyph.vue'
+import '../deviceVisualTokens.css'
 import {componentDefinitions,componentAction,createComponentClient,ComponentError,type ComponentId,type FeatureComponent,type ComponentCatalog,type ComponentPlan} from '../featureComponents'
 const props=withDefaults(defineProps<{open:boolean;focusId?:ComponentId;allowConfigure?:boolean}>(),{allowConfigure:true})
 const emit=defineEmits<{(event:'close'):void;(event:'updated'):void;(event:'busy',value:boolean):void;(event:'configure',id:ComponentId):void}>()

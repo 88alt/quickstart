@@ -1,6 +1,6 @@
 /* Same semantic palette as homeSemanticColors.css, bounded to the LAN page.
  * A colour never substitutes for presence, policy or sampling status text. */
-.device-management {
+.device-management,.device-feature-surface {
  --device-panel:#fff; --device-soft:#f5f7fa; --device-hover:#edf2f8;
  --device-text:#253247; --device-muted:#5b687a; --device-line:#e1e6ed;
  --device-accent:#155dfc; --device-accent-soft:#f0f5ff;
@@ -9,7 +9,7 @@
  --device-warning:#946000; --device-warning-soft:#fff5e5;
 }
 @media(prefers-color-scheme:dark) {
- body:not([theme="light"]) .device-management {
+ body:not([theme="light"]) .device-management,body:not([theme="light"]) .device-feature-surface {
   --device-panel:#2c2c2c; --device-soft:#343a43; --device-hover:#3b4655;
   --device-text:#e6ebf3; --device-muted:#b1bdce; --device-line:#414b59;
   --device-accent:#91b9ff; --device-accent-soft:#2c3e59;
@@ -18,7 +18,7 @@
   --device-warning:#ffce76; --device-warning-soft:#514024;
  }
 }
-body[theme="dark"] .device-management {
+body[theme="dark"] .device-management,body[theme="dark"] .device-feature-surface {
  --device-panel:#2c2c2c; --device-soft:#343a43; --device-hover:#3b4655;
  --device-text:#e6ebf3; --device-muted:#b1bdce; --device-line:#414b59;
  --device-accent:#91b9ff; --device-accent-soft:#2c3e59;
