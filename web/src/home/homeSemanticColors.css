@@ -70,8 +70,6 @@ body[theme=dark] :is(.ordered-home,.network-dialog).home-semantic-colors{
 :is(.ordered-home,.network-dialog).home-semantic-colors .native-business-surface .content .tab>.item:is(.cloud,.memory,.network)>svg [stroke]:not([stroke=none]){stroke:currentColor}
 :is(.ordered-home,.network-dialog).home-semantic-colors .native-business-surface .content .tab>.item:hover{background:var(--c-hover)}
 :is(.ordered-home,.network-dialog).home-semantic-colors .connection-business[data-connection-state=netSuccess] .connection-status-text strong{color:var(--c-good)}
-:is(.ordered-home,.network-dialog).home-semantic-colors .native-system .info .item1.bgcolor1>span{color:var(--home-icon-blue)}
-:is(.ordered-home,.network-dialog).home-semantic-colors .native-system .info .item1.bgcolor2>span{color:var(--color-icon-green)}
 :is(.ordered-home,.network-dialog).home-semantic-colors :is(.native-downloads,.native-remote){--color-widget-icon:var(--color-icon-green)}
 :is(.ordered-home,.network-dialog).home-semantic-colors .native-sharing{--color-widget-icon:var(--home-icon-violet)}
 :is(.ordered-home,.network-dialog).home-semantic-colors :is(.native-storage,.native-system){--color-widget-icon:var(--color-icon-slate)}

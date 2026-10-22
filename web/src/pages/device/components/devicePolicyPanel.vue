@@ -46,7 +46,8 @@
                 <div class="policy-card__heading"><div><strong>{{ $gettext('设备限速') }}</strong><small>{{ $gettext('限制这台设备的最高速率') }}</small></div>
                     <label class="policy-toggle"><input v-model="speedForm.enabled" type="checkbox" :disabled="!available('speed')" /><span>{{ speedForm.enabled ? $gettext('已启用') : $gettext('未启用') }}</span></label>
                 </div>
-                <div v-if="reason('speed')" class="policy-reason"><span>{{ reason('speed') }}</span><button v-if="['not_installed','disabled'].includes(policy.capabilities.speed?.state || '')" type="button" :disabled="saving !== ''" @click="prepareSpeedService">{{ saving === 'capability' ? $gettext('正在处理…') : policy.capabilities.speed?.state === 'disabled' ? $gettext('启用限速服务') : $gettext('安装限速服务') }}</button></div>
+                <button type="button" class="policy-components-entry" :disabled="saving !== ''" @click="prepareSpeedService" data-device-components>{{ $gettext('管理限速组件') }}</button>
+                <div v-if="reason('speed')" class="policy-reason"><span>{{ reason('speed') }}</span></div>
                 <template v-else>
                     <div v-if="policy.rateLimit" class="enforcement-card" :class="policy.rateLimit.state">
                         <div><strong>{{ rateLimitStateLabel }}</strong><small>{{ rateLimitExecutionLabel }}</small></div>
@@ -70,6 +71,7 @@
                 </button>
             </section>
         </template>
+        <FeatureComponentsDrawer :open="componentsOpen" focus-id="quickstart-native" :allow-configure="false" @close="componentsOpen=false" @updated="refreshComponentObservations"/>
     </div>
 </template>
 
@@ -78,6 +80,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { useGettext } from '/@/plugins/i18n'
 import request from '/@/request'
 import PageState from './pageState.vue'
+import FeatureComponentsDrawer from './featureComponentsDrawer.vue'
 import type { DeviceListItem } from '../deviceInventory'
 import {
     policyAvailable,
@@ -96,6 +99,7 @@ const props = withDefaults(defineProps<{ device: DeviceListItem; mode?: 'all' | 
 const mode = computed(() => props.mode)
 const emit = defineEmits<{ (event: 'saved', labels: string[]): void }>()
 const { $gettext } = useGettext()
+const componentsOpen=ref(false)
 
 const translatePolicyMessage = (message: string): string => ({
     '已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。': $gettext('已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。'),
@@ -313,21 +317,17 @@ const applyPlannedChange = async () => {
     }catch(error:any){feedbackKind.value='error';feedback.value=translatePolicyMessage(policyErrorLabel(error?.code,error?.message))}finally{saving.value=''}
 }
 const saveSpeed = () => planRestriction('speed', { ...speedForm })
-const prepareSpeedService = async () => {
-    const action = policy.value?.capabilities.speed?.state === 'disabled' ? 'enable' : 'install'
-    rememberDraft(); saving.value = 'capability'; feedback.value = ''
+const prepareSpeedService = () => { componentsOpen.value=true }
+const refreshComponentObservations = async () => {
     try {
-        const draftToken = `${props.device.deviceId}:restrictions`
-        const plan = (await request.DeviceMangement.capabilityActionV2.PLAN({ capabilityKey: 'device_speed_limit', action, draftToken })).data?.result?.plan
-        if (plan?.error) throw new Error(plan.error.message)
-        const question = action === 'enable' ? $gettext('启用限速服务？') : $gettext('安装限速服务？')
-        if (!plan?.canApply || !window.confirm(`${question}\n${$gettext('尚未保存的限速输入会保留。')}`)) return
-        const result = (await request.DeviceMangement.capabilityActionV2.APPLY({ capabilityKey: 'device_speed_limit', action, draftToken, confirm: true, expectedState: plan.current?.state })).data?.result
-        if (['install_pending','enable_pending'].includes(result?.error?.code)) throw new Error($gettext('组件状态仍在更新，稍后刷新即可继续，草稿已经保留。'))
-        if (result?.error) throw new Error(result.error.message)
-        feedbackKind.value = 'success'; feedback.value = action === 'enable' ? $gettext('限速服务已启用，输入内容已恢复') : $gettext('限速服务已安装，请继续启用，输入内容已恢复'); await load()
-    } catch (error: any) { feedbackKind.value = 'error'; feedback.value = error?.message || $gettext('限速服务准备失败，可稍后重试') }
-    finally { saving.value = '' }
+        const response=await request.DeviceMangement.devicePolicyV2.GET(props.device.deviceId)
+        const observed=response.data?.result?.policy
+        if(response.data?.error||response.data?.success&&response.data.success!==0||!observed?.capabilities||!policy.value)throw new Error('invalid_policy_observation')
+        // Refresh observations only: forms and pending network/restriction plans
+        // retain their existing task owners, without reload/syncForms().
+        policy.value.capabilities=observed.capabilities
+        policy.value.rateLimit=observed.rateLimit
+    } catch { feedbackKind.value='error';feedback.value=$gettext('组件观察未更新，输入内容仍保留，请稍后重试。') }
 }
 const toggleAccess = () => {
     if (!policy.value) return
@@ -339,6 +339,7 @@ watch(() => props.device.deviceId, load, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
+.policy-panel .policy-components-entry{min-height:44px;margin-top:10px;padding:8px 11px;border:1px solid var(--device-line);border-radius:7px;color:var(--device-accent);background:transparent;cursor:pointer}
 .policy-panel { display: flex; flex-direction: column; gap: 12px; }
 .policy-feedback { padding: 9px 11px; border-radius: 7px; font-size: 13px; }
 .policy-feedback.success { color: #176b45; background: rgba(38, 162, 105, .1); }

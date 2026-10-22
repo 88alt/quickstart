@@ -11,7 +11,7 @@ export type ConfigDomain='layout'|'launcher'
 export type ConfigValue=LayoutConfig|LauncherConfig
 export const MAX_CONFIG_BYTES=128*1024
 export class HomeConfigError extends Error{
-  constructor(public code:'invalid'|'future'|'conflict'|'forbidden'|'unavailable'|'uncertain'|'readonly',message=code){super(message);this.name='HomeConfigError'}
+  constructor(public code:'invalid'|'future'|'conflict'|'forbidden'|'unsupported'|'unavailable'|'uncertain'|'readonly',message=code){super(message);this.name='HomeConfigError'}
 }
 const fail=():never=>{throw new HomeConfigError('invalid')}
 const object=(value:any,keys:string[],required=keys)=>{if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!keys.includes(k))||required.some(k=>!Object.prototype.hasOwnProperty.call(value,k)))fail()}

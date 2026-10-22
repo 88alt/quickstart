@@ -60,7 +60,7 @@
         <p class="ordered-editor-hint">{{t('内容最小尺寸始终保留。调整后可一次撤销。','Content minimums are always preserved. Each adjustment can be undone.')}}</p>
       </template>
     </DirectEditPanel>
-    <p class="ordered-notice" v-if="notice" role="status" aria-live="polite" data-layout-notice>{{notice}}</p>
+    <LayoutNotice :notice="noticeState" :editing="editing" @dismiss="dismissNotice"/>
     <DirectEditPanel v-if="panel==='finish'&&finishPreview" :title="t('完成前整理','Review before finishing')" @close="closePanel">
       <p class="direct-panel-note">{{t('仅整理本次留下的空位，不合并不同行。确认前首页布局不变。','Only empty slots are simplified. Rows are never merged. Nothing is applied until you confirm.')}}</p>
       <div v-for="row in draft" :key="row.id" class="slot-finish-row" :data-finish-row="row.id"><strong>{{t('第','Row ')+(draft.indexOf(row)+1)+t('行','')}}</strong><small>{{rowDescription(row)}} → {{rowDescription(finishPreview.rows.find(r=>r.id===row.id))}}</small></div>
@@ -132,6 +132,8 @@
 </template>
 <script setup lang="ts">
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
+import LayoutNotice from './LayoutNotice.vue'
+import {useLayoutNotice} from './useLayoutNotice'
 import HomeBootstrap from './HomeBootstrap.vue'
 import {ROW_SPACE_LIMIT,clamp,splitSpace} from './layout/rowSizing'
 import {useNaturalSizing} from './useNaturalSizing'
@@ -153,7 +155,8 @@ const emit=defineEmits<{(e:'navigate',path:string):void;(e:'device',id:string):v
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,name=(id:WidgetId)=>t(widget(id).zh,widget(id).en)
 const orderedSession=computed(()=>props.config.rows),preferenceSession=computed(()=>props.config.widgetPreferences),theme=computed(()=>props.theme),data=props.data,errors=props.errors,saving=ref(false)
 const homeApplicationSession={get favorites(){return props.favoriteIds}}
-const editing=ref(false),draft=ref(clone(orderedSession.value)),preferences=ref(clone(preferenceSession.value)),revision=ref(0),history=ref<HomeDocument[]>([]),selected=ref(draft.value[0]?.id||''),notice=ref(''),previewWidth=ref(0)
+const {noticeState,notice,showNotice,dismissNotice}=useLayoutNotice()
+const editing=ref(false),draft=ref(clone(orderedSession.value)),preferences=ref(clone(preferenceSession.value)),revision=ref(0),history=ref<HomeDocument[]>([]),selected=ref(draft.value[0]?.id||''),previewWidth=ref(0)
 const layout=computed(()=>editing.value?draft.value:orderedSession.value),visible=computed(()=>visibleIds(layout.value)),hidden=computed(()=>widgetDefinitions.filter(w=>!visible.value.includes(w.id)))
 watch(visible,ids=>emit('visible',ids),{immediate:true})
 const selectedIndex=computed(()=>draft.value.findIndex(r=>r.id===selected.value)),selectedRow=computed(()=>draft.value[selectedIndex.value])
@@ -247,13 +250,13 @@ function cancel(){if(saving.value)return;emit('editing',false);interruptMove();c
 function apply(){if(saving.value)return;interruptMove();const result=normalizeRows(draft.value);if(result.issue||result.changed){finishPreview.value=result;openPanel('finish');return}finishApply(result.rows)}
 async function finishApply(rows:OrderedRow[]){
  const problem=validateDisplayRows(rows,preferences.value,layoutContext());if(problem.issue){warn(problem.issue);return}
- if(saving.value)return;saving.value=true;notice.value=t('正在保存…','Saving…')
+ if(saving.value)return;saving.value=true;showNotice(t('正在保存…','Saving…'),'progress')
  try{await props.persist({schemaVersion:3,rows:clone(rows),widgetPreferences:clone(preferences.value)});draft.value=clone(rows);closePanel();library.value=false;editing.value=false;overview.value=false;emit('editing',false);notice.value=t('首页布局已保存。','Homepage layout saved.');editButton.value?.focus()}
- catch(error){notice.value=(error as Error).message||t('保存失败，草稿仍保留。','Save failed. Your draft is kept.')}
+ catch(error){showNotice((error as Error).message||t('保存失败，草稿仍保留。','Save failed. Your draft is kept.'),'error')}
  finally{saving.value=false}
 }
 
-function warn(issue:string){notice.value=issueText(issue)}
+function warn(issue:string){showNotice(issueText(issue),'error')}
 function mutate(change:(rows:OrderedRow[])=>OrderedRow[]){const before=homeDraft(),next=change(clone(draft.value)),plan=planDocument(before,{rows:next,issue:'',hidden:[],changed:false},layoutContext(),preferences.value,false);if(plan.status==='blocked'){warn(plan.issue);return false}return adoptDocument(plan.next)}
 function undo(){interruptMove();closePanel();const previous=history.value.pop();if(previous){draft.value=clone(previous.rows);preferences.value=clone(previous.widgetPreferences);revision.value++;if(!previous.rows.some(r=>r.id===selected.value))selected.value=previous.rows[0]?.id||'';notice.value=t('已撤销上一次布局修改。','Last layout change undone.')}}
 function setTemplate(template:Template){requestedTemplate.value=template;const capacity=templates.find(v=>v.id===template)!.slots.reduce((a,b)=>a+b,0);retainedIds.value=visibleIds([selectedRow.value]).slice(0,capacity)}

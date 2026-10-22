@@ -58,7 +58,7 @@
         <p class="ordered-editor-hint">{{t('内容最小尺寸始终保留。调整后可一次撤销。','Content minimums are always preserved. Each adjustment can be undone.')}}</p>
       </template>
     </DirectEditPanel>
-    <p class="ordered-notice" v-if="notice" role="status" aria-live="polite" data-layout-notice>{{notice}}</p>
+    <LayoutNotice :notice="noticeState" :editing="editing" @dismiss="dismissNotice"/>
     <DirectEditPanel v-if="panel==='finish'&&finishPreview" :title="t('完成前整理','Review before finishing')" @close="closePanel">
       <p class="direct-panel-note">{{t('仅整理本次留下的空位，不合并不同行。确认前首页布局不变。','Only empty slots are simplified. Rows are never merged. Nothing is applied until you confirm.')}}</p>
       <div v-for="row in draft" :key="row.id" class="slot-finish-row" :data-finish-row="row.id"><strong>{{t('第','Row ')+(draft.indexOf(row)+1)+t('行','')}}</strong><small>{{rowDescription(row)}} → {{rowDescription(finishPreview.rows.find(r=>r.id===row.id))}}</small></div>
@@ -130,6 +130,8 @@
 </template>
 <script setup lang="ts">
 import {computed,nextTick,onMounted,onUnmounted,ref,watch} from 'vue'
+import LayoutNotice from '../home/LayoutNotice.vue'
+import {useLayoutNotice} from '../home/useLayoutNotice'
 import {ROW_SPACE_LIMIT,clamp,splitSpace} from './rowSizing'
 import {useNaturalSizing} from './useNaturalSizing'
 import {useRoute,useRouter} from 'vue-router'
@@ -157,7 +159,8 @@ import {widgetDefinitions,widget,type WidgetId} from './rowLayout'
 import {templates,clone,naturalRows,compactIds,orderedSession,recommended,makeRow,visibleIds,layoutIssue,rowMinimum,changeTemplate,renderRows,type Template,type OrderedRow,type ActualRow,type ActualColumn} from './orderedLayout'
 const route=useRoute(),router=useRouter(),english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,name=(id:WidgetId)=>t(widget(id).zh,widget(id).en)
 orderedSession.value=naturalRows(orderedSession.value)
-const editing=ref(false),draft=ref(clone(orderedSession.value)),preferences=ref(clone(preferenceSession.value)),revision=ref(0),history=ref<HomeDocument[]>([]),selected=ref(draft.value[0]?.id||''),notice=ref(''),previewWidth=ref(0),theme=ref(getTheme())
+const {noticeState,notice,showNotice,dismissNotice}=useLayoutNotice()
+const editing=ref(false),draft=ref(clone(orderedSession.value)),preferences=ref(clone(preferenceSession.value)),revision=ref(0),history=ref<HomeDocument[]>([]),selected=ref(draft.value[0]?.id||''),previewWidth=ref(0),theme=ref(getTheme())
 const layout=computed(()=>editing.value?draft.value:orderedSession.value),visible=computed(()=>visibleIds(layout.value)),hidden=computed(()=>widgetDefinitions.filter(w=>!visible.value.includes(w.id)))
 const selectedIndex=computed(()=>draft.value.findIndex(r=>r.id===selected.value)),selectedRow=computed(()=>draft.value[selectedIndex.value])
 const widthPresets=computed(()=>{const values=selectedRow.value?.columns.length===3?[[34,33,33],[50,25,25],[25,50,25]]:[[50,50],[60,40],[65,35],[40,60]],current=selectedRow.value?.columns.map(c=>c.weight)||[];return values.some(v=>v.join('/')===current.join('/'))?values:[current,...values]})
@@ -251,7 +254,7 @@ function begin(){draft.value=clone(orderedSession.value);preferences.value=clone
 function cancel(){interruptMove();closePanel();library.value=false;editing.value=false;overview.value=false;draft.value=clone(orderedSession.value);preferences.value=clone(preferenceSession.value);revision.value++;notice.value=t('已取消，恢复本次预览已应用的布局。','Cancelled. Applied preview layout restored.');editButton.value?.focus()}
 function apply(){interruptMove();const result=normalizeRows(draft.value);if(result.issue||result.changed){finishPreview.value=result;openPanel('finish');return}finishApply(result.rows)}
 function finishApply(rows:OrderedRow[]){const problem=validateDisplayRows(rows,preferences.value,layoutContext());if(problem.issue){warn(problem.issue);return}orderedSession.value=clone(rows);preferenceSession.value=clone(preferences.value);draft.value=clone(rows);closePanel();library.value=false;editing.value=false;overview.value=false;notice.value=t('布局已应用到本次预览；刷新恢复示例。','Layout applied in this preview. Reload resets it.');editButton.value?.focus()}
-function warn(issue:string){notice.value=issueText(issue)}
+function warn(issue:string){showNotice(issueText(issue),'error')}
 function mutate(change:(rows:OrderedRow[])=>OrderedRow[]){const before=homeDraft(),next=change(clone(draft.value)),plan=planDocument(before,{rows:next,issue:'',hidden:[],changed:false},layoutContext(),preferences.value,false);if(plan.status==='blocked'){warn(plan.issue);return false}return adoptDocument(plan.next)}
 function undo(){interruptMove();closePanel();const previous=history.value.pop();if(previous){draft.value=clone(previous.rows);preferences.value=clone(previous.widgetPreferences);revision.value++;if(!previous.rows.some(r=>r.id===selected.value))selected.value=previous.rows[0]?.id||'';notice.value=t('已撤销上一次布局修改。','Last layout change undone.')}}
 function setTemplate(template:Template){requestedTemplate.value=template;const capacity=templates.find(v=>v.id===template)!.slots.reduce((a,b)=>a+b,0);retainedIds.value=visibleIds([selectedRow.value]).slice(0,capacity)}

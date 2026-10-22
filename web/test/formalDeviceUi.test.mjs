@@ -93,12 +93,16 @@ test('M40 follow-up keeps advanced workflows progressive and mobile rules readab
 
 test('M30 LAN settings use read-only role guidance local degradation and draft-preserving installation', async () => {
     const source = await readFile(new URL('../src/pages/device/lanSettingsPanel.vue', import.meta.url), 'utf8')
-    for (const label of ['只读引导', '网络服务', '上网路线', '规则台账', 'DNS 跟随路线', '其他设置仍可使用', '发现现有设备设置', '确认接管现有设置']) assert.match(source, new RegExp(label))
+    for (const label of ['地址配置只读', '路线只读', '网络服务', '上网路线', '规则台账', 'DNS 跟随路线', '其他设置仍可使用', '发现现有设备设置', '确认接管现有设置']) assert.match(source, new RegExp(label))
     assert.match(source, /routerContextV2/)
     assert.match(source, /lanDeviceMigrationV2\.PLAN/)
     assert.match(source, /lanDeviceMigrationV2\.APPLY/)
     assert.match(source, /!migrationPlan\.canApply/)
-    assert.match(source, /capabilityActionV2\.PLAN/)
+    assert.match(source, /FeatureComponentsDrawer/)
+    assert.match(source, /@updated="refreshSpeed"/)
+    const componentClient = await readFile(new URL('../src/pages/device/featureComponents.ts', import.meta.url), 'utf8')
+    assert.match(componentClient, /capability-action\/plan\//)
+    assert.match(componentClient, /capability-action\/apply\//)
     assert.match(source, /sessionStorage/)
     assert.match(source, /rememberDraft/)
     assert.doesNotMatch(source, /DHCP 标签|option 3|option 6|UCI/)
@@ -125,7 +129,10 @@ test('M35 DHCP settings expose a safe pool plan and recovery path', async () => 
 
 test('M30 detail policy shows desired applied observed states and locks route only by DHCP authority', async () => {
     const source = await readFile(new URL('../src/pages/device/components/devicePolicyPanel.vue', import.meta.url), 'utf8')
-    for (const label of ['想要的路线', '路由器配置', '实际生效情况', 'routeEditability', '安装限速服务', '启用限速服务']) assert.match(source, new RegExp(label))
+    for (const label of ['想要的路线', '路由器配置', '实际生效情况', 'routeEditability', '管理限速组件']) assert.match(source, new RegExp(label))
+    assert.match(source, /FeatureComponentsDrawer/)
+    const drawer = await readFile(new URL('../src/pages/device/components/featureComponentsDrawer.vue', import.meta.url), 'utf8')
+    for(const label of ['查看并安装','查看并启用','确认安装','确认启用']) assert.match(drawer,new RegExp(label))
     assert.match(source, /routeLocked/)
     assert.match(source, /sessionStorage/)
     assert.match(source, /currentPolicyLabels/)
@@ -184,7 +191,8 @@ test('M51 native speed limits stay simple while failures and Bandix migration re
         '存在不支持或冲突的规则，全部处理完成前不会迁移。', '恢复迁移前设置',
     ]) assert.match(settings, new RegExp(label))
     assert.match(settings, /speedProviderReady/)
-    assert.match(settings, /canInstallSpeedProvider/)
+    assert.match(settings, /nativeSpeedProvider/)
+    assert.match(settings, /openComponents\('quickstart-native'\)/)
     assert.match(settings, /speed\.provider === 'quickstart-native'/)
     assert.match(settings, /bandixProvider\?\.installed && speed\.provider === 'bandix'/)
     assert.match(settings, /speed\.provider === 'eqos' \? speed\.enabled : true/)
@@ -258,14 +266,15 @@ test('M56 capability failures stay local and native service preparation preserve
     assert.match(panel, /:disabled="!available\('speed'\)"/)
     assert.match(panel, /v-if="reason\('access'\)"/)
     assert.match(panel, /<button v-else[^>]+@click="toggleAccess"/)
-    assert.match(panel, /rememberDraft\(\); saving\.value = 'capability'/)
-    assert.match(panel, /尚未保存的限速输入会保留/)
-    assert.match(panel, /await load\(\)/)
-    const prepare = panel.match(/const prepareSpeedService = async \(\) => \{[\s\S]*?\n\}/)?.[0] || ''
-    assert.doesNotMatch(prepare, /saveSpeed|deviceRestrictionsV2\.APPLY/)
+    assert.match(panel, /prepareSpeedService = \(\) => \{ componentsOpen\.value=true \}/)
+    assert.match(panel, /@updated="refreshComponentObservations"/)
+    const observe = panel.match(/const refreshComponentObservations = async \(\) => \{[\s\S]*?\n\}/)?.[0] || ''
+    assert.match(observe, /devicePolicyV2\.GET/)
+    assert.doesNotMatch(observe, /await load\(|syncForms\(\);|Object\.assign\(speedForm|saveSpeed|deviceRestrictionsV2\.APPLY/)
 
     assert.match(settings, /其他设置仍可使用/)
-    assert.match(settings, /capabilityActionV2\.PLAN/)
+    assert.match(settings, /FeatureComponentsDrawer/)
+    assert.match(settings, /@updated="refreshSpeed"/)
     assert.match(legacySettings, /openMode\('quickstart-netpolicy'\)/)
     assert.doesNotMatch(panel + settings + legacySettings, /app-meta-eqos/)
 })

@@ -1,4 +1,4 @@
-<template><Card :title="t('系统信息','System information')" class="system-overview" data-system-form="summary"><template #icon><ComputerIcon class="icon"/></template><template #settings><div class="system-overview-actions widget-action-group"><WidgetPrimaryAction icon="chip" class="system-overview-primary" @click="overview" data-system-overview><template #icon><ComputerIcon color="currentColor"/></template>{{t('信息概览','Overview')}}</WidgetPrimaryAction><WidgetMenu :label="t('系统信息更多操作','More system actions')" :items="[{id:'complete',label:t('完整信息','Complete information')}]" @select="$emit('details')"/></div></template><div class="system-overview-metrics"><div v-for="metric in metrics" :key="metric.id" :data-system-metric="metric.id"><span>{{metric.label}}</span><strong>{{metric.value}}<small>{{metric.unit}}</small></strong><i><b :style="{width:metric.percent+'%',background:metric.color}"></b></i></div></div><p class="system-overview-uptime"><span>{{t('已启动','Uptime')}}</span><strong data-system-uptime>{{uptime}}</strong></p></Card></template>
+<template><Card :title="t('系统信息','System information')" class="system-overview" data-system-form="summary"><template #icon><ComputerIcon class="icon"/></template><template #settings><div class="system-overview-actions widget-action-group"><WidgetPrimaryAction icon="chip" class="system-overview-primary" @click="overview" data-system-overview><template #icon><ComputerIcon color="currentColor"/></template>{{t('信息概览','Overview')}}</WidgetPrimaryAction></div></template><div class="system-overview-metrics"><div v-for="metric in metrics" :key="metric.id" :data-system-metric="metric.id"><span>{{metric.label}}</span><strong>{{metric.value}}<small>{{metric.unit}}</small></strong><i><b :style="{width:metric.percent+'%',background:metric.color}"></b></i></div></div><p class="system-overview-uptime"><span>{{t('已启动','Uptime')}}</span><strong data-system-uptime>{{uptime}}</strong></p></Card></template>
 <script setup lang="ts">
 import WidgetPrimaryAction from './WidgetPrimaryAction.vue'
 import {computed} from 'vue'
@@ -6,7 +6,6 @@ import {useSystemStore} from '../plugins/store'
 import utils from '../utils'
 import Card from '../pages/index/components/Card.vue'
 import ComputerIcon from '../components/svg/computer.vue'
-import WidgetMenu from './WidgetMenu.vue'
 defineEmits<{(e:'details'):void}>()
 const english=window.vue_lang==='en',t=(zh:string,en:string)=>english?en:zh,store=useSystemStore()
 // Keep the audited original numeric conventions, including its documented

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"log"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/digineo/go-uci"
 	"github.com/istoreos/quickstart/backend/models"
 	"golang.org/x/sys/unix"
 )
@@ -27,6 +29,7 @@ type capabilityActionStore interface {
 
 type CapabilityActionModule struct {
 	mu           sync.Mutex
+	operations   componentOperations
 	store        capabilityActionStore
 	pollInterval time.Duration
 	pollTimeout  time.Duration
@@ -48,7 +51,9 @@ func (module *CapabilityActionModule) Plan(ctx context.Context, request *models.
 }
 
 func (module *CapabilityActionModule) Apply(ctx context.Context, request *models.CapabilityActionRequest) (*models.CapabilityActionResponse, error) {
-	module.mu.Lock()
+	if !module.mu.TryLock() {
+		return capabilityActionResponse(nil, false, false, nil, &models.DevicePolicyError{Code: "component_busy", Message: "another component action is in progress; check status before retrying"}), nil
+	}
 	defer module.mu.Unlock()
 	plan, err := module.plan(ctx, request)
 	if err != nil {
@@ -57,12 +62,22 @@ func (module *CapabilityActionModule) Apply(ctx context.Context, request *models
 	if request == nil || !request.Confirm {
 		return capabilityActionResponse(plan, false, true, plan.Current, nil), nil
 	}
+	if !plan.CanApply || plan.Current == nil {
+		return capabilityActionResponse(plan, false, false, plan.Current, plan.Error), nil
+	}
 	if request.ExpectedState != "" && models.CapabilityState(request.ExpectedState) != plan.Current.State {
 		return capabilityActionResponse(plan, false, false, plan.Current, &models.DevicePolicyError{Code: "conflict", Message: "capability state changed; review the action again"}), nil
 	}
-	if !plan.CanApply {
-		return capabilityActionResponse(plan, false, false, plan.Current, plan.Error), nil
-	}
+	// Closing a panel or losing HTTP must not kill a package manager halfway
+	// through installation. State reads remain independent and no POST is queued.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Minute)
+	defer cancel()
+	module.operation(plan.CapabilityKey, &componentOperation{state: "running", action: plan.Action})
+	defer func() {
+		if module.operation(plan.CapabilityKey, nil).state == "running" {
+			module.operation(plan.CapabilityKey, &componentOperation{})
+		}
+	}()
 	pendingState, pendingCode := models.CapabilityState("not_installed"), "install_pending"
 	if plan.Action == "enable" {
 		pendingState, pendingCode = "disabled", "enable_pending"
@@ -77,6 +92,7 @@ func (module *CapabilityActionModule) Apply(ctx context.Context, request *models
 		return capabilityActionResponse(plan, false, false, nil, &models.DevicePolicyError{Code: "status_unavailable", Message: err.Error()}), nil
 	}
 	if pending {
+		module.operation(plan.CapabilityKey, &componentOperation{state: "pending", action: plan.Action})
 		return capabilityActionResponse(plan, false, false, current, &models.DevicePolicyError{Code: pendingCode, Message: "component state is still changing; check status again shortly"}), nil
 	}
 	return capabilityActionResponse(plan, true, false, current, nil), nil
@@ -122,6 +138,10 @@ func (module *CapabilityActionModule) plan(ctx context.Context, request *models.
 		return plan, nil
 	}
 	plan.CapabilityKey, plan.Action, plan.DraftToken = request.CapabilityKey, request.Action, request.DraftToken
+	if operation := module.operation(request.CapabilityKey, nil); operation.state != "" {
+		plan.Error = &models.DevicePolicyError{Code: "component_pending", Message: "component action is still pending; check status before submitting again"}
+		return plan, nil
+	}
 	if request.Action == "install" {
 		plan.Target = capabilityInstallTarget(request.CapabilityKey)
 		plan.RequiredFreeBytes = capabilityInstallRequiredFreeBytes
@@ -168,6 +188,8 @@ func capabilityInstallTarget(key string) string {
 		return "quickstart-netpolicy"
 	case "floating_gateway":
 		return "app-meta-floatip"
+	case "compat_speed_limit":
+		return "luci-app-eqos"
 	default:
 		return ""
 	}
@@ -197,19 +219,37 @@ func (store *systemCapabilityActionStore) runCommand(ctx context.Context, name s
 }
 
 func (store *systemCapabilityActionStore) Read(ctx context.Context, key string) (*models.Capability, error) {
-	response, err := NewLanGlobalConfigService().GetGlobalConfigs(ctx)
-	if err != nil {
-		return nil, err
+	if key == "device_speed_limit" {
+		return nativeComponentCapability(ctx, nativeProviderCapability, store.runCommand)
 	}
-	if response == nil || response.Result == nil || response.Result.Capabilities == nil {
-		return nil, errors.New("capability status is unavailable")
-	}
-	capability := response.Result.Capabilities.Items[key]
-	if capability == nil {
+	var installed, enabled bool
+	var err error
+	switch key {
+	case "floating_gateway":
+		installed, err = componentPackageInstalled("floatip", os.Stat)
+		if installed && err == nil {
+			tree := uci.NewTree("/etc/config")
+			err = tree.LoadConfig("floatip", true)
+			if errors.Is(err, os.ErrNotExist) {
+				err = nil
+			}
+			value, _ := tree.GetLast("floatip", "main", "enabled")
+			enabled = value == "1"
+		}
+	case "compat_speed_limit":
+		installed, err = componentPackageInstalled("luci-app-eqos", os.Stat)
+		enabled = installed // Selecting/enabling eqos uses the existing settings transaction.
+	default:
 		return &models.Capability{State: "unsupported", Reason: "unsupported_capability"}, nil
 	}
-	copy := *capability
-	return &copy, nil
+	status := buildDeviceManagementCapability(installed, enabled, err)
+	decorateCapabilityActions(status, capabilityInstallTarget(key))
+	// Floating gateway enable/configuration is a previewed network task, not a
+	// generic service-start action. The UI links back to its existing wizard.
+	if status.State == "disabled" {
+		status.Actions = nil
+	}
+	return status, err
 }
 func (store *systemCapabilityActionStore) AvailableBytes(context.Context) (int64, error) {
 	var stat unix.Statfs_t
@@ -219,13 +259,13 @@ func (store *systemCapabilityActionStore) AvailableBytes(context.Context) (int64
 	return int64(stat.Bavail) * int64(stat.Bsize), nil
 }
 func (store *systemCapabilityActionStore) Install(ctx context.Context, target string) error {
-	output, err := store.runCommand(ctx, "is-opkg", "install", target)
+	if _, err := store.runCommand(ctx, "is-opkg", "update"); err != nil {
+		return errors.New("software sources could not be updated; check the software center and retry")
+	}
+	_, err := store.runCommand(ctx, "is-opkg", "install", target)
 	if err != nil {
-		detail := strings.TrimSpace(string(output))
-		if len(detail) > 4096 {
-			detail = detail[len(detail)-4096:]
-		}
-		log.Printf("capability installation failed target=%s: %s", target, detail)
+		// Package-manager output can contain authenticated feed URLs.
+		log.Printf("capability installation failed target=%s", target)
 		return errors.New("installation failed; check software sources and firmware compatibility")
 	}
 	return nil
@@ -236,9 +276,18 @@ func (store *systemCapabilityActionStore) Enable(ctx context.Context, capability
 		return errors.New("this capability cannot be enabled from device management")
 	}
 	const service = "/etc/init.d/quickstart-netpolicy"
+	// procd's boot symlink and the daemon's UCI enabled switch are separate.
+	// Starting the init script with main.enabled=0 silently starts no process.
+	flag, flagErr := store.runCommand(ctx, "uci", "-q", "get", "quickstart-netpolicy.main.enabled")
+	var exit *exec.ExitError
+	if flagErr != nil && (!errors.As(flagErr, &exit) || exit.ExitCode() != 1) {
+		return errors.New("limit service configuration could not be read")
+	}
+	oldFlag, hadFlag := strings.TrimSpace(string(flag)), flagErr == nil
 	_, enabledErr := store.runCommand(ctx, service, "enabled")
 	_, runningErr := store.runCommand(ctx, service, "running")
 	wasEnabled, wasRunning := enabledErr == nil, runningErr == nil
+	flagChanged := false
 	rollback := func() {
 		rollbackCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
@@ -248,15 +297,35 @@ func (store *systemCapabilityActionStore) Enable(ctx context.Context, capability
 		if !wasEnabled {
 			_, _ = store.runCommand(rollbackCtx, service, "disable")
 		}
+		if flagChanged {
+			if hadFlag {
+				_, _ = store.runCommand(rollbackCtx, "uci", "set", "quickstart-netpolicy.main.enabled="+oldFlag)
+			} else {
+				_, _ = store.runCommand(rollbackCtx, "uci", "-q", "delete", "quickstart-netpolicy.main.enabled")
+			}
+			_, _ = store.runCommand(rollbackCtx, "uci", "commit", "quickstart-netpolicy")
+		}
+	}
+	if oldFlag != "1" {
+		flagChanged = true
+		if _, err := store.runCommand(ctx, "uci", "set", "quickstart-netpolicy.main.enabled=1"); err != nil {
+			rollback()
+			return errors.New("limit service could not be enabled; inspect its configuration")
+		}
+		if _, err := store.runCommand(ctx, "uci", "commit", "quickstart-netpolicy"); err != nil {
+			rollback()
+			return errors.New("limit service configuration could not be saved")
+		}
 	}
 	if output, err := store.runCommand(ctx, service, "enable"); err != nil {
 		log.Printf("capability enable failed key=%s action=enable: %s", capabilityKey, strings.TrimSpace(string(output)))
+		rollback()
 		return errors.New("limit service could not be enabled")
 	}
 	if output, err := store.runCommand(ctx, service, "start"); err != nil {
 		log.Printf("capability enable failed key=%s action=start: %s", capabilityKey, strings.TrimSpace(string(output)))
 		rollback()
-		return errors.New("limit service could not be started; original service state was restored")
+		return errors.New("limit service could not be started; check service state before retrying")
 	}
 	return nil
 }

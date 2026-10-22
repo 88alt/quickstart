@@ -17,5 +17,7 @@ const paths:Record<string,string[]>={
   download:['M12 3v12 M7 10l5 5 5-5 M3 16v5h18v-5'],
   folder:['M3 6h7l2 3h9v11H3z'],
   check:['m5 12 4 4L19 6'],
+  clock:['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18','M12 7v5l3 2'],
+  power:['M12 3v9','M6.5 5.5a9 9 0 1 0 11 0'],
 }
 </script>

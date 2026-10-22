@@ -82,6 +82,12 @@ try:
     env = dict(os.environ, NODE_PATH='/config/playwright-runner/node_modules', QS_ACCEPT_HOST=HOST,
                QS_ACCEPT_SID=sessions[0], QS_ACCEPT_SECOND_SID=sessions[1], QS_ACCEPT_OUT=str(OUT.resolve()))
     test_script = Path(__file__).with_name('home-current-acceptance.cjs')
+    if os.environ.get('QS_ACCEPT_LAYOUT_NOTICE') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/layout-notice-review.cjs'
+    if os.environ.get('QS_ACCEPT_WIDGET_MENUS') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/widget-menu-removal-review.cjs'
+    if os.environ.get('QS_ACCEPT_CONNECTION_WIZARD') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/connection-wizard-review.cjs'
     if os.environ.get('QS_ACCEPT_SYSTEM_LOADING') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/system-loading-review.cjs'
         env['QS_SYSTEM_EVIDENCE'] = str(OUT.resolve() / 'system-loading')
@@ -118,6 +124,18 @@ try:
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-page-spacing-review.cjs'
     if os.environ.get('QS_ACCEPT_HEADER_BAND') == '1':
         test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/home-header-band-review.cjs'
+    if os.environ.get('QS_ACCEPT_SYSTEM_TIME') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/system-time-alignment-review.cjs'
+    if os.environ.get('QS_ACCEPT_SYSTEM_FACTS') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/system-facts-review.cjs'
+    if os.environ.get('QS_ACCEPT_SERVICE_WIDGETS') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/service-widgets-review.cjs'
+    if os.environ.get('QS_ACCEPT_DEVICE_SPACING') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/device-page-spacing-review.cjs'
+    if os.environ.get('QS_ACCEPT_DEVICE_VISUAL') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/device-visual-refinement-review.cjs'
+    if os.environ.get('QS_ACCEPT_LAN_SETTINGS') == '1':
+        test_script = Path(__file__).resolve().parents[2] / 'docs/product/ui-design/lan-settings-refinement-review.cjs'
     result = subprocess.run(['node', str(test_script)], env=env, timeout=480)
     report['uiExitCode'] = result.returncode
 finally:
