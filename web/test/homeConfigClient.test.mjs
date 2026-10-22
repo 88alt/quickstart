@@ -15,6 +15,20 @@ test('empty saved configuration is a valid result',async()=>{
  const client=createHomeConfigClient(async()=>response({state:'saved',version,value}))
  assert.deepEqual((await client.read('launcher')).value,value)
 })
+test('missing read endpoint is unsupported, while transient errors stay unavailable',async()=>{
+ for(const status of [404,503]){
+  const client=createHomeConfigClient(async()=>new Response('',{status}))
+  await assert.rejects(()=>client.read('layout'),error=>error.code===(status===404?'unsupported':'unavailable'))
+ }
+})
+test('404 after a POST still reconciles because a write may have committed',async()=>{
+ const methods=[];const client=createHomeConfigClient(async(_url,options)=>{
+  methods.push(options.method)
+  return options.method==='POST'?new Response('',{status:404}):response({state:'saved',version,value})
+ })
+ assert.equal((await client.save('launcher',version,value)).version,version)
+ assert.deepEqual(methods,['POST','GET'])
+})
 test('timeout after commit is confirmed by GET without replaying POST',async()=>{
  const methods=[];const client=createHomeConfigClient(async(_url,options)=>{
   methods.push(options.method)

@@ -5,6 +5,7 @@ import {defaultLayout,defaultLauncher} from './defaults'
 
 export const configErrorText=(error:unknown)=>{
  const en=window.vue_lang==='en',code=error instanceof HomeConfigError?error.code:'unavailable'
+ if(code==='unsupported')return en?'This backend does not support homepage configuration. Showing defaults; saving is unavailable.':'当前后端不支持首页配置，暂用默认内容，无法保存。'
  const labels:Record<string,[string,string]>={conflict:['另一窗口已保存。草稿仍保留；请先取消编辑并重新读取，再合并修改。','Another window saved. Keep your draft, then cancel and reload before merging.'],forbidden:['登录已失效或没有权限，请重新登录。','Session expired or access denied. Sign in again.'],future:['配置来自更新版本，当前页面只读。','Configuration requires a newer version. This page is read only.'],readonly:['配置需要恢复，当前禁止覆盖。','Configuration needs recovery; overwriting is disabled.'],uncertain:['保存结果尚未确认，草稿已保留。请重试读取，勿重复提交。','Save outcome is unconfirmed. Draft retained. Reload to confirm before submitting again.'],invalid:['配置结构不兼容，未保存。','Configuration is incompatible and was not saved.'],unavailable:['暂时无法读取路由器配置，正在临时展示内置首页。','Router configuration is unavailable. Showing built-in defaults temporarily.']}
  return labels[code][en?1:0]
 }

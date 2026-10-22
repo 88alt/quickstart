@@ -19,7 +19,7 @@ export function createHomeConfigClient(transport:HomeTransport=fetch,timeoutMs=8
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs)
   try{
    const response=await transport('/cgi-bin/luci/istore/home/v1/'+domain+'/'+action,{method,credentials:'same-origin',cache:'no-store',signal:controller.signal,headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined})
-   if(!response.ok){throw new HomeConfigError(response.status===409?'conflict':response.status===401||response.status===403?'forbidden':response.status===422?'invalid':response.status===423?'readonly':'unavailable')}
+   if(!response.ok){throw new HomeConfigError(response.status===409?'conflict':response.status===401||response.status===403?'forbidden':response.status===404&&method==='GET'?'unsupported':response.status===422?'invalid':response.status===423?'readonly':'unavailable')}
    const text=await response.text();if(new TextEncoder().encode(text).length>MAX_CONFIG_BYTES+4096)throw new HomeConfigError('invalid')
    let envelope:any;try{envelope=JSON.parse(text)}catch{throw new HomeConfigError('invalid')}
    if(envelope?.success!==0||envelope?.error)throw new HomeConfigError(envelope?.success===-1001?'forbidden':'unavailable')
