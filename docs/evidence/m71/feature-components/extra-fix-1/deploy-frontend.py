@@ -36,8 +36,8 @@ def hashes():
 report={'host':'192.168.30.244','frontendCommit':C['commit'],'backendCommit':C['backendCommit'],'assetVersion':C['assetVersion'],'scope':'Frontend/cache key only; no process restart, package hooks, policy or configuration writes','backup':BACKUP,'before':snapshot(),'result':'preparing'}
 old=hashes();baseline=dict(line.split('=',1) for line in (ROOT/'bin/previews/9f31d4f/MANIFEST').read_text().splitlines())
 for name,digest in old.items():
-    assert digest==baseline['web.'+name.replace('/','.')],name+' no longer matches B baseline'
-    if name not in NAMES:assert digest==C['hashes'][name],name+' unexpectedly changed; audit full payload'
+    if name in NAMES:assert digest==baseline['web.'+name.replace('/','.')],name+' no longer matches B baseline'
+    else:assert digest==C['hashes'][name],name+' unexpectedly changed; audit full payload'
 assert remote('sha256sum /usr/sbin/quickstart').decode().split()[0]==C['backendSHA']
 assert remote('/usr/sbin/quickstart version --more').decode().strip()==C['backendVersion']
 service=json.loads(remote('ubus -S call service list \'{"name":"quickstart"}\''))

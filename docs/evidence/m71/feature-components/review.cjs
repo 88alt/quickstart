@@ -4,9 +4,14 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const base='http://192.168.30.244',out=process.env.QS_COMPONENT_OUT;
 const rehearsal=process.env.QS_COMPONENT_REHEARSAL==='1',projected=process.env.QS_COMPONENT_PROJECTED==='1';
 const extended=process.env.QS_COMPONENT_EXTENDED==='1';
+const actualPlans=process.env.QS_COMPONENT_ACTUAL_PLANS==='1';
+const expected=process.env.QS_COMPONENT_CHECK_INSTALLED==='1'?JSON.parse(fs.readFileSync(path.join(__dirname,'extra-fix-1/candidate.json'))):null;
+let vendorVersion;
+if(expected){const bundle=fs.readFileSync(path.resolve(__dirname,'../../../../web/dist/luci-static/quickstart/index.js'));assert.equal(require('node:crypto').createHash('sha256').update(bundle).digest('hex'),expected.hashes['index.js']);vendorVersion=bundle.toString().match(/vendor\.js\?v=([a-z0-9]+)/)[1]}
 const fixture=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../contracts/feature-components.json')));
 const report={result:'running',rehearsal,projected,views:[],errors:[],blocked:[],projectedCalls:[]};
 report.coverageChecks=[];
+report.actualPlanCalls=[];
 let browser,page;
 const prefix='/cgi-bin/luci/istore',catalogPath=prefix+'/lanctrl/v2/feature-components/';
 async function screenshot(name){await page.screenshot({path:path.join(out,name+'.png'),fullPage:false})}
@@ -39,7 +44,7 @@ async function geometry(){return page.locator('[data-feature-components]').evalu
  })}
 (async()=>{try{
  browser=await chromium.launch();
- const cases=process.env.QS_COMPONENT_SINGLE==='1'?[{width:390,lang:'en',theme:'dark'}]:process.env.QS_COMPONENT_QUICK==='1'?[{width:1440,lang:'zh-cn',theme:'light'}]:['zh-cn','en'].flatMap(lang=>['light','dark'].flatMap(theme=>[1440,390,320].map(width=>({width,lang,theme}))));
+ const cases=actualPlans?[{width:1440,lang:'zh-cn',theme:'light'},{width:390,lang:'en',theme:'dark'}]:process.env.QS_COMPONENT_SINGLE==='1'?[{width:390,lang:'en',theme:'dark'}]:process.env.QS_COMPONENT_QUICK==='1'?[{width:1440,lang:'zh-cn',theme:'light'}]:['zh-cn','en'].flatMap(lang=>['light','dark'].flatMap(theme=>[1440,390,320].map(width=>({width,lang,theme}))));
  for(const c of cases){
   const context=await browser.newContext({viewport:{width:c.width,height:1000},hasTouch:c.width<600});
   await context.addCookies([{name:'sysauth_http',value:process.env.QS_COMPONENT_SID,domain:'192.168.30.244',path:'/'}]);
@@ -52,6 +57,9 @@ async function geometry(){return page.locator('[data-feature-components]').evalu
    if(rehearsal&&key.startsWith('/luci-static/quickstart/')){const name=key.split('/luci-static/quickstart/')[1];if(['index.js','style.css','vendor.js','i18n/en.json'].includes(name))return route.fulfill({path:path.resolve(__dirname,'../../../../web/dist/luci-static/quickstart',name)})}
    if(projected&&key===catalogPath){bodyReads++;if(catalogMode==='failure')return route.fulfill({status:503,json:{error:'projected'}});if(catalogMode==='forbidden')return route.fulfill({json:{success:-1001}});if(catalogMode==='malformed')return route.fulfill({json:{success:0,result:{schemaVersion:2}}});return route.fulfill({json:{success:0,result:catalog}})}
    if(!['GET','HEAD'].includes(req.method())){
+    if(actualPlans&&!projected&&key===prefix+'/lanctrl/v2/capability-action/plan/'){
+     const body=req.postDataJSON();assert.ok([['device_speed_limit','enable'],['compat_speed_limit','install'],['floating_gateway','install']].some(([key,action])=>body.capabilityKey===key&&body.action===action));report.actualPlanCalls.push({key,body});return route.continue();
+    }
     if(key==='/ubus/'){
      const body=req.postDataJSON(),calls=Array.isArray(body)?body:[body];if(calls.every(call=>call.method==='list'||call.method==='call'&&['luci.getFeatures','file.list','uci.changes'].includes(call.params?.[1]+'.'+call.params?.[2])))return route.continue();
     }
@@ -86,6 +94,8 @@ async function geometry(){return page.locator('[data-feature-components]').evalu
   page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));
   await page.goto(base+'/cgi-bin/luci/admin/quickstart/devicemanagement',{waitUntil:'networkidle'});await page.locator('[data-device-id]:visible').first().waitFor();await page.locator('.primary-tabs button').nth(2).click();await page.locator('.settings-nav').waitFor();await page.evaluate(theme=>document.body.setAttribute('theme',theme),c.theme);
   const name=[c.lang,c.theme,c.width].join('-');
+  const resources=await page.evaluate(()=>performance.getEntriesByType('resource').map(item=>item.name).filter(name=>/\/luci-static\/quickstart\/(index\.js|vendor\.js|style\.css|i18n\/(en|zh-cn)\.json)(\?|$)/.test(name)));
+  if(expected){assert.equal(rehearsal,false);for(const name of ['index.js','vendor.js','style.css'])assert.ok(resources.some(url=>new URL(url).pathname.endsWith('/'+name)),'Missing deployed resource '+name);for(const url of resources)assert.equal(new URL(url).searchParams.get('v'),new URL(url).pathname.endsWith('/vendor.js')?vendorVersion:expected.assetVersion,'Page uses a cache key different from the frozen template/bundle')}
   const rates=page.locator('.speed-card input[type=number]');let originalPlan;
   if(projected){await rates.first().fill('37');await rates.nth(1).fill('83');await page.locator('.speed-card>.primary').click();await page.locator('.speed-card .impact-preview').waitFor();originalPlan=await page.locator('.speed-card .impact-preview').innerText();assert.equal(await page.locator('[data-manage-speed-component]').isVisible(),true)}
   const entry=page.locator('[data-open-components]:visible');await entry.click();await page.locator('[data-feature-component=quickstart-native]').waitFor();
@@ -95,6 +105,15 @@ async function geometry(){return page.locator('[data-feature-components]').evalu
   assert.equal(await page.evaluate(()=>document.body.style.overflow),'hidden');
   await screenshot(name+'-components');
   const coverage=await titleCoverage();report.coverageChecks.push({name,...coverage});assert.ok(coverage.unobscured,'Native chrome paints over component heading');
+  if(actualPlans){
+   assert.equal(projected,false);assert.equal(rehearsal,false);
+   for(const item of fixture.components){
+    const before=report.actualPlanCalls.length;
+    await page.locator('[data-prepare-component='+item.id+']').click();await page.locator('[data-component-confirm]').waitFor();assert.equal(report.actualPlanCalls.length,before+1);
+    assert.match(await page.locator('[data-component-confirm]').innerText(),new RegExp(item.package));await screenshot(name+'-actual-plan-'+item.id);
+    await page.locator('[data-component-confirm] button').first().click();await page.locator('[data-component-confirm]').waitFor({state:'hidden'});
+   }
+  }
   if(projected){
    const before=report.projectedCalls.length;
    await page.locator('[data-prepare-component=quickstart-native]').click();await page.locator('[data-component-confirm]').waitFor();assert.equal(report.projectedCalls.length,before+1);assert.match(await page.locator('[data-component-confirm]').innerText(),/quickstart-netpolicy/);await screenshot(name+'-confirm');
@@ -141,7 +160,7 @@ async function geometry(){return page.locator('[data-feature-components]').evalu
    await nestedEntry.click();await page.locator('[data-close-components]:visible').click();await page.locator('.drawer-close').click();assert.equal(await page.locator('[data-feature-overlay]').count(),0,'Unmount left a teleported overlay');assert.equal(await page.locator('[inert]').count(),0,'Unmount leaked inert');
    extra.nested={coverage,draftPreserved:projected,escapeOnlyClosesChild:true,focusAndScrollRestored:true,unmountClean:true};
   }
-  report.views.push({...c,bodyReads,metrics:m,draftsAndExplicitSwitch:projected,extra});await context.close();page=null;
+  report.views.push({...c,bodyReads,metrics:m,draftsAndExplicitSwitch:projected,extra,resources});await context.close();page=null;
  }
  assert.deepEqual(report.errors,[]);assert.deepEqual(report.blocked,[]);report.result='passed';
 }catch(error){report.result='failed';report.failure=error.stack;process.exitCode=1;if(page)await screenshot('failure').catch(()=>{})}
