@@ -1,5 +1,7 @@
 # 局域网设置：状态优先、配置按需
 
+2026-10-22 用户认可的组件准备交互由[M71功能组件契约](lan-feature-components.md)补充：统一抽屉、独立组件状态、安装/启用/切换分别确认。原页面内安装按钮与安装后全页load的实现由该契约替代；本文件关于局部降级、草稿保留、现有业务事务和服务重新检查的规则继续有效。
+
 2026-10-21，用户已认可并要求实施。延续[设备页视觉](lan-device-visual-refinement.md)与[业务架构](../lan-device-management-product-architecture.md)，本文件只补充局域网设置的呈现和局部检查交互，业务事务/权限仍以上述架构为准。[任务树与证据](../evidence/m70/lan-settings-refinement/status.md)。
 
 当前已部署B前端9f31d4f，第三候选通过24组已登录页面与12组补充交互验证，[当前验收](../evidence/m70/lan-settings-refinement/acceptance.md)。B现有地址配置读取的静态字段兼容错误独立记录，尚未修复；摘要只在成功读取时显示。

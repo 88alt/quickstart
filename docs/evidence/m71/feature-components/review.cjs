@@ -1,0 +1,85 @@
+const {chromium}=require('playwright');
+const {ratio}=require('../../../product/ui-design/home-semantic-colour-checks.cjs');
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const base='http://192.168.30.244',out=process.env.QS_COMPONENT_OUT;
+const rehearsal=process.env.QS_COMPONENT_REHEARSAL==='1',projected=process.env.QS_COMPONENT_PROJECTED==='1';
+const fixture=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../../../contracts/feature-components.json')));
+const report={result:'running',rehearsal,projected,views:[],errors:[],blocked:[],projectedCalls:[]};
+let browser,page;
+const prefix='/cgi-bin/luci/istore',catalogPath=prefix+'/lanctrl/v2/feature-components/';
+async function screenshot(name){await page.screenshot({path:path.join(out,name+'.png'),fullPage:false})}
+async function geometry(){return page.locator('[data-feature-components]').evaluate(root=>{
+ const background=node=>{for(let current=node;current;current=current.parentElement){const value=getComputedStyle(current).backgroundColor;if(!['rgba(0, 0, 0, 0)','transparent'].includes(value))return value}return 'rgb(255,255,255)'};
+ return {overflow:root.scrollWidth>root.clientWidth+1,viewportOverflow:document.documentElement.scrollWidth>innerWidth,targets:Array.from(root.querySelectorAll('button:not(:disabled)')).filter(n=>n.checkVisibility()).map(n=>({text:n.innerText,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height})),text:root.innerText,copy:Array.from(root.querySelectorAll('h2,h3,h4,p,.feature-state,.feature-tags span')).filter(n=>n.checkVisibility()).map(n=>({text:n.innerText,color:getComputedStyle(n).color,background:background(n)})),heading:{background:getComputedStyle(root.querySelector('h2')).backgroundColor,shadow:getComputedStyle(root.querySelector('h2')).boxShadow}};
+ })}
+(async()=>{try{
+ browser=await chromium.launch();
+ const cases=process.env.QS_COMPONENT_SINGLE==='1'?[{width:390,lang:'en',theme:'dark'}]:process.env.QS_COMPONENT_QUICK==='1'?[{width:1440,lang:'zh-cn',theme:'light'}]:['zh-cn','en'].flatMap(lang=>['light','dark'].flatMap(theme=>[1440,390,320].map(width=>({width,lang,theme}))));
+ for(const c of cases){
+  const context=await browser.newContext({viewport:{width:c.width,height:1000},hasTouch:c.width<600});
+  await context.addCookies([{name:'sysauth_http',value:process.env.QS_COMPONENT_SID,domain:'192.168.30.244',path:'/'}]);
+  await context.addInitScript(lang=>{let url='';Object.defineProperty(window,'vue_lang',{configurable:true,get:()=>lang,set:()=>{}});Object.defineProperty(window,'vue_lang_data',{configurable:true,get:()=>url,set:value=>url=value.replace(/\/i18n\/[^/?]+\.json/,'/i18n/'+lang+'.json')});},c.lang);
+  let catalog=structuredClone(fixture),catalogMode='normal',bodyReads=0;
+  const native=()=>catalog.components[0];
+  await context.route('**/*',async route=>{
+   const req=route.request(),url=new URL(req.url()),key=url.pathname;
+   if(url.origin!==base)return route.abort();
+   if(rehearsal&&key.startsWith('/luci-static/quickstart/')){const name=key.split('/luci-static/quickstart/')[1];if(['index.js','style.css','vendor.js','i18n/en.json'].includes(name))return route.fulfill({path:path.resolve(__dirname,'../../../../web/dist/luci-static/quickstart',name)})}
+   if(projected&&key===catalogPath){bodyReads++;if(catalogMode==='failure')return route.fulfill({status:503,json:{error:'projected'}});if(catalogMode==='forbidden')return route.fulfill({json:{success:-1001}});if(catalogMode==='malformed')return route.fulfill({json:{success:0,result:{schemaVersion:2}}});return route.fulfill({json:{success:0,result:catalog}})}
+   if(!['GET','HEAD'].includes(req.method())){
+    if(key==='/ubus/'){
+     const body=req.postDataJSON(),calls=Array.isArray(body)?body:[body];if(calls.every(call=>call.method==='list'||call.method==='call'&&['luci.getFeatures','file.list','uci.changes'].includes(call.params?.[1]+'.'+call.params?.[2])))return route.continue();
+    }
+    if(projected&&key.startsWith(prefix+'/lanctrl/v2/capability-action/')){
+     const body=req.postDataJSON();report.projectedCalls.push({key,body});
+     const item=catalog.components.find(item=>item.capabilityKey===body.capabilityKey);
+     if(key.endsWith('/plan/'))return route.fulfill({json:{success:0,result:{plan:{...body,current:item.status,target:body.action==='install'?item.package:item.capabilityKey,canApply:true,requiresConfirmation:true,requiredFreeBytes:8388608,availableFreeBytes:99999999}}}});
+     assert.equal(body.confirm,true);item.status=body.action==='install'?{state:'disabled',reason:'service_stopped',actions:[{kind:'enable'}]}:{state:'available'};
+     return route.fulfill({json:{success:0,result:{changed:true,current:item.status}}});
+    }
+    if(projected&&key===prefix+'/lanctrl/v2/rate-limit-settings/plan/'){const body=req.postDataJSON();report.projectedCalls.push({key,body});return route.fulfill({json:{success:0,result:{version:'browser-plan-'+body.settings.provider,canApply:true,changes:[{kind:'speed'}],changed:false}}})}
+    report.blocked.push({key,method:req.method()});return route.abort();
+   }
+   if(projected&&key===prefix+'/lanctrl/globalConfigs/'){
+    const response=await route.fetch(),body=await response.json();
+    body.result.speedLimit={provider:'eqos',enabled:true,uploadSpeed:100,downloadSpeed:1000,installed:true,providers:[{id:'eqos',installed:true,available:true},{id:'quickstart-native',installed:native().status.state!=='not_installed',available:native().status.state==='available',reason:native().status.reason||''}]};
+    body.result.capabilities.items.device_speed_limit={state:'available'};body.result.capabilities.speedLimit={state:'available'};
+    return route.fulfill({response,json:body});
+   }
+   return route.continue();
+  });
+  page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));
+  await page.goto(base+'/cgi-bin/luci/admin/quickstart/devicemanagement',{waitUntil:'networkidle'});await page.locator('[data-device-id]:visible').first().waitFor();await page.locator('.primary-tabs button').nth(2).click();await page.locator('.settings-nav').waitFor();await page.evaluate(theme=>document.body.setAttribute('theme',theme),c.theme);
+  const name=[c.lang,c.theme,c.width].join('-');
+  const rates=page.locator('.speed-card input[type=number]');let originalPlan;
+  if(projected){await rates.first().fill('37');await rates.nth(1).fill('83');await page.locator('.speed-card>.primary').click();await page.locator('.speed-card .impact-preview').waitFor();originalPlan=await page.locator('.speed-card .impact-preview').innerText();assert.equal(await page.locator('[data-manage-speed-component]').isVisible(),true)}
+  const entry=page.locator('[data-open-components]:visible');await entry.click();await page.locator('[data-feature-component=quickstart-native]').waitFor();
+  const m=await geometry();assert.equal(m.overflow,false);assert.equal(m.viewportOverflow,false);for(const button of m.targets)assert.ok(button.width>=44&&button.height>=44,'small action '+button.text);for(const copy of m.copy)assert.ok(ratio(copy.color,copy.background)>=4.5,'contrast '+copy.text);assert.equal(m.heading.shadow,'none');assert.equal(m.heading.background,'rgba(0, 0, 0, 0)');
+  m.titleCoverage=await page.locator('.feature-heading h2').evaluate(node=>{const r=node.getBoundingClientRect();return {rect:{left:r.left,top:r.top,width:r.width,height:r.height},pseudo:{before:getComputedStyle(node,'::before').content,after:getComputedStyle(node,'::after').content},stack:document.elementsFromPoint(r.left+8,r.top+12).map(item=>({tag:item.tagName,id:item.id,class:item.className,zIndex:getComputedStyle(item).zIndex,position:getComputedStyle(item).position}))}});
+  assert.match(await entry.innerText(),c.lang==='en'?/Feature components/:/功能组件/);
+  assert.equal(await page.evaluate(()=>document.body.style.overflow),'hidden');
+  await screenshot(name+'-components');
+  if(projected){
+   const before=report.projectedCalls.length;
+   await page.locator('[data-prepare-component=quickstart-native]').click();await page.locator('[data-component-confirm]').waitFor();assert.equal(report.projectedCalls.length,before+1);assert.match(await page.locator('[data-component-confirm]').innerText(),/quickstart-netpolicy/);await screenshot(name+'-confirm');
+   await page.locator('[data-component-confirm] button').first().click();assert.equal(report.projectedCalls.length,before+1,'Cancel submitted installation');
+   await page.locator('[data-prepare-component=quickstart-native]').click();await page.locator('[data-confirm-component]').click();await page.waitForFunction(()=>document.querySelector('[data-feature-component=quickstart-native]')?.textContent.match(/未启用|Not enabled/));
+   assert.equal(await rates.first().inputValue(),'37');assert.equal(await rates.nth(1).inputValue(),'83');assert.equal(await page.locator('.speed-card .impact-preview').innerText(),originalPlan);
+   await page.locator('[data-prepare-component=quickstart-native]').click();await page.locator('[data-confirm-component]').click();await page.waitForFunction(()=>document.querySelector('[data-feature-component=quickstart-native]')?.textContent.match(/已就绪|Ready/));
+   assert.equal(await page.locator('.speed-card select').inputValue(),'eqos','Enable silently switched provider');
+   await page.locator('[data-configure-component=quickstart-native]').click();await page.locator('[data-feature-overlay]').waitFor({state:'hidden'});await page.waitForFunction(()=>document.querySelector('.speed-card select')?.value==='quickstart-native');await page.locator('.speed-card .impact-preview').waitFor();
+   assert.ok(report.projectedCalls.every(call=>!call.key.endsWith('/rate-limit-settings/apply/')));
+   await entry.click();await page.locator('[data-feature-component=quickstart-native]').waitFor();
+  }
+  await page.locator('[data-close-components]').focus();await page.keyboard.press('Shift+Tab');assert.equal(await page.evaluate(()=>document.activeElement?.closest('[data-feature-components]')!==null),true);
+  await page.keyboard.press('Escape');await page.locator('[data-feature-overlay]').waitFor({state:'hidden'});assert.equal(await entry.evaluate(node=>node===document.activeElement),true);assert.notEqual(await page.evaluate(()=>document.body.style.overflow),'hidden');
+  if(projected&&c.lang==='en'&&c.theme==='dark'&&c.width===390){
+   for(const mode of ['failure','forbidden','malformed']){catalogMode=mode;await entry.click();await page.locator('.feature-feedback.warning').waitFor();assert.equal(await page.locator('[data-prepare-component]:enabled').count(),0);await screenshot(name+'-'+mode);catalogMode='normal';await page.locator('[data-check-components]').click();await page.locator('.feature-feedback.warning').waitFor({state:'hidden'});await page.keyboard.press('Escape')}
+   native().operation='pending';native().status={state:'not_installed',actions:[{kind:'install'}]};await entry.click();await page.locator('[data-feature-component=quickstart-native]').waitFor();assert.equal(await page.locator('[data-prepare-component=quickstart-native]').count(),0);await screenshot(name+'-pending');await page.keyboard.press('Escape');delete native().operation;
+   native().status={state:'unsupported',reason:'interface_not_supported',actions:[{kind:'retry'}]};await entry.click();await page.locator('[data-feature-component=quickstart-native]').waitFor();assert.equal(await page.locator('[data-prepare-component=quickstart-native]').count(),0);await page.keyboard.press('Escape');
+  }
+  report.views.push({...c,bodyReads,metrics:m,draftsAndExplicitSwitch:projected});await context.close();page=null;
+ }
+ assert.deepEqual(report.errors,[]);assert.deepEqual(report.blocked,[]);report.result='passed';
+}catch(error){report.result='failed';report.failure=error.stack;process.exitCode=1;if(page)await screenshot('failure').catch(()=>{})}
+finally{await browser?.close();fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({result:report.result,rehearsal,projected,views:report.views.length,errors:report.errors,blocked:report.blocked,failure:report.failure},null,2));}})();

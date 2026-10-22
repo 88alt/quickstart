@@ -1,5 +1,6 @@
 <template>
     <section class="lan-settings" :aria-label="$gettext('局域网设置')">
+        <button v-if="loading || error" type="button" class="components-fallback" @click="openComponents()" data-open-components><HomeGlyph name="layers"/>{{ $gettext('功能组件') }}</button>
         <PageState v-if="loading" kind="loading" :title="$gettext('正在读取局域网设置')" />
         <PageState v-else-if="error" kind="error" :title="$gettext('局域网设置读取失败')" :description="error" :action-label="$gettext('重新加载')" @action="load" />
         <template v-else>
@@ -19,9 +20,9 @@
             </details>
             <p v-else-if="migrationError" class="migration-read-error" role="status">{{ $gettext('暂时无法检查现有设置，不影响其他局域网设置。') }}</p>
 
-            <nav class="settings-nav" :aria-label="$gettext('设置区域')">
+            <div class="settings-navigation"><nav class="settings-nav" :aria-label="$gettext('设置区域')">
                 <button v-for="item in sections" :key="item.id" type="button" :class="{ active: section === item.id }" @click="section = item.id">{{ item.label }}</button>
-            </nav>
+            </nav><button type="button" class="components-entry" :disabled="Boolean(saving) || speedRefreshing" @click="openComponents()" data-open-components><HomeGlyph name="layers"/>{{ $gettext('功能组件') }}</button></div>
 
             <div v-if="section === 'services'" class="settings-stack">
                 <article class="setting-card dhcp-card">
@@ -54,7 +55,9 @@
 
                 <article class="setting-card speed-card" :aria-busy="speedRefreshing">
                     <div class="card-heading"><div><h3><HomeGlyph name="activity" />{{ $gettext('设备限速服务') }}</h3><p>{{ $gettext('为设备设置最高上传和下载速度；联网权限不依赖此服务。') }}</p></div><span class="capability-pill" :class="speedStatusFresh ? speedCapability.state : 'error'">{{ speedStatusFresh ? capabilityLabel(speedCapability.state) : $gettext('状态未更新') }}</span></div>
-                    <div v-if="!speedProviderReady || !speedStatusFresh" class="capability-action" role="status"><p>{{ speedRefreshError || speedProviderGuidance }}</p><div class="capability-actions"><button v-if="canInstallSpeedProvider" class="primary" type="button" :disabled="installing || speedRefreshing || !speedStatusFresh" @click="installCapability('device_speed_limit')">{{ installing ? $gettext('正在安装…') : $gettext('安装所需服务') }}</button></div></div>
+                    <p class="current-speed-provider">{{ $gettext('当前方式') }}：{{ providerLabel(currentSpeedProvider) }}</p>
+                    <div class="speed-component-entry"><span>{{ $gettext('智能设备限速（推荐）') }} · {{ nativeSpeedProvider?.available ? $gettext('已就绪') : nativeSpeedProvider ? providerReason(nativeSpeedProvider.reason) : $gettext('状态待确认') }}</span><button type="button" :disabled="Boolean(saving) || speedRefreshing" @click="openComponents('quickstart-native')" data-manage-speed-component>{{ nativeSpeedProvider?.reason === 'dependency_not_installed' ? $gettext('查看并安装') : $gettext('管理组件') }}</button></div>
+                    <div v-if="!speedProviderReady || !speedStatusFresh" class="capability-action" role="status"><p>{{ speedRefreshError || speedProviderGuidance }}</p></div>
                     <template v-if="speedProviderReady">
                         <template v-if="speed.provider === 'eqos'">
                             <label class="switch-line"><input v-model="speed.enabled" type="checkbox" />{{ enableSpeedLabel }}</label>
@@ -116,7 +119,8 @@
                 </article>
                 <article class="setting-card">
                     <div class="card-heading"><div><h3>{{ $gettext('浮动网关') }}</h3><p>{{ $gettext('主路由与旁路由共享一个稳定入口，旁路由异常时自动切回主路由。') }}</p></div><span class="capability-pill" :class="floatCapability.state">{{ capabilityLabel(floatCapability.state) }}</span></div>
-                    <div v-if="floatCapability.state === 'not_installed'" class="capability-action"><p>{{ $gettext('只有浮动网关功能会被锁定，设备和其他路线仍可管理。') }}</p><button class="primary" type="button" :disabled="installing" @click="installCapability('floating_gateway')">{{ installing ? $gettext('正在安装…') : $gettext('安装浮动网关') }}</button></div>
+                    <button type="button" class="floating-component-entry" :disabled="Boolean(saving)" @click="openComponents('floatip')" data-manage-float-component>{{ floatCapability.state === 'not_installed' ? $gettext('查看并安装') : $gettext('管理组件') }}</button>
+                    <div v-if="floatCapability.state === 'not_installed'" class="capability-action"><p>{{ $gettext('只有浮动网关功能会被锁定，设备和其他路线仍可管理。') }}</p></div>
                     <FloatingGatewayWizard v-else />
                 </article>
             </div>
@@ -124,6 +128,7 @@
             <NetworkRulesHub v-else />
             <p v-if="feedback" class="feedback" :class="feedbackKind" role="status">{{ feedback }}</p>
         </template>
+        <FeatureComponentsDrawer :open="componentsOpen" :focus-id="componentFocus" @close="componentsOpen=false" @busy="installing=$event" @updated="refreshSpeed" @configure="configureComponent"/>
     </section>
 </template>
 
@@ -131,7 +136,6 @@
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useGettext } from '/@/plugins/i18n'
 import request from '/@/request'
-import Toast from '/@/components/toast'
 import PageState from './components/pageState.vue'
 import FloatingGatewayWizard from './components/floatingGatewayWizard.vue'
 import NetworkRulesHub from './networkRulesHub.vue'
@@ -140,12 +144,16 @@ import type { GatewayTarget, GatewayTargetMutationPlan, GatewayTargetMutationReq
 import type { LanDhcpSettingsResult } from './lanDhcpSettings'
 import { readDhcpSnapshot, readSpeedSnapshot } from './lanSettingsStatus'
 import HomeGlyph from '/@/home/HomeGlyph.vue'
+import FeatureComponentsDrawer from './components/featureComponentsDrawer.vue'
+import type { ComponentId } from './featureComponents'
 
 const { $gettext } = useGettext()
 const enableSpeedLabel = $gettext('启用设备限速')
 const draftKey = 'quickstart.lan-settings-draft.v1'
 const restored = (() => { try { return JSON.parse(sessionStorage.getItem(draftKey) || '{}') } catch { return {} } })()
 const loading = ref(true), error = ref(''), saving = ref(''), installing = ref(false), migrating = ref(false), feedback = ref(''), feedbackKind = ref<'success'|'error'>('success')
+const componentsOpen=ref(false),componentFocus=ref<ComponentId>()
+const openComponents=(id?:ComponentId)=>{componentFocus.value=id;componentsOpen.value=true}
 const section = ref<'services'|'routes'|'rules'>(['services','routes','rules'].includes(restored.section) ? restored.section : 'services')
 const routerContext = ref<any>(), globalData = ref<any>({}), speedCapability = ref<DeviceCapability>({ state: 'error' }), floatCapability = ref<DeviceCapability>({ state: 'error' })
 const migrationPlan = ref<any>(), migrationError = ref(false)
@@ -180,7 +188,7 @@ const selectedSpeedProvider = computed(() => speedProviders.value.find((provider
 const bandixProvider = computed(() => speedProviders.value.find((provider:any) => provider.id === 'bandix'))
 const currentSpeedProvider = computed(() => globalData.value?.speedLimit?.provider || '')
 const speedProviderReady = computed(() => Boolean(selectedSpeedProvider.value?.available))
-const canInstallSpeedProvider = computed(() => selectedSpeedProvider.value?.reason === 'dependency_not_installed' && !speedProviders.value.some((provider:any) => provider.id === 'quickstart-native' && provider.installed))
+const nativeSpeedProvider = computed(() => speedProviders.value.find((provider:any) => provider.id === 'quickstart-native'))
 const providerLabel = (id:string) => ({'quickstart-native':$gettext('智能设备限速（推荐）'),bandix:$gettext('现有 Bandix（仅用于迁移）'),eqos:$gettext('兼容模式（按 IPv4）')} as Record<string,string>)[id] || id
 const providerReason = (reason:string) => ({dependency_not_installed:$gettext('未安装'),kernel_not_supported:$gettext('系统内核不支持'),engine_unavailable:$gettext('服务未运行'),interface_not_supported:$gettext('版本不兼容')} as Record<string,string>)[reason] || $gettext('当前不可用')
 const speedProviderGuidance = computed(() => speedCapability.value.reason === 'selected_provider_unavailable' ? $gettext('已安装限速服务，但当前执行方式不可用。') : speed.provider === 'quickstart-native' ? $gettext('Quickstart 限速服务未就绪。请安装或启动服务后重新检查；系统不会自动改用其他方式。') : $gettext('当前执行方式不可用，请先安装或启用对应服务。'))
@@ -273,7 +281,8 @@ const refreshSpeed = async () => {
         if (controller.signal.aborted) throw new Error('aborted_service_check')
         const snapshot = readSpeedSnapshot(response.data)
         // Observations only. Draft values and pending plans retain their owners.
-        globalData.value = { ...globalData.value, speedLimit: snapshot.speedLimit }
+        globalData.value = { ...globalData.value, ...response.data.result, speedLimit: snapshot.speedLimit }
+        floatCapability.value = resolveCapability(globalData.value, 'floatGateway')
         speedCapability.value = snapshot.capability as DeviceCapability
         speedStatusFresh.value = true
     } catch {
@@ -353,24 +362,19 @@ const applyMigration = async () => {
     }
     finally { migrating.value=false }
 }
-const installCapability = async (capabilityKey:string) => {
-    rememberDraft(); installing.value=true; feedback.value=''
-    try {
-        const draftToken = `lan-settings:${section.value}`
-        const plan = (await request.DeviceMangement.capabilityActionV2.PLAN({ capabilityKey, action:'install', draftToken })).data?.result?.plan
-        if (plan?.error) throw new Error(plan.error.message)
-        if (!plan?.canApply) throw new Error($gettext('当前无法安装，请检查存储空间和软件源。'))
-        if (!window.confirm(`${$gettext('确认安装所需组件？')}\n${$gettext('至少需要可用空间')} ${Math.ceil(plan.requiredFreeBytes/1048576)} MB`)) return
-        const result = (await request.DeviceMangement.capabilityActionV2.APPLY({ capabilityKey, action:'install', draftToken, confirm:true, expectedState:plan.current?.state })).data?.result
-        if (result?.error?.code === 'install_pending') throw new Error($gettext('组件仍在安装，稍后刷新即可继续，草稿已经保留。'))
-        if (result?.error) throw new Error(result.error.message)
-        feedbackKind.value='success';feedback.value=$gettext('组件安装完成，草稿已恢复');await load()
-    } catch(reason:any){feedbackKind.value='error';feedback.value=reason?.message||$gettext('安装失败，可稍后重试');Toast.Warning(feedback.value)} finally{installing.value=false}
+const configureComponent=async(id:ComponentId)=>{
+    if(id==='floatip'){section.value='routes';return}
+    section.value='services';await refreshSpeed()
+    const provider=speedProviders.value.find((item:any)=>item.id===id)
+    if(!provider?.available||!speedStatusFresh.value)return
+    if(id!==currentSpeedProvider.value){speed.provider=id;await planSpeed()}
+    await showSpeedAdvanced()
 }
 load()
 </script>
 
 <style lang="scss" scoped>
+.settings-navigation{display:flex;align-items:center;gap:12px;margin-bottom:13px}.settings-navigation .settings-nav{flex:1;min-width:0;margin:0}.components-entry,.components-fallback{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:none;min-height:44px;padding:8px 12px;background:transparent;border:1px solid var(--device-line);border-radius:7px;color:var(--device-accent);font:inherit;cursor:pointer}.components-entry svg,.components-fallback svg{width:18px;height:18px}.components-fallback{margin-bottom:12px}.current-speed-provider{margin:0 0 8px;font-size:12px;color:var(--device-muted)}.speed-component-entry{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--device-line)}.speed-component-entry>span{font-size:12px;color:var(--device-muted);line-height:1.6}.speed-component-entry>button{flex:none}.floating-component-entry{margin-bottom:10px}@media(max-width:700px){.settings-navigation{flex-wrap:wrap;gap:8px}.settings-navigation .settings-nav{order:1;flex-basis:100%}.components-entry{margin-left:auto}.speed-component-entry{align-items:flex-start;flex-wrap:wrap}}
 .lan-settings fieldset{min-width:0;margin:0;padding:0;border:0}
 .setting-card h3{display:flex;align-items:center;gap:8px}.setting-card h3>svg{width:18px;height:18px;flex:none;color:var(--device-accent)}
 .settings-nav button{min-height:44px}.context-card strong{font-size:14px}.context-state{white-space:nowrap}

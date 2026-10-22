@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/istoreos/quickstart/backend/models"
+	"github.com/istoreos/quickstart/backend/modules/homeconfig"
 	lancontrolspeedstats "github.com/istoreos/quickstart/backend/modules/lancontrol/speedstats"
 )
 
@@ -739,6 +740,9 @@ func (backend *ServiceBackend) lanDeviceMigrationModule() *LanDeviceMigrationMod
 }
 
 func (backend *ServiceBackend) PostCapabilityActionPlanV2(ctx context.Context, r *http.Request) (*models.CapabilityActionResponse, error) {
+	if _, err := homeconfig.RootAuthorizer(homeconfig.LocalSession)(r); err != nil {
+		return &models.CapabilityActionResponse{JSONResponse: models.JSONResponse{Success: -1001, Error: "valid root session required"}}, nil
+	}
 	var request models.CapabilityActionRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return capabilityActionResponse(nil, false, false, nil, &models.DevicePolicyError{Code: "validation_failed", Message: "invalid capability action request"}), nil
@@ -747,11 +751,21 @@ func (backend *ServiceBackend) PostCapabilityActionPlanV2(ctx context.Context, r
 }
 
 func (backend *ServiceBackend) PostCapabilityActionApplyV2(ctx context.Context, r *http.Request) (*models.CapabilityActionResponse, error) {
+	if _, err := homeconfig.RootAuthorizer(homeconfig.LocalSession)(r); err != nil {
+		return &models.CapabilityActionResponse{JSONResponse: models.JSONResponse{Success: -1001, Error: "valid root session required"}}, nil
+	}
 	var request models.CapabilityActionRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return capabilityActionResponse(nil, false, false, nil, &models.DevicePolicyError{Code: "validation_failed", Message: "invalid capability action request"}), nil
 	}
 	return backend.capabilityActionModule().Apply(ctx, &request)
+}
+
+func (backend *ServiceBackend) GetFeatureComponentsV2(ctx context.Context, r *http.Request) (*models.FeatureComponentsResponse, error) {
+	if _, err := homeconfig.RootAuthorizer(homeconfig.LocalSession)(r); err != nil {
+		return &models.FeatureComponentsResponse{JSONResponse: models.JSONResponse{Success: -1001, Error: "valid root session required"}}, nil
+	}
+	return backend.capabilityActionModule().Components(ctx, effectiveRateLimitProvider(defaultRateLimitProviderPath)), nil
 }
 
 func (backend *ServiceBackend) capabilityActionModule() *CapabilityActionModule {

@@ -55,6 +55,7 @@ type Backend interface {
 	PostRateLimitMigrationApplyV2(ctx context.Context, r *http.Request) (*models.RateLimitMigrationResponse, error)
 	PostRateLimitMigrationRollbackV2(ctx context.Context, r *http.Request) (*models.RateLimitMigrationResponse, error)
 	PostCapabilityActionPlanV2(ctx context.Context, r *http.Request) (*models.CapabilityActionResponse, error)
+	GetFeatureComponentsV2(ctx context.Context, r *http.Request) (*models.FeatureComponentsResponse, error)
 	PostCapabilityActionApplyV2(ctx context.Context, r *http.Request) (*models.CapabilityActionResponse, error)
 	GetRouterContextV2(ctx context.Context, r *http.Request) (*models.RouterContextResponse, error)
 	GetLanDHCPSettingsV2(ctx context.Context) (*models.LanDHCPSettingsResponse, error)
@@ -228,6 +229,9 @@ func RegisterRoutes(router *httprouter.Router, backend Backend) {
 	})
 	httpapi.PostJSON(router, "/cgi-bin/luci/istore/lanctrl/v2/rate-limit-migration/rollback/", func(ctx context.Context, r *http.Request) (any, error) {
 		return backend.PostRateLimitMigrationRollbackV2(ctx, r)
+	})
+	httpapi.GetJSON(router, "/cgi-bin/luci/istore/lanctrl/v2/feature-components/", func(ctx context.Context, r *http.Request) (any, error) {
+		return backend.GetFeatureComponentsV2(ctx, r)
 	})
 	httpapi.PostJSON(router, "/cgi-bin/luci/istore/lanctrl/v2/capability-action/plan/", func(ctx context.Context, r *http.Request) (any, error) {
 		return backend.PostCapabilityActionPlanV2(ctx, r)

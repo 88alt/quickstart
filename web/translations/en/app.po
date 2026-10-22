@@ -7246,3 +7246,31 @@ msgstr "The check timed out. Retry when ready; your draft is retained."
 #: src/pages/device/lanSettingsPanel.vue
 msgid "检查失败，状态未更新。请重试，草稿已保留。"
 msgstr "The check failed and status was not updated. Retry when ready; your draft is retained."
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "功能组件"
+msgstr "Feature components"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "当前方式"
+msgstr "Current mode"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "已就绪"
+msgstr "Ready"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "查看并安装"
+msgstr "Review and install"
+
+#: src/pages/device/lanSettingsPanel.vue
+msgid "管理组件"
+msgstr "Manage components"
+
+#: src/pages/device/components/devicePolicyPanel.vue
+msgid "管理限速组件"
+msgstr "Manage limit components"
+
+#: src/pages/device/components/devicePolicyPanel.vue
+msgid "组件观察未更新，输入内容仍保留，请稍后重试。"
+msgstr "Component status was not updated. Your inputs are retained; retry later."

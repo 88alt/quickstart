@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -130,6 +131,9 @@ func TestSystemCapabilityActionStoreEnablesNativeServiceWithoutTouchingEqos(t *t
 	var calls []invocation
 	store := &systemCapabilityActionStore{run: func(_ context.Context, name string, args ...string) ([]byte, error) {
 		calls = append(calls, invocation{name: name, args: append([]string(nil), args...)})
+		if name == "uci" && len(args) == 3 && args[1] == "get" {
+			return []byte("0\n"), nil
+		}
 		if len(args) == 1 && (args[0] == "enabled" || args[0] == "running") {
 			return nil, errors.New("inactive")
 		}
@@ -138,15 +142,15 @@ func TestSystemCapabilityActionStoreEnablesNativeServiceWithoutTouchingEqos(t *t
 	if err := store.Enable(context.Background(), "device_speed_limit"); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"enabled", "running", "enable", "start"}
+	want := []string{"uci -q", "/etc/init.d/quickstart-netpolicy enabled", "/etc/init.d/quickstart-netpolicy running", "uci set", "uci commit", "/etc/init.d/quickstart-netpolicy enable", "/etc/init.d/quickstart-netpolicy start"}
 	if len(calls) != len(want) {
 		t.Fatalf("calls = %#v", calls)
 	}
 	for index, call := range calls {
-		if call.name != "/etc/init.d/quickstart-netpolicy" || len(call.args) != 1 || call.args[0] != want[index] {
+		if call.name+" "+call.args[0] != want[index] {
 			t.Fatalf("call[%d] = %#v", index, call)
 		}
-		if call.name == "uci" || call.name == "/etc/init.d/eqos" {
+		if call.name == "/etc/init.d/eqos" || call.name == "uci" && len(call.args) > 1 && !strings.Contains(call.args[len(call.args)-1], "quickstart-netpolicy") {
 			t.Fatalf("legacy service touched: %#v", call)
 		}
 	}
@@ -155,6 +159,13 @@ func TestSystemCapabilityActionStoreEnablesNativeServiceWithoutTouchingEqos(t *t
 func TestSystemCapabilityActionStoreRestoresNativeServiceStateWhenStartFails(t *testing.T) {
 	var actions []string
 	store := &systemCapabilityActionStore{run: func(_ context.Context, name string, args ...string) ([]byte, error) {
+		if name == "uci" {
+			actions = append(actions, "uci "+strings.Join(args, " "))
+			if len(args) == 3 && args[1] == "get" {
+				return []byte("0\n"), nil
+			}
+			return nil, nil
+		}
 		if name != "/etc/init.d/quickstart-netpolicy" || len(args) != 1 {
 			t.Fatalf("unexpected command: %s %#v", name, args)
 		}
@@ -169,10 +180,10 @@ func TestSystemCapabilityActionStoreRestoresNativeServiceStateWhenStartFails(t *
 		}
 	}}
 	err := store.Enable(context.Background(), "device_speed_limit")
-	if err == nil || err.Error() != "limit service could not be started; original service state was restored" {
+	if err == nil || err.Error() != "limit service could not be started; check service state before retrying" {
 		t.Fatalf("error = %v", err)
 	}
-	want := []string{"enabled", "running", "enable", "start", "stop", "disable"}
+	want := []string{"uci -q get quickstart-netpolicy.main.enabled", "enabled", "running", "uci set quickstart-netpolicy.main.enabled=1", "uci commit quickstart-netpolicy", "enable", "start", "stop", "disable", "uci set quickstart-netpolicy.main.enabled=0", "uci commit quickstart-netpolicy"}
 	if len(actions) != len(want) {
 		t.Fatalf("actions = %#v", actions)
 	}
