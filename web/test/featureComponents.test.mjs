@@ -29,6 +29,14 @@ test('read handles HTTP, login, malformed and 200 business failures without fall
   await assert.rejects(()=>client.read());assert.equal(reads,1)
  }
 })
+test('current Go response may omit zero success and an empty provider',async()=>{
+ const result=structuredClone(fixture)
+ delete result.components[2].provider
+ const client=createComponentClient(async()=>new Response(JSON.stringify({result})))
+ const catalog=await client.read()
+ assert.equal(catalog.components[2].id,'floatip')
+ assert.equal(componentAction(catalog.components[0]),'install')
+})
 test('plan and apply are separate and network loss never replays a mutation',async()=>{
  const calls=[],item=fixture.components[0]
  const client=createComponentClient(async(url,options)=>{

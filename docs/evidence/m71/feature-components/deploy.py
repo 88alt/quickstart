@@ -7,15 +7,17 @@ from pathlib import Path
 import re
 import shlex
 import subprocess
+import sys
 import tarfile
 import zipfile
 
 HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[3]
-OUT=HERE/'deployment.json'
+BACKEND_ONLY='--backend-only' in sys.argv
+OUT=HERE/('backend-deployment.json' if BACKEND_ONLY else 'deployment.json')
 assert not OUT.exists()
 CANDIDATE=json.loads((HERE/'candidate.json').read_text())
-BACKUP='/root/quickstart-backups/m71-components-'+CANDIDATE['commit'][:7]
+BACKUP='/root/quickstart-backups/m71-components-'+CANDIDATE['commit'][:7]+('-backend' if BACKEND_ONLY else '')
 WEB='/www/luci-static/quickstart/'
 TEMPLATE='/usr/lib/lua/luci/view/quickstart/main.htm'
 Q=shlex.quote
@@ -27,7 +29,7 @@ def remote(command,data=None):
 def snapshot():
     return remote('sha256sum /etc/config/* /etc/quickstart/home-layout.json /etc/quickstart/home-launcher.json /usr/lib/opkg/status /usr/bin/quickstart-netpolicy /etc/init.d/quickstart; ip -4 route show default; pidof startdhns; pidof quickstart-netpolicy || true').decode().strip().splitlines()
 
-report={'host':'192.168.30.244','candidate':CANDIDATE['commit'],'scope':'B serve backend and frontend/cache key; no package hooks, no policy changes','backup':BACKUP,'before':snapshot(),'result':'preparing'}
+report={'host':'192.168.30.244','candidate':CANDIDATE['commit'],'scope':'B serve backend only; frontend retained while visual acceptance is pending' if BACKEND_ONLY else 'B serve backend and frontend/cache key; no package hooks, no policy changes','backup':BACKUP,'before':snapshot(),'result':'preparing'}
 assert remote('/usr/sbin/quickstart version --more').decode().startswith('0.16.6-test20261018 c9624a3')
 assert not remote('pidof quickstart-netpolicy || true').strip()
 assert remote('uci -q get quickstart-netpolicy.main.enabled').strip()==b'0'
@@ -37,6 +39,7 @@ report['oldServePID']=list(service['quickstart']['instances'].values())[0]['pid'
 old_manifest=dict(line.split('=',1) for line in (ROOT/'bin/previews/9f31d4f/MANIFEST').read_text().splitlines())
 names=['index.js','style.css','vendor.js','i18n/en.json']
 for name in names:assert remote('sha256sum '+Q(WEB+name)).decode().split()[0]==old_manifest['web.'+name.replace('/','.')]
+if BACKEND_ONLY:names=[]
 old_template=remote('cat '+Q(TEMPLATE))
 new_template,count=re.subn(rb'local asset_version = "[^"]+"',b'local asset_version = "'+CANDIDATE['assetVersion'].encode()+b'"',old_template)
 assert count==1
@@ -47,13 +50,13 @@ try:
         files={name:bundle.read('luci-static/quickstart/'+name) for name in names}
         files['_backend']=(Path(CANDIDATE['candidate'])/'quickstart.x86_64').read_bytes()
         assert hashlib.sha256(files['_backend']).hexdigest()==CANDIDATE['binarySHA']
-        files['_main.htm']=new_template
+        if not BACKEND_ONLY:files['_main.htm']=new_template
         for name,data in files.items():
             if name in names:assert hashlib.sha256(data).hexdigest()==CANDIDATE['hashes'][name]
             item=tarfile.TarInfo(name);item.size=len(data);item.mode=0o755 if name=='_backend' else 0o644;archive.addfile(item,io.BytesIO(data))
     remote('tar -xzf - -C '+Q(BACKUP+'/stage'),buffer.getvalue())
     commands=['set -eu']
-    for name,target in [(name,WEB+name) for name in names]+[('_backend','/usr/sbin/quickstart'),('_main.htm',TEMPLATE)]:
+    for name,target in [(name,WEB+name) for name in names]+[('_backend','/usr/sbin/quickstart')]+([] if BACKEND_ONLY else [('_main.htm',TEMPLATE)]):
         commands+=['cp -p '+Q(BACKUP+'/stage/'+name)+' '+Q(target+'.m71-new'),'mv '+Q(target+'.m71-new')+' '+Q(target)]
     commands+=['/etc/init.d/quickstart restart']
     remote('\n'.join(commands))
