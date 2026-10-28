@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/istoreos/quickstart/backend/modules/homeconfig"
 	"github.com/istoreos/quickstart/backend/service"
 	"github.com/julienschmidt/httprouter"
 )
@@ -25,7 +26,7 @@ func RouterInit(serviceBackend *service.ServiceBackend) http.Handler {
 	registerWirelessRoutes(router, serviceBackend)
 	router = lanControlRouterInit(router, serviceBackend)
 
-	return router
+	return secureHTTP(router, homeconfig.RootAuthorizer(homeconfig.LocalSession))
 }
 
 func UnixRouterInit(serviceBackend *service.ServiceBackend) http.Handler {

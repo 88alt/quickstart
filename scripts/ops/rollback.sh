@@ -25,6 +25,11 @@ if [ -d \"\${backup}\" ]; then
     rm -rf '${REMOTE_WEB_DIR}'
     cp -a \"\${backup}/web\" '${REMOTE_WEB_DIR}'
     cp -p \"\${backup}/main.htm\" '${REMOTE_TEMPLATE}'
+    if [ -f \"\${backup}/quickstart-state.keep\" ]; then
+        cp -p \"\${backup}/quickstart-state.keep\" /lib/upgrade/keep.d/quickstart-state
+    elif [ -f \"\${backup}/quickstart-state.keep.absent\" ]; then
+        rm -f /lib/upgrade/keep.d/quickstart-state
+    fi
     '${REMOTE_SERVICE}' start
 else
     test -f \"\${backup}\"

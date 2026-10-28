@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import * as echarts from 'echarts/core';
+import 'echarts/theme/v5';
 import {
     TitleComponent,
     GridComponent,
@@ -132,7 +133,7 @@ let MyChart: echarts.ECharts | null = null
 // 基础面积图
 const NewBasic = (event: HTMLElement) => {
     const dark = isDark()
-    MyChart = echarts.init(event, dark ? 'dark' : "light");
+    MyChart = echarts.init(event, dark ? 'dark' : "v5");
     MyChart.setOption({
         animation: false,
         backgroundColor: dark ? "#88888822" : "#fff",
@@ -429,7 +430,7 @@ onUnmounted(() => {
     }
 }
 
-@media screen and(max-width: 600px) {
+@media screen and (max-width: 600px) {
     .flow {
         height: 55vw;
     }

@@ -65,6 +65,7 @@ grep -Fqx 'new-index' "$success_fixture/root/www/luci-static/quickstart/index.js
 grep -Fq 'local asset_version = "0.14.0-test"' "$success_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
 grep -Fqx 'old-binary' "$success_fixture/backups/success/quickstart"
 cmp "$success_fixture/backups/success/config-sha.before" "$success_fixture/backups/success/config-sha.after"
+grep -Fxq '/etc/quickstart/' "$success_fixture/root/lib/upgrade/keep.d/quickstart-state"
 
 rollback_fixture="$test_root/rollback"
 prepare_fixture "$rollback_fixture"
@@ -77,6 +78,16 @@ grep -Fqx 'old-binary' "$rollback_fixture/root/usr/sbin/quickstart"
 grep -Fqx 'old-index' "$rollback_fixture/root/www/luci-static/quickstart/index.js"
 grep -Fq 'local asset_version = "old"' "$rollback_fixture/root/usr/lib/lua/luci/view/quickstart/main.htm"
 [ "$(cat "$rollback_fixture/service.state")" = running ]
+[ ! -e "$rollback_fixture/root/lib/upgrade/keep.d/quickstart-state" ]
+
+keep_fixture="$test_root/keep-rollback"
+prepare_fixture "$keep_fixture"
+mkdir -p "$keep_fixture/root/lib/upgrade/keep.d"
+printf '/etc/quickstart/custom.json\n' >"$keep_fixture/root/lib/upgrade/keep.d/quickstart-state"
+if run_installer "$keep_fixture" keep-rollback http://127.0.0.1:1 1 >/dev/null 2>&1; then
+    echo 'unhealthy candidate accepted' >&2; exit 1
+fi
+grep -Fxq '/etc/quickstart/custom.json' "$keep_fixture/root/lib/upgrade/keep.d/quickstart-state"
 
 
 legacy_fixture="$test_root/legacy"
