@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
 const {suites:expected}=require('./widget-body-final-runner.cjs');
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-body/75-review');
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-body/75-review');
 const sha=body=>crypto.createHash('sha256').update(body).digest('hex');
 (async()=>{
   const suites=JSON.parse(fs.readFileSync(root+'/suite-results.json')),candidate=JSON.parse(fs.readFileSync(root+'/candidate/candidate.json'));
@@ -10,7 +10,7 @@ const sha=body=>crypto.createHash('sha256').update(body).digest('hex');
   assert.deepEqual(await(await fetch(candidate.base+'/health')).json(),candidate.health);
   for(const asset of candidate.assets){const response=await fetch(candidate.base+asset.path);assert.equal(response.status,200);assert.equal(sha(Buffer.from(await response.arrayBuffer())),asset.sha256,asset.path)}
   const protection=JSON.parse(fs.readFileSync(root+'/protection/report.json')),business=JSON.parse(fs.readFileSync(root+'/original-business/report.json'));assert.equal(protection.result,'pass');assert.equal(business.result,'pass');
-  const baseline=JSON.parse(fs.readFileSync('docs/evidence/m66/widget-body/70-baseline/sources.json'));
+  const baseline=JSON.parse(fs.readFileSync('docs/archive/evidence/m66/widget-body/70-baseline/sources.json'));
   const changed=execFileSync('rtk',['proxy','git','diff','--name-only',baseline.head,'--','web'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
   assert.deepEqual(changed,['web/src/design/NetworkConnectionCard.vue','web/src/design/homeWidgetDetails.css']);
   assert.equal(execFileSync('rtk',['proxy','git','ls-files','--others','--exclude-standard','--','web'],{encoding:'utf8'}).trim(),'');

@@ -1,6 +1,6 @@
 // Actual click, semantic and layout regression for the DHCP-authority explanation.
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/row-layout/11-review');fs.mkdirSync(root,{recursive:true});
+const base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/row-layout/11-review');fs.mkdirSync(root,{recursive:true});
 (async()=>{
  const browser=await chromium.launch(),page=await browser.newPage(),report={checkedAt:new Date().toISOString(),base,cases:[],errors:[]};page.on('pageerror',e=>report.errors.push(e.message));
  try{

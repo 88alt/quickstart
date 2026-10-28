@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const stage = process.argv[2] || '01-preview';
-const out = path.resolve(`docs/evidence/m66/vue/${stage}`);
+const out = path.resolve(`docs/archive/evidence/m66/vue/${stage}`);
 fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({args:['--no-sandbox']});

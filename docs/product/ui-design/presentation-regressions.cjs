@@ -1,6 +1,6 @@
 // Run independent browser suites serially; collect all failures for one review.
 const {spawnSync}=require('node:child_process'),fs=require('node:fs'),path=require('node:path');
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-presentation/30-review/regression');fs.mkdirSync(root,{recursive:true});
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-presentation/30-review/regression');fs.mkdirSync(root,{recursive:true});
 const attempt=1+fs.readdirSync(root).filter(n=>/^batch-\d+\.json$/.test(n)).length,report={attempt,checkedAt:new Date().toISOString(),suites:[]};
 for(const name of ['presentation-applications','presentation-devices','presentation-negotiation','slot-primary','slot-normalization','slot-overview','slot-input','row-sort','row-sort-lifecycle','slot-navigation','slot-resource','presentation-resource']){
  const filename=name==='presentation-resource'?'presentation-resource-review.cjs':name+'-review.cjs';

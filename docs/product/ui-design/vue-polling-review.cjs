@@ -1,7 +1,7 @@
 // Regression feedback loop for real homepage timer ownership; no simulated clock.
 const {chromium}=require('playwright');const fs=require('node:fs');const path=require('node:path');const assert=require('node:assert/strict');
 (async()=>{
- const out=path.resolve('docs/evidence/m66/vue/05-review');fs.mkdirSync(out,{recursive:true});
+ const out=path.resolve('docs/archive/evidence/m66/vue/05-review');fs.mkdirSync(out,{recursive:true});
  const browser=await chromium.launch({args:['--no-sandbox']});const page=await browser.newPage();
  try{
   await page.goto('http://192.168.98.2:5180/?layout=below-network',{waitUntil:'networkidle'});

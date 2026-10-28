@@ -2,7 +2,7 @@
 // historical release when the working tree already contains accepted changes.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {run}=require('./direct-test-utils.cjs');
-const root='docs/evidence/m66/launcher/57-contract';
+const root='docs/archive/evidence/m66/launcher/57-contract';
 const sha=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
 const mutable=new Set(['HomeApplications.vue','homeApplications.ts','homeApplications.css','widgetPresentation.ts','NativeBusinessHost.vue','fixtures.ts','main.ts']);
 function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name)])}

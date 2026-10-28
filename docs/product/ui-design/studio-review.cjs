@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const output=path.resolve('docs/evidence/m66/redesign');
+const output=path.resolve('docs/archive/evidence/m66/redesign');
 fs.mkdirSync(output,{recursive:true});
 const base='http://192.168.98.2:5180';
 const report={checkedAt:new Date().toISOString(),viewports:[],states:[],interactions:[],contrast:[],errors:[],outside:[]};

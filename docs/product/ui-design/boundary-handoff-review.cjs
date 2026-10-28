@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const repo=path.resolve(__dirname,'../../..'),root=path.join(repo,'docs/evidence/m66/boundary-resize'),dir=path.join(root,'handoff'),hash=body=>crypto.createHash('sha256').update(body).digest('hex');
+const repo=path.resolve(__dirname,'../../..'),root=path.join(repo,'docs/archive/evidence/m66/boundary-resize'),dir=path.join(root,'handoff'),hash=body=>crypto.createHash('sha256').update(body).digest('hex');
 const suites=['boundary-contract','boundary-interaction','boundary-touch','boundary-layout','boundary-resource','boundary-state','structure-render','structure-interaction','structure-resource','row-sort','business-widgets','business-actions','structure-matrix','natural-matrix','network-interaction','network-input'];
 (async()=>{
  const report={checkedAt:new Date().toISOString(),checks:[]};

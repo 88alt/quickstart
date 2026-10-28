@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),Module=require('node:module');
 const {parse}=require('../../../web/node_modules/@vue/compiler-sfc');
-const baseline=JSON.parse(fs.readFileSync('docs/evidence/m66/widget-composition/76-baseline/sources.json'));
-const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-composition/81-review/protection';fs.mkdirSync(root,{recursive:true});
+const baseline=JSON.parse(fs.readFileSync('docs/archive/evidence/m66/widget-composition/76-baseline/sources.json'));
+const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-composition/81-review/protection';fs.mkdirSync(root,{recursive:true});
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex'),allowed=new Set(['web/src/design/homeWidgetDetails.css','web/src/design/NetworkConnectionCard.vue','web/vite.design.config.ts']);
 const report={at:new Date().toISOString(),protected:[],exceptions:[],templates:[]};
 try{

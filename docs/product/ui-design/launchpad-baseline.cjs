@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {run}=require('./direct-test-utils.cjs');
-const root='docs/evidence/m66/launchpad/63-contract';
+const root='docs/archive/evidence/m66/launchpad/63-contract';
 const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
 const allowed=new Set(['web/src/design/HomeApplications.vue','web/src/design/homeApplications.ts','web/src/design/homeApplications.css','web/src/design/launcherCatalog.ts','web/src/design/launcherFixtures.ts']);
 fs.mkdirSync(root,{recursive:true});

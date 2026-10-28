@@ -8,7 +8,7 @@ run('network-density-'+stage,async({page,visit,root,report,assert,capture,state,
  const sources=files.map(file=>{const s=fs.readFileSync(file,'utf8'),m=s.match(/<script[^>]*>([\s\S]*?)<\/script>/);return{file,sha256:hash(s),script:m?hash(m[1]):null}});
  fs.writeFileSync(path.join(root,'sources.json'),JSON.stringify(sources,null,2)+'\n');
  if(!before){
-  const baseline=JSON.parse(fs.readFileSync('docs/evidence/m66/network-density/before/sources.json'));
+  const baseline=JSON.parse(fs.readFileSync('docs/archive/evidence/m66/network-density/before/sources.json'));
   const allowed=['NetworkConnectionCard.vue','homeWidgetDetails.css','naturalHome.css','rowLayout.ts','widgetPresentation.ts'];
   for(const prior of baseline){const now=sources.find(s=>s.file===prior.file);assert.ok(now,prior.file);if(prior.script)assert.equal(now.script,prior.script,prior.file+' script unchanged');if(!allowed.includes(path.basename(prior.file)))assert.equal(now.sha256,prior.sha256,prior.file+' unchanged')}
   report.checks.push('Original design business scripts and all unrelated runtime sources match this turn baseline');

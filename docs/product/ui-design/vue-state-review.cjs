@@ -1,6 +1,6 @@
 const { chromium } = require('playwright');
 const fs=require('node:fs');const path=require('node:path');const assert=require('node:assert/strict');
-const out=path.resolve('docs/evidence/m66/vue/05-review');fs.mkdirSync(out,{recursive:true});
+const out=path.resolve('docs/archive/evidence/m66/vue/05-review');fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({args:['--no-sandbox']});
  const page=await browser.newPage();const errors=[],outside=[],views=[],checks=[];

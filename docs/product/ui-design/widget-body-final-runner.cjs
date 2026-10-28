@@ -14,6 +14,6 @@ const suites=[
 module.exports={suites};
 if(require.main===module){
   const result=spawnSync('rtk',['proxy','node',path.join(__dirname,'launcher-final-runner.cjs'),...suites],{
-    env:{...process.env,QS_DESIGN_EVIDENCE_ROOT:process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-body/75-review'},stdio:'inherit',
+    env:{...process.env,QS_DESIGN_EVIDENCE_ROOT:process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-body/75-review'},stdio:'inherit',
   });process.exitCode=result.status??1;
 }

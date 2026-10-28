@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-body/75-review/protection';
-const baseline=JSON.parse(fs.readFileSync('docs/evidence/m66/widget-body/70-baseline/sources.json'));
+const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-body/75-review/protection';
+const baseline=JSON.parse(fs.readFileSync('docs/archive/evidence/m66/widget-body/70-baseline/sources.json'));
 const sha=body=>crypto.createHash('sha256').update(body).digest('hex');
 fs.mkdirSync(root,{recursive:true});
 const report={at:new Date().toISOString(),baseline:baseline.head,checks:[],protected:[],presentationExceptions:[]};

@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),Module=require('node:module'),ts=require('../../../web/node_modules/typescript');
 Module._extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);global.location={search:''};
 const d=require('../../../web/src/design/homeDocument.ts'),o=require('../../../web/src/design/orderedLayout.ts'),s=require('../../../web/src/design/slotLayout.ts'),z=require('../../../web/src/design/rowSizing.ts');
-const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/boundary-resize/contract';fs.mkdirSync(root,{recursive:true});const report={checkedAt:new Date().toISOString(),checks:[]},check=(name,work)=>{work();report.checks.push(name)};
+const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/boundary-resize/contract';fs.mkdirSync(root,{recursive:true});const report={checkedAt:new Date().toISOString(),checks:[]},check=(name,work)=>{work();report.checks.push(name)};
 try{
  const rows=o.naturalRows([o.makeRow(['traffic','connection','networkInterface'],'left-big',320,'network')]);
  check('B01 old height/split stay inactive; missing new fields migrate idempotently',()=>{for(const schemaVersion of [1,2,3]){const doc=d.migrateDocument({schemaVersion,rows}).document;assert.ok(doc);assert.equal(doc.rows[0].minHeight,undefined);assert.equal(doc.rows[0].columns[1].upperShare,undefined);assert.deepEqual(d.migrateDocument(doc).document,doc)}});

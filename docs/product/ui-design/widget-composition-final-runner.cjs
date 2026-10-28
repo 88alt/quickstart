@@ -9,4 +9,4 @@ const suites=[
  'home-widget-chart-review','boundary-interaction-review','row-sort-review','structure-interaction-review','structure-resource-review',
 ];
 module.exports={suites};
-if(require.main===module){const result=spawnSync('rtk',['proxy','node',path.join(__dirname,'launcher-final-runner.cjs'),...suites],{env:{...process.env,QS_DESIGN_EVIDENCE_ROOT:process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-composition/81-review'},stdio:'inherit'});process.exitCode=result.status??1}
+if(require.main===module){const result=spawnSync('rtk',['proxy','node',path.join(__dirname,'launcher-final-runner.cjs'),...suites],{env:{...process.env,QS_DESIGN_EVIDENCE_ROOT:process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-composition/81-review'},stdio:'inherit'});process.exitCode=result.status??1}

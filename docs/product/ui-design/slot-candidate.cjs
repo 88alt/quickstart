@@ -1,6 +1,6 @@
 // Record actual public assets and source fingerprints. Does not publish anything.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
-const repo=path.resolve(__dirname,'../../..'),base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/slot-edit/24-review');
+const repo=path.resolve(__dirname,'../../..'),base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/slot-edit/24-review');
 const digest=body=>crypto.createHash('sha256').update(body).digest('hex');
 (async()=>{
  const health=await (await fetch(base+'/health')).json();assert.equal(health.owner,path.join(repo,'docs/product/ui-design'));assert.equal(health.mode,'vue-design-built');

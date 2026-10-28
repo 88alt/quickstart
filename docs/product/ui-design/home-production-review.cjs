@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
 const {checkHomeShell,setSystemTheme}=require('../../../scripts/ops/home-shell-checks.cjs');
 const {checkDeviceAddresses}=require('./device-address-checks.cjs');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
-const project=path.resolve(__dirname,'../../..'),out=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m69/02-business/attempt-1');
+const project=path.resolve(__dirname,'../../..'),out=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m69/02-business/attempt-1');
 if(fs.existsSync(out))throw new Error('Evidence directory already exists');fs.mkdirSync(out,{recursive:true});
 const defaults=JSON.parse(fs.readFileSync(path.join(project,'backend/modules/homeconfig/defaults.json'),'utf8'));
 const visualOnly=process.env.QS_HOME_VISUAL_ONLY==='1',language=process.env.QS_HOME_LANGUAGE||'zh-cn',touch=process.env.QS_HOME_TOUCH==='1';

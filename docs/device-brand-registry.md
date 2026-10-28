@@ -10,7 +10,7 @@
 
 | 短品牌 | 接受的原始厂商范围 | 审核说明 |
 | --- | --- | --- |
-| ASUS | `ASUSTeK COMPUTER INC.`、`ASUS` | 用户已确认目标默认类别为网络设备；M11 已同步分类器、fixture 和旧后端兼容适配器；型号/名称证据仍优先 |
+| ASUS | `ASUSTeK COMPUTER INC.`、`ASUS` | 默认类别为网络设备；型号/名称证据仍优先 |
 | Apple | Apple 公司名及 `Inc.` 后缀变体 | 拒绝 Appleton 等近似名称 |
 | Samsung | Samsung / Samsung Electronics 公司名变体 | 拒绝 Samsungton 等近似名称 |
 | Xiaomi | Xiaomi 公司名、北京小米注册名称 | 仅显式公司名称 |
@@ -45,7 +45,7 @@ Intel、Realtek、Broadcom 等文本可能只代表网卡或芯片，当前不�
 
 - 样本库：`backend/service/testdata/device_classification_fixtures.json`
 - 契约测试：`TestDeviceClassifierReviewedFixtureLibrary`
-- 当前基线：60 个样本、12 个类别/场景组（11 个可选类别 + fallback）、20 个以上原始厂商变体、10 个以上短品牌。
+- 样本数量和规则覆盖范围以样例文件与测试输出为准。
 - 诊断输出仅包含样本数量、分组、来源分布、品牌数、厂商变体数和 fallback 数，不读取、保存或上传真实局域网设备数据。
 
 运行：

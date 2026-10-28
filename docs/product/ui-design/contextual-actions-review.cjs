@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const base='http://192.168.9.19:5180';
-const root=path.resolve('docs/evidence/m66/contextual-actions');fs.mkdirSync(root,{recursive:true});
+const root=path.resolve('docs/archive/evidence/m66/contextual-actions');fs.mkdirSync(root,{recursive:true});
 const destinations=['/network','/devicemanagement','/networkSpeedTest','/parental','/applications'];
 const report={checkedAt:new Date().toISOString(),base,layouts:[],visibilityCombinations:[],states:[],navigation:[],errors:[],outside:[],visualStatus:'requires_user_confirmation'};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));

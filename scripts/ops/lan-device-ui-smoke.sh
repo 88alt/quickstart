@@ -9,7 +9,7 @@ PROJECT_ROOT="$(CDPATH= cd -- "${SCRIPT_DIR}/../.." && pwd)"
 load_target_env
 
 : "${PLAYWRIGHT_NODE_PATH:=/config/playwright-runner/node_modules}"
-: "${UI_AUDIT_SCRIPT:=${PROJECT_ROOT}/docs/evidence/m40/interaction-audit.cjs}"
+: "${UI_AUDIT_SCRIPT:=${PROJECT_ROOT}/docs/archive/evidence/m40/interaction-audit.cjs}"
 
 ui_address="${UI_ADDRESS:-${SSH_TARGET#*@}}"
 case "$ui_address" in

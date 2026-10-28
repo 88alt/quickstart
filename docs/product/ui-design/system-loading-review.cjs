@@ -2,10 +2,10 @@
 // B mode uses real root-authenticated APIs; local mode uses archived fixtures.
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
-const root=path.resolve(__dirname,'../../..'),out=path.resolve(process.env.QS_SYSTEM_EVIDENCE||'docs/evidence/m70/system-loading/baseline');
+const root=path.resolve(__dirname,'../../..'),out=path.resolve(process.env.QS_SYSTEM_EVIDENCE||'docs/archive/evidence/m70/system-loading/baseline');
 assert.ok(!fs.existsSync(out),'Do not overwrite evidence');fs.mkdirSync(out,{recursive:true});
 const real=process.env.QS_ACCEPT_HOST==='192.168.30.244',base=real?'http://192.168.30.244':'http://127.0.0.1:5181',home=real?base+'/cgi-bin/luci/admin/quickstart/':base+'/';
-const fixtures=JSON.parse(fs.readFileSync(path.join(root,'docs/evidence/m70/header-correction/round-1/local-full/fixtures.json')));
+const fixtures=JSON.parse(fs.readFileSync(path.join(root,'docs/archive/evidence/m70/header-correction/round-1/local-full/fixtures.json')));
 const defaults=JSON.parse(fs.readFileSync(path.join(root,'backend/modules/homeconfig/defaults.json')));
 const report={checks:[],cases:[],errors:[],result:'running',real};let browser,server;
 (async()=>{try{
