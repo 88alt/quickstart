@@ -20,6 +20,9 @@ profile.cov
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# Local third-party source checkouts for reference or independent builds
+/third_party/
+
 # Go workspace file
 go.work
 go.work.sum
