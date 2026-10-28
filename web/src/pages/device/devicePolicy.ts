@@ -78,6 +78,7 @@ export const policyAvailable = (policy: DevicePolicy | null, kind: 'static' | 's
 export const policyUnavailableReason = (policy: DevicePolicy | null, kind: 'static' | 'speed' | 'access'): string => {
     const capability = policy?.capabilities?.[kind]
     if (!capability || capability.state === 'available') return ''
+    if (capability.reason === 'selected_provider_unavailable') return '已安装限速服务，但当前执行方式不可用；请到局域网设置选择并预览。'
     if (capability.reason === 'dependency_not_installed' || capability.state === 'not_installed') return '所需组件尚未安装'
     if (capability.state === 'disabled') return '请先在全局设置中启用该能力'
     return capability.reason || '当前暂不可用'

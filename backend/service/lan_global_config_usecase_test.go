@@ -8,6 +8,43 @@ import (
 	"github.com/istoreos/quickstart/backend/models"
 )
 
+func TestSpeedPreparationPreservesProviderAndAvoidsReinstall(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		selected        string
+		state           models.CapabilityState
+		nativeInstalled bool
+		wantState       models.CapabilityState
+		wantAction      string
+	}{
+		{"legacy missing and alternative installed", "eqos", "not_installed", true, "error", "retry"},
+		{"legacy disabled and alternative installed", "eqos", "disabled", true, "error", "retry"},
+		{"working legacy stays usable", "eqos", "available", true, "available", ""},
+		{"no package keeps installation", "eqos", "not_installed", false, "not_installed", "install"},
+		{"selected native keeps its own diagnosis", nativePolicyProviderName, "error", true, "error", "retry"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			capability := &models.DeviceManagementCapability{State: tc.state, Reason: "original_reason"}
+			decorateCapabilityActions(capability, "quickstart-netpolicy")
+			speed := &models.LANCtrlSpeedLimitModule{Provider: tc.selected, Providers: []*models.RateLimitProviderOption{{ID: nativePolicyProviderName, Installed: tc.nativeInstalled}}}
+			clarifySpeedPreparation(capability, speed)
+			if capability.State != tc.wantState || speed.Provider != tc.selected {
+				t.Fatalf("capability=%+v selected=%s", capability, speed.Provider)
+			}
+			if tc.wantAction == "" {
+				if len(capability.Actions) != 0 {
+					t.Fatalf("unexpected actions: %+v", capability.Actions)
+				}
+			} else if len(capability.Actions) != 1 || capability.Actions[0].Kind != tc.wantAction {
+				t.Fatalf("actions=%+v, want %s", capability.Actions, tc.wantAction)
+			}
+			if tc.selected != nativePolicyProviderName && tc.nativeInstalled && tc.state != "available" && capability.Reason != "selected_provider_unavailable" {
+				t.Fatalf("misleading reason: %s", capability.Reason)
+			}
+		})
+	}
+}
+
 type fakeGlobalConfigLanStatusReader struct {
 	readLanStatusFn func(ctx context.Context) (LanStatusSnapshot, error)
 }

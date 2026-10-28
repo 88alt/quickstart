@@ -285,6 +285,11 @@ func (backend *fakeLanControlBackend) PostCapabilityActionPlanV2(ctx context.Con
 	return &models.CapabilityActionResponse{Result: &models.CapabilityActionResult{}}, backend.err
 }
 
+func (backend *fakeLanControlBackend) GetFeatureComponentsV2(ctx context.Context, r *http.Request) (*models.FeatureComponentsResponse, error) {
+	backend.recordRequest("featureComponentsV2", r)
+	return &models.FeatureComponentsResponse{Result: &models.FeatureComponentsResult{SchemaVersion: 1}}, backend.err
+}
+
 func (backend *fakeLanControlBackend) PostCapabilityActionApplyV2(ctx context.Context, r *http.Request) (*models.CapabilityActionResponse, error) {
 	backend.recordRequest("postCapabilityActionApplyV2", r)
 	return &models.CapabilityActionResponse{Result: &models.CapabilityActionResult{}}, backend.err
@@ -486,6 +491,7 @@ func TestRegisterLanControlRoutesMapsRoutesToBackendMethods(t *testing.T) {
 		{name: "plan rate limit migration v2", method: http.MethodGet, path: "/cgi-bin/luci/istore/lanctrl/v2/rate-limit-migration/plan/", wantCall: "getRateLimitMigrationPlanV2"},
 		{name: "apply rate limit migration v2", method: http.MethodPost, path: "/cgi-bin/luci/istore/lanctrl/v2/rate-limit-migration/apply/", body: `{"expectedVersion":"v1"}`, wantCall: "postRateLimitMigrationApplyV2"},
 		{name: "rollback rate limit migration v2", method: http.MethodPost, path: "/cgi-bin/luci/istore/lanctrl/v2/rate-limit-migration/rollback/", body: `{"migrationId":"m1"}`, wantCall: "postRateLimitMigrationRollbackV2"},
+		{name: "feature components v2", method: http.MethodGet, path: "/cgi-bin/luci/istore/lanctrl/v2/feature-components/", wantCall: "featureComponentsV2"},
 		{name: "plan capability install v2", method: http.MethodPost, path: "/cgi-bin/luci/istore/lanctrl/v2/capability-action/plan/", body: `{"capabilityKey":"device_speed_limit","action":"install","draftToken":"draft-1"}`, wantCall: "postCapabilityActionPlanV2"},
 		{name: "apply capability install v2", method: http.MethodPost, path: "/cgi-bin/luci/istore/lanctrl/v2/capability-action/apply/", body: `{"capabilityKey":"device_speed_limit","action":"install","draftToken":"draft-1","confirm":true}`, wantCall: "postCapabilityActionApplyV2"},
 		{name: "get router context v2", method: http.MethodGet, path: "/cgi-bin/luci/istore/lanctrl/v2/router-context/?lan=guest_20", wantCall: "getRouterContextV2"},

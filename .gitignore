@@ -37,6 +37,24 @@ go.work.sum
 # Release artifacts
 bin/
 
+# Generated acceptance evidence (keep source scripts, summaries and input manifests)
+/docs/evidence/**/*.png
+/docs/evidence/**/*.jpg
+/docs/evidence/**/*.jpeg
+/docs/evidence/**/*.webp
+/docs/evidence/**/*.gif
+/docs/evidence/**/*.mp4
+/docs/evidence/**/*.webm
+/docs/evidence/**/*.zip
+/docs/evidence/**/*.tar
+/docs/evidence/**/*.tar.gz
+/docs/evidence/**/*.tgz
+/docs/evidence/**/*.log
+/docs/evidence/**/*.txt
+/docs/evidence/**/*.tsv
+/docs/evidence/**/report.json
+/docs/evidence/**/attempt-*.json
+
 # Editor/IDE
 # .idea/
 # .vscode/

@@ -59,16 +59,36 @@ func (svc *LanGlobalConfigService) GetGlobalConfigs(ctx context.Context) (*model
 	}
 
 	plan := BuildAutoDhcpPlan(lanStatus, dhcpState)
+	speedModel := toSpeedLimitModel(speedState)
+	capabilities := buildDeviceManagementCapabilities(floatState, floatErr, speedState, speedErr)
+	clarifySpeedPreparation(capabilities.SpeedLimit, speedModel)
 
 	return &models.LANCtrlGlobalConfigResponse{
 		Result: &models.LANCtrlGlobalConfig{
-			Capabilities: buildDeviceManagementCapabilities(floatState, floatErr, speedState, speedErr),
+			Capabilities: capabilities,
 			DhcpTags:     buildGlobalDhcpTags(lanStatus, dhcpState),
 			DhcpGlobal:   buildDhcpGlobalConfig(lanStatus, plan),
 			FloatGateway: toFloatGatewayModel(floatState),
-			SpeedLimit:   toSpeedLimitModel(speedState),
+			SpeedLimit:   speedModel,
 		},
 	}, nil
+}
+
+// Preparation must describe the selected provider without offering to install
+// an already installed alternative. Choosing another provider remains the
+// existing explicit settings transaction; reading capability never switches it.
+func clarifySpeedPreparation(capability *models.DeviceManagementCapability, speed *models.LANCtrlSpeedLimitModule) {
+	if capability == nil || speed == nil || capability.State == "available" || speed.Provider == nativePolicyProviderName {
+		return
+	}
+	for _, provider := range speed.Providers {
+		if provider != nil && provider.ID == nativePolicyProviderName && provider.Installed {
+			capability.State = "error"
+			capability.Reason = "selected_provider_unavailable"
+			capability.Actions = []*models.CapabilityAction{{Kind: "retry"}}
+			return
+		}
+	}
 }
 
 func buildDeviceManagementCapabilities(floatState FloatIPStatus, floatErr error, speedState SpeedLimitStatus, speedErr error) *models.DeviceManagementCapabilities {

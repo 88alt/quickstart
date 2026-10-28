@@ -1,10 +1,18 @@
 # 局域网设备管理：产品与领域基线
 
+2026-10-21 用户要求移除内容顶部重复的设备管理标题及介绍，仅保留面包屑作为当前页面定位和原三项页签；主区域保留可访问名称。进一步与首页统一的视觉建议见[设备页视觉方案](product/lan-device-visual-refinement.md)，其中未实施建议不覆盖本文件的身份、状态、权限和事务语义。
+
 > 状态：**当前唯一产品与领域基线（M64 业务验收候选）**
 > 基线版本：M64 / 2026-09-28
 > 范围：Quickstart `backend` / `web`、OpenWrt `quickstart` 集成、`floatip`、`luci-app-oui`、`luci-app-bandix`  
 > 文档权限：本文件定义产品语义、领域语言和模块 Interface；研究、原型、历史里程碑与能力对比不能覆盖本文  
 > 关联资料：[能力对比与历史路线图](device-management-comparison-and-roadmap.md)、[低保真交互](lan-device-management-low-fidelity-design.md)、[设备品牌注册表](device-brand-registry.md)
+
+> 2026-10-14 接手：M64 产品语义继续有效；本文件中的历史设备/版本状态不代表当前安装验收。
+> 当前事实见 [M65～M70 核验与计划](quickstart-m65-m70-takeover.md)；[Quickstart 首页设计评审](product/quickstart-home-design-review.md) 是待确认的概览扩展，不覆盖本基线，也尚未实现为正式首页。
+> 首页设计仍采用项目 Vue 与共享设备语义。当前用户要求移走顶部快捷入口，保留原大图并大胆重组信息；评审依据为 [主视觉与操作空间](product/quickstart-home-canvas.md)。前两轮规格保留历史。原型不代表正式首页或当前设备验收。
+> 首页设计只修改系统菜单右侧的 Quickstart 内容。系统左侧菜单的项目、层级、样式、权限和交互保持原样，首页模块配置不包含系统菜单；预览中的宿主占位不作为菜单设计或正式代码发布。
+> 2026-10-15：首页已推进到有序行的就地编辑原型（M66.13～18），当前进度见[执行状态](evidence/m66/direct-edit/status.md)，已实现交互规则见[R规格](product/quickstart-home-ordered-prototype-spec.md)。仅优化隔离预览，设备身份、DHCP分配权和策略基线保持本文件语义，最终用户体验仍需确认。
 
 > M11～M20 的历史任务与证据见 [《局域网设备管理 M11～M21 实施里程碑》](lan-device-management-m11-m21-milestones.md)；M21～M31 见 [《基线冻结、P0 闭环与正式 UI》](lan-device-management-m21-m31-baseline-p0-ui-milestones.md)；当前收口顺序见 [《M32～M40 收口里程碑》](lan-device-management-m32-m40-closeout-milestones.md)。
 
@@ -21,6 +29,8 @@ M11～M20 已实现的能力继续作为迁移输入，但经典静态/限速页
 3. **配置提供这些结果的局域网能力**：DHCP、路线目标、浮动网关、总带宽和可选增强能力。
 
 底层继续使用 DHCP host/tag、dnsmasq option、eqos、防火墙和 floatip，但普通用户不再需要理解这些实现名词。
+
+2026-10-21页面宽度补充：设备、分组与计划、局域网设置共用LuCI右侧原生内容区域，取消额外1320px居中限宽；标题、导航与正文外边界对齐，不因设备少而缩窄页面。桌面保留原生20px、手机16px外间距，正文内部留白、表格列/卡片响应式、表单和详情抽屉保持各自业务规则。系统左侧菜单不改。任务及当前设备证据见[页面间距修正](evidence/m70/device-page-spacing/status.md)。
 
 ### 1.1 七个 P0 的冻结结论
 
