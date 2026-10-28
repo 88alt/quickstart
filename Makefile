@@ -23,7 +23,7 @@ export DEPLOY_TARGET SSH_TARGET SSH_PORT SSH_EXTRA_OPTS SCP_EXTRA_OPTS
 export REMOTE_BINARY REMOTE_TMP REMOTE_BACKUP_DIR REMOTE_SERVICE REMOTE_LOG_COMMAND ROLLBACK_RELEASE
 
 .PHONY: help fmt tidy test build build-web build-amd64 build-arm64 build-armv7 release clean
-.PHONY: ops-targets ops-show-selected ops-release ops-init-selected ops-preflight-selected ops-deploy-selected ops-verify-selected ops-rollback-selected ops-ui-smoke-selected test-ops test-lan-lab test-lan-identity-address test-lan-capability-context test-lan-route test-lan-transaction-migration test-lan-groups-schedule test-lan-traffic-quota test-lan-ipv6 test-lan-advanced-tools test-lan-soak-analyzer verify-product verify-lan-device-business smoke-lan-device smoke-lan-device-candidate smoke-bandix bandix-sources bandix-source-check
+.PHONY: ops-targets ops-show-selected ops-release ops-init-selected ops-preflight-selected ops-deploy-selected ops-verify-selected ops-rollback-selected ops-ui-smoke-selected test-ops test-lan-lab test-lan-identity-address test-lan-capability-context test-lan-route test-lan-transaction-migration test-lan-groups-schedule test-lan-traffic-quota test-lan-ipv6 test-lan-advanced-tools test-lan-soak-analyzer verify-product verify-lan-device-business smoke-lan-device smoke-lan-device-candidate smoke-bandix
 
 help:
 	@printf '%s\n' \
@@ -59,9 +59,7 @@ help:
 		'  verify-lan-device-business  Run the deterministic LAN-device business completion gate' \
 		'  smoke-lan-device       Fail-closed four-host release smoke; critical gateway stays read-only' \
 		'  smoke-lan-device-candidate  Validate local candidate artifacts on the four-host topology; ignore old opkg metadata' \
-		'  smoke-bandix           Validate Bandix/eBPF on B; set BANDIX_MUTATION_SMOKE=1 for disposable-rule CRUD' \
-		'  bandix-sources         Initialize the pinned Bandix source submodules' \
-		'  bandix-source-check    Verify Bandix source versions and clean state'
+		'  smoke-bandix           Validate Bandix/eBPF on B; set BANDIX_MUTATION_SMOKE=1 for disposable-rule CRUD'
 
 fmt:
 	cd $(BACKEND_ROOT) && $(GO) fmt ./...
@@ -183,12 +181,6 @@ smoke-lan-device-candidate:
 
 smoke-bandix:
 	./scripts/ops/bandix-runtime-smoke.sh
-
-bandix-sources:
-	git submodule update --init --recursive -- third_party/bandix/core third_party/bandix/openwrt third_party/bandix/luci
-
-bandix-source-check:
-	./scripts/check-bandix-sources.sh
 
 clean:
 	rm -rf $(BUILD_DIR)

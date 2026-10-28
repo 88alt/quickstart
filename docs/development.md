@@ -15,8 +15,15 @@ Quickstart 由 Go 后端和 Vue 3 前端组成，正式运行依赖 iStoreOS/Ope
 npm --prefix web ci
 ```
 
-Go 命令会按 `go.mod` / `go.sum` 获取所需依赖。只有需要构建 Bandix 源码时才需初始化
-`third_party/bandix/` 下的子模块，说明见[该目录 README](../third_party/bandix/README.md)。
+Go 命令会按 `go.mod` / `go.sum` 获取所需依赖。Quickstart 的构建、测试和发布不依赖
+`third_party/` 下的源码；该目录仅用于本地参考或独立构建，已加入 Git 忽略列表。
+
+Bandix 是设备端可选服务，Quickstart 通过 HTTP API 与其交互。如需研究或单独构建，
+可自行克隆上游 [Bandix](https://github.com/timsaya/bandix)、
+[OpenWrt 包](https://github.com/timsaya/openwrt-bandix)和
+[LuCI 应用](https://github.com/timsaya/luci-app-bandix)到 `third_party/bandix/`，
+并保留各自的许可证和 NOTICE。历史版本与架构说明见
+[Bandix 源码走读](archive/bandix-source-walkthrough.md)。
 
 ## 本地检查与构建
 
