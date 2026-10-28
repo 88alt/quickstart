@@ -70,6 +70,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {useHomeSnapshot} from "/@/home/widgetContext"
 import flowIcon from "/@/components/svg/flow.vue"
 import * as echarts from 'echarts/core';
+import 'echarts/theme/v5';
 import {
     TitleComponent,
     GridComponent,
@@ -195,7 +196,7 @@ let onWindowResize: (() => void) | null = null   // 为了卸载时能移除
 // 基础面积图
 const NewBasic = (event: HTMLElement) => {
     const dark = isDark()
-    MyChart = echarts.init(event, dark ? 'dark' : "light");
+    MyChart = echarts.init(event, dark ? 'dark' : "v5");
     MyChart.setOption({
         animation: false,
         backgroundColor: dark ? "#2c2c2c" : "#fff",

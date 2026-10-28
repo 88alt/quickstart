@@ -36,7 +36,7 @@ const simple: Record<string, unknown> = {
 
 export function installFixtures() {
   const realFetch = window.fetch.bind(window)
-  window.fetch = async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = new URL(typeof input === 'string' ? input : input instanceof Request ? input.url : String(input), location.href)
     const method = (init?.method || (input instanceof Request ? input.method : 'GET')).toUpperCase()
     // Only same-origin static assets can leave this adapter. No router API fallback.

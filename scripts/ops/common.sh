@@ -109,6 +109,9 @@ build_ldflags() {
     version="$(project_version)"
     [ -n "$version" ] || die "cannot read version from ${VERSION_FILE}"
     git_sha="$(git -C "$PROJECT_ROOT" rev-parse HEAD)"
+    if ! git -C "$PROJECT_ROOT" diff --quiet || ! git -C "$PROJECT_ROOT" diff --cached --quiet; then
+        git_sha="${git_sha}-dirty"
+    fi
     build_epoch="${SOURCE_DATE_EPOCH:-$(git -C "$PROJECT_ROOT" show -s --format=%ct HEAD)}"
     build_date="$(date -u -d "@${build_epoch}" +.%Y%m%d.%H%M%S)"
     printf '%s' "-buildid= -X main.BuildVersion=${git_sha} -X main.BuildDate=${build_date} -X main.Version=${version} -s -w -extldflags \"-static\""

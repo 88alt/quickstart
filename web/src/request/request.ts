@@ -13,6 +13,11 @@ const baseURL = "/cgi-bin/luci/istore";
 const baseURL1 = "/cgi-bin/luci/admin";
 let reloading = false;
 const Request = <T>(url: string, data: RequestInit) => {
+  if (!["GET", "HEAD", "OPTIONS"].includes((data.method || "GET").toUpperCase())) {
+    const headers = new Headers(data.headers);
+    if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    data = { ...data, headers };
+  }
   if (url.indexOf("//") == -1) url = `${baseURL}${url}`;
   return Do<ResponseData<T>>(url, data).then((res) => {
     if (res?.data) {

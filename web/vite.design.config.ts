@@ -38,7 +38,7 @@ export default defineConfig({
     configureServer:controlMiddleware,
     configurePreviewServer:controlMiddleware,
   }],
-  css: { preprocessorOptions: { scss: { charset: false, additionalData: '@import "./src/style/theme.scss";' } } },
+  css: { preprocessorOptions: { scss: { charset: false, additionalData: `@import ${JSON.stringify(path.resolve(__dirname, 'src/style/theme.scss'))};` } } },
   server: { host: '0.0.0.0', port: 5180, strictPort: true, hmr: { overlay: true } },
   build: { outDir:path.join(process.env.BUILD_CACHE_WORK_DIR || '/tmp/quickstart-design-cache','vue-preview'),emptyOutDir:true,chunkSizeWarningLimit:4096 },
   preview: { host:'0.0.0.0',port:5180,strictPort:true },

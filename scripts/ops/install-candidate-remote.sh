@@ -25,6 +25,7 @@ health_url="$4"
 stage_root="$5"
 health_attempts="$6"
 config_root="$7"
+keep_path="${config_root%/}/lib/upgrade/keep.d/quickstart-state"
 expected_style_sha="${8:-}"
 expected_vendor_sha="${9:-}"
 
@@ -52,6 +53,11 @@ restore_release() {
         rm -rf "$remote_web_dir"
         cp -a "${backup_dir}/web" "$remote_web_dir" || true
         cp -p "${backup_dir}/main.htm" "$remote_template" || true
+        if [ -f "${backup_dir}/quickstart-state.keep" ]; then
+            cp -p "${backup_dir}/quickstart-state.keep" "$keep_path" || true
+        elif [ -f "${backup_dir}/quickstart-state.keep.absent" ]; then
+            rm -f "$keep_path"
+        fi
         "$remote_service" start >/dev/null 2>&1 || true
     fi
     rm -rf "$next_web" "$previous_web" "$template_next" "$stage_dir"
@@ -118,6 +124,11 @@ chmod 0644 "$template_next"
 cp -p "$remote_binary" "${backup_dir}/quickstart"
 cp -a "$remote_web_dir" "${backup_dir}/web"
 cp -p "$remote_template" "${backup_dir}/main.htm"
+if [ -f "$keep_path" ]; then
+    cp -p "$keep_path" "${backup_dir}/quickstart-state.keep"
+else
+    : >"${backup_dir}/quickstart-state.keep.absent"
+fi
 {
     for config_name in network dhcp firewall eqos floatip; do
         config_path="${config_root%/}/etc/config/${config_name}"
@@ -135,6 +146,11 @@ mv "${remote_binary}.quickstart-next" "$remote_binary"
 mv "$remote_web_dir" "$previous_web"
 mv "$next_web" "$remote_web_dir"
 mv "$template_next" "$remote_template"
+# The binary rollout must preserve the new JSON configuration on a later
+# sysupgrade, even when the appliance still has the old package metadata.
+mkdir -p "$(dirname "$keep_path")"
+printf '# Quickstart persistent configuration and recovery snapshots\n/etc/quickstart/\n' >"$keep_path"
+chmod 0644 "$keep_path"
 "$remote_service" start
 
 health_ok=0
