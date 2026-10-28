@@ -86,15 +86,34 @@ func TestBuildTrafficStatSnapshotCopiesValues(t *testing.T) {
 	}
 }
 
-func TestBuildHostHintHostnameStripsDomainOnce(t *testing.T) {
-	if got := buildHostHintHostname("office-printer.local"); got != "office-printer" {
-		t.Fatalf("expected hostname office-printer, got %q", got)
+func TestBuildHostHintHostname(t *testing.T) {
+	for _, tc := range []struct{ name, want string }{
+		{"nas", "nas"},
+		{"office-printer.local", "office-printer"},
+		{"office-printer.office.lan", "office-printer.office"},
+		{"", ""},
+		{"客厅电视", "客厅电视"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := buildHostHintHostname(tc.name); got != tc.want {
+				t.Fatalf("buildHostHintHostname(%q) = %q, want %q", tc.name, got, tc.want)
+			}
+		})
 	}
 }
 
-func TestBuildHostHintHostnameKeepsPlainName(t *testing.T) {
-	if got := buildHostHintHostname("nas"); got != "" {
-		t.Fatalf("expected plain name to return empty string, got %q", got)
+func TestLanDeviceListPreservesPlainHostHintHostname(t *testing.T) {
+	const mac = "AA:BB:CC:DD:EE:FF"
+	hints, err := buildBestEffortHostHints(ubusHostHintMap{
+		mac: {Name: "nas"},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	device := &models.LANDevice{Mac: mac}
+	mergeLanDeviceHostHint(device, hints)
+	if device.Hostname != "nas" {
+		t.Fatalf("hostname = %q, want nas", device.Hostname)
 	}
 }
 

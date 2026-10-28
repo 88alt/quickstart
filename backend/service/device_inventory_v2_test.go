@@ -178,6 +178,42 @@ func TestDeviceInventorySnapshotMergesSourcesByMAC(t *testing.T) {
 	}
 }
 
+func TestDeviceInventoryPreservesHostHintHostname(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct{ name, hint, lease, want string }{
+		{name: "plain hint", hint: "nas", want: "nas"},
+		{name: "qualified hint", hint: "nas.local", want: "nas"},
+		{name: "DHCP takes precedence", hint: "nas", lease: "lease-name", want: "lease-name"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			const mac = "AA:BB:CC:DD:EE:FF"
+			hints := buildLANHostHints(ubusHostHintMap{
+				mac: {Name: tc.hint, IPAddrs: []string{"192.168.100.20"}},
+			}, []netip.Prefix{netip.MustParsePrefix("192.168.100.0/24")}, nil)
+			snapshot := deviceInventorySourceSnapshot{
+				ARP:       []deviceInventoryObservation{{MAC: mac, IPv4: "192.168.100.20", Online: true}},
+				HostHints: hints,
+			}
+			if tc.lease != "" {
+				snapshot.DHCPv4 = []deviceInventoryObservation{{MAC: mac, IPv4: "192.168.100.20", Hostname: tc.lease}}
+			}
+			now := time.Date(2026, 10, 28, 0, 0, 0, 0, time.UTC)
+			source := &fakeDeviceInventorySource{snapshots: []deviceInventorySourceSnapshot{snapshot}}
+			response, err := newTestDeviceInventory(t, source, &now, 100).Snapshot(context.Background())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(response.Result.Devices) != 1 {
+				t.Fatalf("devices = %#v, want one device", response.Result.Devices)
+			}
+			device := response.Result.Devices[0]
+			if device.Hostname != tc.want || device.DisplayName != tc.want {
+				t.Fatalf("hostname = %q, displayName = %q, want %q", device.Hostname, device.DisplayName, tc.want)
+			}
+		})
+	}
+}
+
 func TestDeviceInventoryKeepsBootHistoryAndStableIdentity(t *testing.T) {
 	t.Parallel()
 	now := time.Date(2026, 9, 24, 1, 0, 0, 0, time.UTC)
