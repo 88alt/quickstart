@@ -1,6 +1,6 @@
 // Read exported PNG pixels, independently of the live ECharts canvas.
 const {chromium}=require('playwright'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/row-layout/11-review');
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/row-layout/11-review');
 const baseline=JSON.parse(fs.readFileSync(path.join(root,'review-report.json'))).baseline;
 (async()=>{
  const browser=await chromium.launch(),page=await browser.newPage(),report={checkedAt:new Date().toISOString(),images:[]};

@@ -23,5 +23,5 @@ commit, then update the gitlink in a normal Quickstart change.
 The upstream repositories retain their own licenses and notices. Keep them
 intact when building or redistributing artifacts.
 
-See [`docs/bandix-source-walkthrough.md`](../../docs/bandix-source-walkthrough.md)
+See [`docs/archive/bandix-source-walkthrough.md`](../../docs/archive/bandix-source-walkthrough.md)
 for architecture, data flow, review findings and the recommended reading order.

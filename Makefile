@@ -55,7 +55,7 @@ help:
 		'  test-lan-ipv6         Verify native MAC policy covers IPv4/IPv6 and real IPv6 throughput' \
 		'  test-lan-advanced-tools Verify safe probes, bounded webhooks, and policy import recovery' \
 		'  test-lan-soak-analyzer Verify the 24h topology soak release gate' \
-		'  verify-product         Validate and regenerate the five-layer product coverage matrix' \
+		'  verify-product         Validate and regenerate the archived product coverage matrix' \
 		'  verify-lan-device-business  Run the deterministic LAN-device business completion gate' \
 		'  smoke-lan-device       Fail-closed four-host release smoke; critical gateway stays read-only' \
 		'  smoke-lan-device-candidate  Validate local candidate artifacts on the four-host topology; ignore old opkg metadata' \

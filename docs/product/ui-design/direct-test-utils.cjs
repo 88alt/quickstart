@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
 const capture=require('./ordered-capture.cjs');
 const base=process.env.QS_DESIGN_BASE_URL||'http://192.168.9.19:5180';
 async function run(stage,work){
- const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||`docs/evidence/m66/direct-edit/${stage}`);fs.mkdirSync(root,{recursive:true});
+ const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||`docs/archive/evidence/m66/direct-edit/${stage}`);fs.mkdirSync(root,{recursive:true});
  const attempt=1+fs.readdirSync(root).filter(f=>/^attempt-\d+\.json$/.test(f)).length;
  const report={checkedAt:new Date().toISOString(),base,stage,attempt,checks:[],errors:[],outside:[]};
  const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1440,height:900}});

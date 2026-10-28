@@ -5,7 +5,7 @@ global.location={search:''};
 const {homeApplicationSession:home,homeApplications,systemTools}=require('../../../web/src/design/homeApplications.ts');
 const {normalizeInstalled}=require('../../../web/src/design/launcherMetadata.ts');
 const lib=require('../../../web/src/design/launcherLibrary.ts');
-const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/launchpad/64-catalog';fs.mkdirSync(root,{recursive:true});
+const root=process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/launchpad/64-catalog';fs.mkdirSync(root,{recursive:true});
 const report={checkedAt:new Date().toISOString(),checks:[]};
 const check=(name,work)=>{work();report.checks.push(name)};
 try{

@@ -1,7 +1,7 @@
 // Current R editor; isolated synthetic browser acceptance for M66.10.
 const captureContent=require('./ordered-capture.cjs');
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/row-layout/10-interactions');fs.mkdirSync(root,{recursive:true});
+const base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/row-layout/10-interactions');fs.mkdirSync(root,{recursive:true});
 const attempt=1+fs.readdirSync(root).filter(f=>/^attempt-\d+\.json$/.test(f)).length,report={checkedAt:new Date().toISOString(),base,attempt,checks:[],errors:[],outside:[]};
 (async()=>{const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1440,height:1000}});page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text())});page.on('request',r=>{if(new URL(r.url()).origin!==base)report.outside.push(r.url())});
  const pause=()=>page.waitForTimeout(200),state=()=>page.evaluate(()=>window.__quickstartOrdered),edit=()=>page.getByRole('button',{name:'自定义首页',exact:true}).click();

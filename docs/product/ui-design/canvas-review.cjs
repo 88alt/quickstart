@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const root=path.resolve('docs/evidence/m66/canvas');fs.mkdirSync(root,{recursive:true});
+const root=path.resolve('docs/archive/evidence/m66/canvas');fs.mkdirSync(root,{recursive:true});
 const base='http://192.168.98.2:5180';
 const report={checkedAt:new Date().toISOString(),layouts:[],states:[],interactions:[],sampling:[],errors:[],outside:[],visualStatus:'requires_human_screenshot_review'};
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));

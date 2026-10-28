@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
 const {execFileSync} = require('node:child_process');
 const {run} = require('./direct-test-utils.cjs');
-const root = process.env.QS_DESIGN_EVIDENCE_ROOT || 'docs/evidence/m66/widget-body/70-baseline';
+const root = process.env.QS_DESIGN_EVIDENCE_ROOT || 'docs/archive/evidence/m66/widget-body/70-baseline';
 const mutable = new Set(['web/src/design/homeWidgetDetails.css', 'web/src/design/NetworkConnectionCard.vue']);
 const walk = dir => fs.readdirSync(dir, {withFileTypes:true}).flatMap(e => e.isDirectory() ? walk(path.join(dir,e.name)) : [path.join(dir,e.name)]);
 const sha = body => crypto.createHash('sha256').update(body).digest('hex');

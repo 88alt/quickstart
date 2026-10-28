@@ -1,6 +1,6 @@
 // M66.8 public-entry comparison; all variants share synthetic inventory and modules.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const base='http://192.168.9.19:5180',root=path.resolve('docs/evidence/m66/row-layout/08-visual-options');fs.mkdirSync(root,{recursive:true});
+const base='http://192.168.9.19:5180',root=path.resolve('docs/archive/evidence/m66/row-layout/08-visual-options');fs.mkdirSync(root,{recursive:true});
 const report={checkedAt:new Date().toISOString(),base,layouts:[],errors:[],outside:[],visualStatus:'requires_product_selection'};
 (async()=>{
  const browser=await chromium.launch(),page=await browser.newPage();

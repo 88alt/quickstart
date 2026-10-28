@@ -1,6 +1,6 @@
 // Render two real screenshots side by side in HTML; never repaint widget data.
 const fs=require('node:fs'),path=require('node:path'),{chromium}=require('/config/playwright-runner/node_modules/playwright');
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-composition/81-review'),baseline=path.resolve('docs/evidence/m66/widget-composition/76-baseline');
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-composition/81-review'),baseline=path.resolve('docs/archive/evidence/m66/widget-composition/76-baseline');
 (async()=>{const out=path.join(root,'comparisons');fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch();try{const page=await browser.newPage({viewport:{width:1280,height:1000}});for(const [width,theme]of [[1440,'light'],[390,'dark']])for(const id of ['connection','storage','sharing','docker','downloads','remote','system']){
  const before=path.join(baseline,`${width}-${theme}-${id}.png`),after=path.join(root,'widget-composition-review',`${width}-${theme}-zh-${id}.png`),src=file=>'data:image/png;base64,'+fs.readFileSync(file).toString('base64');
  const outputWidth=Math.max(fs.readFileSync(before).readUInt32BE(16),fs.readFileSync(after).readUInt32BE(16))*2+48;await page.setViewportSize({width:outputWidth,height:1000});

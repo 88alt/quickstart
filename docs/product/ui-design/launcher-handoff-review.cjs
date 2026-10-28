@@ -1,6 +1,6 @@
 // Verify the handoff is about the candidate that actually ran the final suites.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/launcher/62-review/optimization-1'),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/launcher/62-review/optimization-1'),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 (async()=>{
  const suites=JSON.parse(fs.readFileSync(path.join(root,'suite-results.json'))),candidate=JSON.parse(fs.readFileSync(path.join(root,'candidate/candidate.json')));
  assert.equal(suites.result,'pass');assert.equal(suites.suites.length,22);assert.ok(suites.groups>=263);

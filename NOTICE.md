@@ -32,5 +32,5 @@ luci-app-oui, luci-app-bandix, and floatip. Quickstart's implementation and
 artwork were produced independently; code and branded assets from those
 projects were not copied into this release. Relevant source-license findings
 and integration boundaries are recorded in
-`docs/lan-device-management-reference-research.md`.
+`docs/archive/lan-device-management-reference-research.md`.
 

@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 (async () => {
-  const out=path.resolve('docs/evidence/m66'); fs.mkdirSync(out,{recursive:true});
+  const out=path.resolve('docs/archive/evidence/m66'); fs.mkdirSync(out,{recursive:true});
   const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
   const page=await browser.newPage();
   const errors=[],failed=[],views=[];

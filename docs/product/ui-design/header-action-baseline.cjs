@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const {run}=require('./direct-test-utils.cjs');const root='docs/evidence/m66/header-actions/baseline';
+const {run}=require('./direct-test-utils.cjs');const root='docs/archive/evidence/m66/header-actions/baseline';
 const mutable=new Set(['web/src/design/HomeApplications.vue','web/src/design/NetworkConnectionCard.vue','web/src/design/NetworkInterfaceCard.vue','web/src/design/CanvasModule.vue','web/src/design/SystemOverview.vue','web/src/design/LayoutPreviewCard.vue','web/src/design/widgetActionGroup.css']);
 const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]),sha=b=>crypto.createHash('sha256').update(b).digest('hex');fs.mkdirSync(root,{recursive:true});
 fs.writeFileSync(root+'/sources.json',JSON.stringify(walk('web/src').filter(p=>/\.(vue|ts|css)$/.test(p)).concat(['web/vite.design.config.ts','scripts/ui-design.sh','scripts/ui-design-server.cjs']).map(file=>({file,mutable:mutable.has(file),sha256:sha(fs.readFileSync(file)),script:mutable.has(file)&&file.endsWith('.vue')?fs.readFileSync(file,'utf8').match(/<script[\s\S]*?<\/script>/)?.[0]:undefined})),null,2)+'\n');

@@ -5,7 +5,7 @@ const original=Module._extensions['.ts'];
 Module._extensions['.ts']=(m,file)=>m._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,file);
 global.location={search:''};
 const m=require(path.join(repo,'web/src/design/slotLayout.ts')),o=require(path.join(repo,'web/src/design/orderedLayout.ts')),c=require(path.join(repo,'web/src/design/moduleCapability.ts'));
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/slot-edit/19-contract');fs.mkdirSync(root,{recursive:true});
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/slot-edit/19-contract');fs.mkdirSync(root,{recursive:true});
 const attempt=1+fs.readdirSync(root).filter(f=>/^attempt-\d+.json$/.test(f)).length,report={attempt,checkedAt:new Date().toISOString(),checks:[],capabilities:c.moduleCapabilities};
 function check(name,run){run();report.checks.push(name)}
 const row=(ids,t='pair',id='test')=>o.makeRow(ids,t,340,id),a={row:'a',column:0,slot:0},b={row:'b',column:0,slot:0};

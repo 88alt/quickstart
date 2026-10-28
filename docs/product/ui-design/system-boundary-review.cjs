@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const base='http://192.168.9.19:5180';
-const root=path.resolve('docs/evidence/m66/system-boundary');
+const root=path.resolve('docs/archive/evidence/m66/system-boundary');
 fs.mkdirSync(root,{recursive:true});
 const report={checkedAt:new Date().toISOString(),base,layouts:[],interactions:[],errors:[],outside:[],visualStatus:'requires_user_review'};
 (async()=>{

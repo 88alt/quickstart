@@ -1,6 +1,6 @@
 // M66.9 representative interactions. Does not implement/accept the full M66.10 editor.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const base='http://192.168.9.19:5180',root=path.resolve('docs/evidence/m66/row-layout/09-selection');fs.mkdirSync(root,{recursive:true});
+const base='http://192.168.9.19:5180',root=path.resolve('docs/archive/evidence/m66/row-layout/09-selection');fs.mkdirSync(root,{recursive:true});
 const report={checkedAt:new Date().toISOString(),base,checks:[],errors:[],outside:[],productDecision:'pending'};
 (async()=>{
  const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1440,height:1000}});

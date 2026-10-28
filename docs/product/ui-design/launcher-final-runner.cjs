@@ -1,6 +1,6 @@
 // Bounded browser concurrency. Each suite keeps its own attempts and screenshots.
 const {spawn}=require('node:child_process'),fs=require('node:fs'),path=require('node:path');
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/launcher/62-review');fs.mkdirSync(root,{recursive:true});
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/launcher/62-review');fs.mkdirSync(root,{recursive:true});
 const suites=process.argv.slice(2).length?process.argv.slice(2):[
  'launcher-actions-review','launcher-home-review','launcher-editor-review','launcher-states-review','launcher-resource-review','launcher-matrix-review','launcher-overflow-state-review',
  'visual-refinement-matrix-review','home-widget-chart-review','network-interaction-review','business-widgets-review','business-actions-review',

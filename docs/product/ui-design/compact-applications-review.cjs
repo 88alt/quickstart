@@ -1,6 +1,6 @@
 // Current public preview: independent chart height + a single apps/tools surface.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-const base='http://192.168.9.19:5180',root=path.resolve('docs/evidence/m66/compact-applications');fs.mkdirSync(root,{recursive:true});
+const base='http://192.168.9.19:5180',root=path.resolve('docs/archive/evidence/m66/compact-applications');fs.mkdirSync(root,{recursive:true});
 const report={checkedAt:new Date().toISOString(),base,layouts:[],states:[],navigation:[],checks:[],errors:[],outside:[],visualStatus:'requires_user_review'};
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 (async()=>{

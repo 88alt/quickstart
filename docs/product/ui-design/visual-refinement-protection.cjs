@@ -1,7 +1,7 @@
 // Protect business and layout implementations while allowing isolated CSS work.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
-const baseline='docs/evidence/m66/visual-refinement/51-baseline/protected.json';
-const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/visual-refinement/56-review/protection');
+const baseline='docs/archive/evidence/m66/visual-refinement/51-baseline/protected.json';
+const root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/visual-refinement/56-review/protection');
 const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 const digest=file=>hash(file.startsWith('web/src/design/')&&file.endsWith('.vue')?fs.readFileSync(file,'utf8').replace(/<style\b[^>]*>[\s\S]*?<\/style>/g,''):fs.readFileSync(file));
 fs.mkdirSync(root,{recursive:true});

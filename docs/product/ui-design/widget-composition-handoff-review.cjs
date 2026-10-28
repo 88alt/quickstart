@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto'),{execFileSync}=require('node:child_process');
-const {suites:expected}=require('./widget-composition-final-runner.cjs'),root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/widget-composition/81-review'),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const {suites:expected}=require('./widget-composition-final-runner.cjs'),root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/widget-composition/81-review'),sha=b=>crypto.createHash('sha256').update(b).digest('hex');
 (async()=>{
  const suites=JSON.parse(fs.readFileSync(root+'/suite-results.json')),candidate=JSON.parse(fs.readFileSync(root+'/candidate/candidate.json'));
  assert.equal(suites.result,'pass');assert.deepEqual(suites.suites.map(s=>s.name).sort(),[...expected].sort());for(const s of suites.suites)assert.equal(JSON.parse(fs.readFileSync(s.report)).result,'pass',s.name);

@@ -4,7 +4,7 @@ set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 PROJECT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
-DOC_ROOT="$PROJECT_DIR/docs/prototypes"
+DOC_ROOT="$PROJECT_DIR/docs/archive/prototypes"
 PAGE_FILE="lan-device-management/index.html"
 PAGE_URL_PATH="lan-device-management/"
 

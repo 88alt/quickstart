@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),{run}=require('./direct-test-utils.cjs');
 run('widget-body-matrix',async({page,assert,report,visit,pause,state,root,capture,edit})=>{
-  const baseDoc=JSON.parse(fs.readFileSync('docs/evidence/m66/widget-body/70-baseline/1440-light.json')).document;
+  const baseDoc=JSON.parse(fs.readFileSync('docs/archive/evidence/m66/widget-body/70-baseline/1440-light.json')).document;
   const fields=[
     '.connection-addresses dd>span','.native-storage .disk-item_name',
     '.native-sharing .content [class*="-item_name"]','.native-sharing .content [class*="-item_value"]',

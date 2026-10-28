@@ -1,6 +1,6 @@
 // Current M66.24 candidate. Real browser, actual synthetic HTTP and exported PNGs.
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),capture=require('./ordered-capture.cjs');
-const base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/evidence/m66/slot-edit/24-review/visual');fs.mkdirSync(root,{recursive:true});
+const base='http://192.168.9.19:5180',root=path.resolve(process.env.QS_DESIGN_EVIDENCE_ROOT||'docs/archive/evidence/m66/slot-edit/24-review/visual');fs.mkdirSync(root,{recursive:true});
 const attempt=1+fs.readdirSync(root).filter(f=>/^attempt-\d+.json$/.test(f)).length,out=path.join(root,'attempt-'+attempt);fs.mkdirSync(out,{recursive:true});
 const report={attempt,checkedAt:new Date().toISOString(),output:out,baseline:[],scenarios:[],boundaries:[],checks:[],errors:[],outside:[],manualVisual:'pending'};
 (async()=>{const browser=await chromium.launch(),page=await browser.newPage();page.on('pageerror',e=>report.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text())});page.on('request',r=>{if(new URL(r.url()).origin!==base)report.outside.push(r.url())});

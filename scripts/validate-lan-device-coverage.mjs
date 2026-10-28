@@ -6,8 +6,8 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const sourcePath = path.join(root, 'docs/lan-device-management-requirements.json')
-const outputPath = path.join(root, 'docs/lan-device-management-coverage-matrix.md')
+const sourcePath = path.join(root, 'docs/archive/lan-device-management-requirements.json')
+const outputPath = path.join(root, 'docs/archive/lan-device-management-coverage-matrix.md')
 const layerNames = ['product', 'prototype', 'backend', 'frontend', 'device']
 const statuses = new Set(['not_started', 'partial', 'blocked', 'verified', 'not_applicable'])
 const requiredScenarios = ['normal', 'missing', 'error', 'recovery', 'retry']
@@ -74,8 +74,10 @@ function render(matrix) {
   const lines = [
     '# 局域网设备管理五层覆盖矩阵',
     '',
+    '> 历史归档：本矩阵仅检查历史清单的一致性，不代表当前版本验收。',
+    '',
     '> 本文件由 `scripts/validate-lan-device-coverage.mjs --write` 从 `lan-device-management-requirements.json` 生成，请勿手工修改。',
-    `> 基线：[当前唯一产品与领域基线](./lan-device-management-product-architecture.md) · 更新：${matrix.updated}`,
+    `> 历史基线：[当时的产品与领域基线](./lan-device-management-product-architecture.md) · 更新：${matrix.updated}`,
     '',
     `共 ${matrix.requirements.length} 项：原型历史能力 48 项，P0 新增场景 7 项。总状态只有在五层均完成后才能为 \`verified\`。`,
     '',
